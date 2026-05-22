@@ -17,8 +17,8 @@ async function sendBookingEmail({ to, subject, text, html }) {
         reply_to: { email: "creekviewvilla@gmail.com" },
         subject,
         content: [
-          { type: "text/plain", value: text || "" },
-          { type: "text/html", value: html || "" },
+          ...(text ? [{ type: "text/plain", value: text }] : []),
+          ...(html ? [{ type: "text/html", value: html }] : []),
         ],
       }),
     });
