@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -9,25 +11,98 @@ const store = require("./data/store");
 const { sendBookingEmail } = require("./services/integrations");
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
+app.use(cors({ origin: CORS_ORIGIN }));
+
+app.use(express.json({ limit: "100kb" }));
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/api/", apiLimiter);
+app.use("/admin/", adminLimiter);
 
 const MANAGER_EMAIL = process.env.MANAGER_EMAIL || "manager@homestay.local";
 const PORT = process.env.PORT || 4000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
+const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "";
+const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "";
 
-function requireAdmin(req, res, next) {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^[\d\s+\-()]{7,20}$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const VALID_GUEST_TYPES = new Set(["Family", "Bachelor"]);
+
+function sanitize(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(/[<>&"']/g, (c) => ({
+    "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#x27;"
+  }[c]));
+}
+
+async function verifyFirebaseToken(idToken) {
+  if (!FIREBASE_API_KEY || !idToken) return null;
+  try {
+    const url = `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${FIREBASE_API_KEY}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.log(`[verifyFirebaseToken] Google API returned ${res.status}: ${text.slice(0, 200)}`);
+      return null;
+    }
+    const data = await res.json();
+    return data.users?.[0] || null;
+  } catch (err) {
+    console.log(`[verifyFirebaseToken] fetch error: ${err.message}`);
+    return null;
+  }
+}
+
+async function requireAdmin(req, res, next) {
   if (!ADMIN_TOKEN) {
-    // No token configured — warn but allow (dev mode)
-    console.warn("[Auth] ADMIN_TOKEN not set — admin routes are unprotected!");
-    return next();
+    return res.status(500).json({ message: "Server misconfigured: authentication not set up." });
   }
   const auth = req.headers["authorization"] || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (token !== ADMIN_TOKEN) {
+  if (!token) {
+    console.log("[requireAdmin] No token provided");
     return res.status(401).json({ message: "Unauthorized." });
   }
-  next();
+  if (token === ADMIN_TOKEN) {
+    console.log("[requireAdmin] Matched ADMIN_TOKEN");
+    return next();
+  }
+
+  console.log(`[requireAdmin] Token prefix: ${token.slice(0, 20)}... (does not match ADMIN_TOKEN)`);
+  const firebaseUser = await verifyFirebaseToken(token);
+  if (firebaseUser) {
+    console.log(`[requireAdmin] Firebase verified: ${firebaseUser.email || firebaseUser.localId}`);
+    return next();
+  }
+
+  console.log("[requireAdmin] Firebase verification FAILED");
+  return res.status(401).json({ message: "Unauthorized." });
 }
 
 let razorpay = null;
@@ -52,22 +127,45 @@ app.get("/availability", async (_, res) => {
   res.json(events);
 });
 
-app.get("/bookings", async (_, res) => {
+app.get("/bookings", requireAdmin, async (_, res) => {
   const data = await store.getBookings();
   res.json(data);
 });
 
 app.post("/bookings", async (req, res) => {
-  const { roomId, checkIn, checkOut, guestName, guestEmail, guestPhone, guests, guestType, createdBy = "guest" } = req.body;
+  let { roomId, checkIn, checkOut, guestName, guestEmail, guestPhone, guests, guestType, createdBy = "guest" } = req.body;
+
+  guestName = sanitize(guestName);
+  guestEmail = sanitize(guestEmail);
+  guestPhone = sanitize(guestPhone);
+  guestType = sanitize(guestType);
+  roomId = sanitize(roomId);
 
   if (!roomId || !checkIn || !checkOut || !guestName || !guestEmail || !guestPhone) {
     return res.status(400).json({ message: "Missing required booking fields." });
+  }
+  if (!EMAIL_RE.test(guestEmail)) {
+    return res.status(400).json({ message: "Invalid email format." });
+  }
+  if (!PHONE_RE.test(guestPhone)) {
+    return res.status(400).json({ message: "Invalid phone number format." });
+  }
+  if (!DATE_RE.test(checkIn) || !DATE_RE.test(checkOut)) {
+    return res.status(400).json({ message: "Dates must be in YYYY-MM-DD format." });
+  }
+  if (checkIn >= checkOut) {
+    return res.status(400).json({ message: "Check-out must be after check-in." });
+  }
+  if (guestType && !VALID_GUEST_TYPES.has(guestType)) {
+    return res.status(400).json({ message: "Guest type must be Family or Bachelor." });
+  }
+  if (guests && (isNaN(guests) || Number(guests) < 1)) {
+    return res.status(400).json({ message: "Number of guests must be at least 1." });
   }
   if (!(await store.roomExists(roomId))) {
     return res.status(404).json({ message: "Room not found." });
   }
 
-  // Verify Razorpay payment if payment data is present
   if (req.body.razorpayPaymentId) {
     const expectedSig = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -121,7 +219,6 @@ Padinjarathara, Wayanad, Kerala
   }
 });
 
-// Create Razorpay order
 app.post("/api/create-razorpay-order", async (req, res) => {
   if (!razorpay) return res.status(400).json({ message: "Razorpay not configured." });
 
@@ -132,7 +229,7 @@ app.post("/api/create-razorpay-order", async (req, res) => {
   const nights = Math.max(1, Math.ceil(
     (new Date(checkOut + "T00:00:00") - new Date(checkIn + "T00:00:00")) / (1000 * 60 * 60 * 24)
   ));
-  const amount = nights * room.basePrice * 100; // paise
+  const amount = nights * room.basePrice * 100;
 
   try {
     const order = await razorpay.orders.create({

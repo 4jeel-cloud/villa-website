@@ -55,10 +55,13 @@ async function scriptPost(payload) {
   });
   const text = await res.text();
   console.log("[Sheets] POST", payload.action, "→", res.status, text.slice(0, 400));
+  if (!res.ok) {
+    throw new Error(`Sheets API returned ${res.status}: ${text.slice(0, 200)}`);
+  }
   try {
     return JSON.parse(text);
   } catch {
-    return { error: "Non-JSON response: " + text.slice(0, 200) };
+    throw new Error(`Non-JSON response from sheets: ${text.slice(0, 200)}`);
   }
 }
 
@@ -142,8 +145,8 @@ function toDateString(val) {
 }
 
 function normalizeBookingFromScript(r) {
-  var g = function (keys) {
-    for (var k of keys) {
+  const g = function (keys) {
+    for (const k of keys) {
       if (r[k] !== undefined && r[k] !== "") return r[k];
     }
     return "";
@@ -188,16 +191,9 @@ async function roomExists(roomId) {
   return rooms.some((r) => r.id === roomId);
 }
 
-function toDate(input) {
-  return new Date(`${input}T00:00:00`);
-}
-
 function datesOverlap(startA, endA, startB, endB) {
-  const aStart = toDate(startA);
-  const aEnd = toDate(endA);
-  const bStart = toDate(startB);
-  const bEnd = toDate(endB);
-  return aStart < bEnd && bStart < aEnd;
+  // Dates are already YYYY-MM-DD — lexicographic comparison works correctly
+  return startA < endB && startB < endA;
 }
 
 async function isRoomAvailable(roomId, checkIn, checkOut, ignoreBookingId = null) {
@@ -297,10 +293,7 @@ async function createBooking(data) {
       };
 
       console.log("[Sheets] appendBooking payload:", JSON.stringify(payload));
-      const result = await scriptPost(payload);
-      if (result.error) {
-        console.error("[Sheets] appendBooking error:", result.error);
-      }
+      await scriptPost(payload);
     } catch (err) {
       console.error("[Sheets] Failed to sync booking:", err.message);
     }
@@ -429,10 +422,29 @@ async function updateRoomImages(roomId, images) {
   return room;
 }
 
+// ===== Merge helper: keeps in-memory items + picks up sheet additions =====
+function mergeById(existing, incoming, idKey, normalizeFn) {
+  if (!Array.isArray(incoming) || incoming.length === 0) return;
+  const existingIds = new Set(existing.map((item) => item[idKey]));
+  for (const raw of incoming) {
+    const normalized = normalizeFn(raw);
+    if (!normalized || !normalized[idKey]) continue;
+    if (!existingIds.has(normalized[idKey])) {
+      existing.push(normalized);
+      existingIds.add(normalized[idKey]);
+    } else {
+      const idx = existing.findIndex((item) => item[idKey] === normalized[idKey]);
+      if (idx !== -1) existing[idx] = normalized;
+    }
+  }
+}
+
 // ===== Periodic re-sync from sheets (catches manual edits) =====
+// Uses merge so in-memory items that failed to sync to sheets are NOT lost
+let syncInterval = null;
 function startPeriodicSync() {
   if (!hasScript()) return;
-  setInterval(async () => {
+  syncInterval = setInterval(async () => {
     try {
       const [roomsData, bookingsData, blocksData] = await Promise.all([
         scriptGet("getRooms"),
@@ -446,19 +458,21 @@ function startPeriodicSync() {
         const missing = DEFAULT_ROOMS.filter((r) => !sheetIds.has(r.id)).map((r) => ({ ...r }));
         rooms = [...sheetRooms, ...missing];
       }
-      bookings = Array.isArray(bookingsData)
-        ? bookingsData.filter((b) => b.bookingId || b.Timestamp || b["Full name"]).map(normalizeBookingFromScript)
+
+      const newBookings = Array.isArray(bookingsData)
+        ? bookingsData.filter((b) => b.bookingId || b.Timestamp || b["Full name"])
         : [];
-      blockedDates = Array.isArray(blocksData)
-        ? blocksData.filter((b) => b.id).map((b) => ({
-            id: b.id,
-            roomId: b.roomId || "",
-            roomName: b.roomName || "",
-            startDate: b.startDate || "",
-            endDate: b.endDate || "",
-            reason: b.reason || "",
-          }))
-        : [];
+      mergeById(bookings, newBookings, "id", normalizeBookingFromScript);
+
+      const newBlocks = Array.isArray(blocksData) ? blocksData.filter((b) => b.id) : [];
+      mergeById(blockedDates, newBlocks, "id", (b) => ({
+        id: b.id,
+        roomId: b.roomId || "",
+        roomName: b.roomName || "",
+        startDate: b.startDate || "",
+        endDate: b.endDate || "",
+        reason: b.reason || "",
+      }));
     } catch (err) {
       // Silently fail on re-sync
     }
@@ -480,6 +494,12 @@ async function init() {
 }
 
 init();
+
+process.on("exit", () => {
+  if (syncInterval) clearInterval(syncInterval);
+});
+process.on("SIGINT", () => process.exit());
+process.on("SIGTERM", () => process.exit());
 
 module.exports = {
   getRooms,

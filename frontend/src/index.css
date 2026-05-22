@@ -2,11 +2,15 @@
   box-sizing: border-box;
 }
 
-html {
+html, body {
   margin: 0;
   padding: 0;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
   scroll-behavior: smooth;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 .notification {
@@ -66,6 +70,7 @@ body {
   max-width: 100%;
   margin: 0 auto;
   padding: 0;
+  overflow-x: hidden;
 }
 
 .homeContent {
@@ -205,7 +210,7 @@ body {
 }
 
 .heroTextPrimary {
-  font-family: "Amarna", serif;
+  font-family: "Cormorant Garamond", serif;
   font-size: clamp(4.5rem, 11vw, 9rem);
   font-weight: 600;
   line-height: 1.05;
@@ -684,7 +689,7 @@ button {
 }
 
 .calendarCard .fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
-  background: rgba(5, 150, 105, 0.06);
+  background: rgba(5, 150, 105, 0.05);
 }
 
 .calendarCard .fc .fc-day-today {
@@ -704,26 +709,14 @@ button {
   margin: 2px auto 0;
 }
 
-.calendarCard .fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
-  background: rgba(5, 150, 105, 0.05);
-}
-
 .calendarCard .fc .fc-event {
   border: none;
   border-radius: 8px;
   font-size: 0.72rem;
 }
 
-.fc .fc-bg-event {
-  opacity: 0.7;
-}
-
-.fc .fc-bg-event .fc-event-title {
-  display: none;
-}
-
-.fc .fc-daygrid-day-bg .fc-bg-event {
-  border-radius: 0;
+.fc .blocked-date .fc-daygrid-day-frame {
+  background: rgba(239, 68, 68, 0.85) !important;
 }
 
 .fc .fc-toolbar {
@@ -732,30 +725,37 @@ button {
   margin-bottom: 6px;
 }
 
-.fc .selected-range .fc-daygrid-day-frame {
-  background: rgba(16, 185, 129, 0.12);
-  border-top: 1.5px solid rgba(16, 185, 129, 0.3);
-  border-bottom: 1.5px solid rgba(16, 185, 129, 0.3);
-}
+/* ── Selection styles ── */
 
-.fc .selected-checkin .fc-daygrid-day-frame,
-.fc .selected-checkout .fc-daygrid-day-frame {
-  background: #059669;
-  border-radius: 8px;
+/* Check-in: left white, right green */
+.fc .selected-checkin .fc-daygrid-day-frame {
+  background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
 }
-
-.fc .selected-checkin .fc-daygrid-day-number,
-.fc .selected-checkout .fc-daygrid-day-number {
-  color: #ffffff !important;
+.fc .selected-checkin .fc-daygrid-day-number {
   font-weight: 700;
 }
 
-.fc .selected-checkin .fc-daygrid-day-frame {
-  border-radius: 8px 0 0 8px;
+/* Check-out: left green, right white */
+.fc .selected-checkout .fc-daygrid-day-frame {
+  background: linear-gradient(to right, rgba(5, 150, 105, 0.7) 50%, transparent 50%) !important;
+}
+.fc .selected-checkout .fc-daygrid-day-number {
+  font-weight: 700;
 }
 
-.fc .selected-checkout .fc-daygrid-day-frame {
-  border-radius: 0 8px 8px 0;
+/* Middle nights: light green */
+.fc .selected-range .fc-daygrid-day-frame {
+  background: rgba(5, 150, 105, 0.18) !important;
+}
+
+/* ── Existing booking checkout-only date: left yellow, right white ── */
+.fc .date-checkout-only .fc-daygrid-day-frame {
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.55) 50%, transparent 50%) !important;
+}
+
+/* If checkout-only date is selected as check-in, green wins */
+.fc .date-checkout-only.selected-checkin .fc-daygrid-day-frame {
+  background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
 }
 
 @media (max-width: 768px) {
@@ -854,23 +854,6 @@ button {
 
 .carousel-row--reverse .carousel-item {
   transform: scaleX(-1);
-}
-
-.carousel-track {
-  display: flex;
-  flex-wrap: nowrap;
-  will-change: transform;
-  padding: 0 60px;
-}
-
-.carousel .carousel-item {
-  position: relative;
-  flex: 0 0 auto;
-  width: 300px;
-  height: 380px;
-  margin: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
 .carousel-track {
@@ -1341,5 +1324,173 @@ button {
 
   .footerLinks {
     gap: 1.5rem;
+  }
+}
+
+/* ===== Nearby Page ===== */
+
+.nearbyPage {
+  padding-top: 72px;
+  background: #f7f8fb;
+  min-height: 100vh;
+}
+
+.nearbyHero {
+  background: #fff;
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0;
+}
+
+.nearbyHero h2 {
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  color: #059669;
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  letter-spacing: 1px;
+  margin: 0 0 4px;
+}
+
+.nearbyHero p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.nearbyList {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.nearbyRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 320px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.nearbyRow:last-child {
+  border-bottom: none;
+}
+
+.nearbyCard {
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  background: #fff;
+}
+
+.nearbyRow--reverse .nearbyCard {
+  background: #f8fafc;
+}
+
+.nearbyTag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.nearbyCard h3 {
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: #0f172a;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nearbyRating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nearbyStars {
+  color: #f59e0b;
+  font-size: 0.8rem;
+  letter-spacing: -1px;
+}
+
+.nearbyRatingNum {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.nearbyReviews {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.nearbyDesc {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.nearbyMapBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #059669;
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1.5px solid #a7f3d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+  width: fit-content;
+  margin-top: 4px;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.nearbyMapBtn:hover {
+  background: #dcfce7;
+  border-color: #059669;
+}
+
+.nearbyMapWrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.nearbyMapIframe {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border: none;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .nearbyRow {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+
+  .nearbyRow--reverse .nearbyMapWrap {
+    order: -1;
+  }
+
+  .nearbyMapIframe {
+    min-height: 220px;
+  }
+
+  .nearbyCard {
+    padding: 24px 20px;
   }
 }
