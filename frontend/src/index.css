@@ -986,20 +986,6 @@ button {
   }
 }
 
-  .carousel-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .carousel-btn--prev {
-    left: 8px;
-  }
-
-  .carousel-btn--next {
-    right: 8px;
-  }
-}
-
 .carousel .carousel-item {
   position: relative;
   flex: 0 0 auto;
