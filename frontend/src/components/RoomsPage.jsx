@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function RoomsPage({ rooms }) {
   const [activeImg, setActiveImg] = useState({});
+  const navigate = useNavigate();
 
   return (
     <section className="card roomsPage">
@@ -33,6 +35,9 @@ export default function RoomsPage({ rooms }) {
                   <span>👥 Up to {room.capacity} guests</span>
                   <span>₹{room.basePrice.toLocaleString("en-IN")}/night</span>
                 </div>
+                <button className="formSubmit" style={{ marginTop: 10 }} onClick={() => navigate(`/?room=${room.id}`)}>
+                  Select
+                </button>
               </div>
             </article>
           );

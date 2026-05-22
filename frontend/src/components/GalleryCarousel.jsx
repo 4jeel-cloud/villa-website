@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const CITIES = [
+const IMAGES = [
   { img: "/carousel/1.webp" },
   { img: "/carousel/2.webp" },
   { img: "/carousel/DSC00989.webp" },
@@ -13,7 +13,17 @@ const CITIES = [
   { img: "/carousel/DSC01115.webp" },
 ];
 
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function GalleryCarousel() {
+  const [order] = useState(() => shuffle(IMAGES));
   const [index, setIndex] = useState(10);
   const [paused, setPaused] = useState(false);
   const [lightboxData, setLightboxData] = useState(null);
@@ -26,8 +36,8 @@ export default function GalleryCarousel() {
   const [touchDelta, setTouchDelta] = useState(0);
   const isSwiping = useRef(false);
 
-  const len = CITIES.length;
-  const items = useMemo(() => [...CITIES, ...CITIES, ...CITIES], []);
+  const len = order.length;
+  const items = useMemo(() => [...order, ...order, ...order], [order]);
 
   const snap = useCallback((dir) => {
     setIndex((prev) => prev + dir);
@@ -200,7 +210,7 @@ export default function GalleryCarousel() {
       >
         {items.map((city, i) => (
           <div className="carousel-item" key={i}>
-            <div className="carousel-box" onClick={() => setLightboxData(CITIES[i % len])}>
+            <div className="carousel-box" onClick={() => setLightboxData(order[i % len])}>
               <img src={city.img} loading="lazy" />
             </div>
           </div>

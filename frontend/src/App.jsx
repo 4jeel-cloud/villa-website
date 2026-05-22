@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import {
   cancelBooking,
   createBooking,
@@ -164,6 +164,19 @@ function App() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const room = searchParams.get("room");
+    if (room && rooms.length) {
+      setBookingForm((prev) => ({ ...prev, roomId: room }));
+      setTimeout(() => {
+        const el = document.getElementById("booking");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    }
+  }, [searchParams, rooms]);
 
   useEffect(() => {
     if (location.hash) {
@@ -395,9 +408,9 @@ function App() {
       <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/admin","/rooms","/nearby"].includes(location.pathname) ? "topNav--light" : ""}`}>
         <Link className="brand" to="/" style={{ textDecoration: "none" }}>CreekViewVilla</Link>
         <nav className="navCenter">
+          <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms">Rooms</Link>
           <Link className={`navLink${location.pathname === "/" && location.hash === "#photos" ? " active" : ""}`} to="/#photos">Photos</Link>
           <Link className={`navLink${location.pathname === "/" && location.hash === "#location" ? " active" : ""}`} to="/#location">Location</Link>
-          <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms">Rooms</Link>
           <Link className={`navLink${location.pathname === "/nearby" ? " active" : ""}`} to="/nearby">Nearby</Link>
         </nav>
         <nav className="navActions">
