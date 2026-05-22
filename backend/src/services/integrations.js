@@ -1,42 +1,33 @@
-const nodemailer = require("nodemailer");
-
-let transporter = null;
-function getTransporter() {
-  if (transporter) return transporter;
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    requireTLS: true,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    pool: true,
-    maxConnections: 3,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
-  return transporter;
-}
-
 async function sendBookingEmail({ to, subject, text, html }) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log("[Email] SMTP not configured, skipping:", to, subject);
+  const apiKey = process.env.SENDGRID_API_KEY || process.env.SMTP_PASS;
+  if (!apiKey) {
+    console.log("[Email] No API key configured, skipping:", to, subject);
     return;
   }
   try {
-    const t = getTransporter();
-    const info = await t.sendMail({
-      from: `"Creek View Villa" <${process.env.SMTP_USER}>`,
-      replyTo: process.env.SMTP_USER,
-      to,
-      subject,
-      text,
-      html,
+    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: "creekviewvilla@gmail.com", name: "Creek View Villa" },
+        reply_to: { email: "creekviewvilla@gmail.com" },
+        subject,
+        content: [
+          { type: "text/plain", value: text || "" },
+          { type: "text/html", value: html || "" },
+        ],
+      }),
     });
-    console.log("[Email] Sent to", to, "messageId:", info.messageId);
+    if (res.ok) {
+      console.log("[Email] Sent to", to, "status:", res.status);
+    } else {
+      const errText = await res.text();
+      console.error("[Email] Failed to", to, "—", res.status, errText.slice(0, 200));
+    }
   } catch (err) {
     console.error("[Email] Failed to", to, "—", err.message);
   }
