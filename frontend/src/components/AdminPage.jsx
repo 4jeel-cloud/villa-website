@@ -25,20 +25,40 @@ export default function AdminPage({
       title: booking.guestName,
       start: booking.checkIn,
       end: booking.checkOut,
-      backgroundColor: "#3b82f6",
-      borderColor: "#2563eb",
-      textColor: "#ffffff",
       classNames: ["admin-booking-event"]
     }));
+
+  const existingCheckin = useMemo(() => {
+    const s = new Set();
+    for (const evt of availability) {
+      if (!evt.start) continue;
+      s.add(toDateKey(new Date(evt.start + "T00:00:00")));
+    }
+    return s;
+  }, [availability]);
+
+  const existingCheckout = useMemo(() => {
+    const s = new Set();
+    for (const evt of availability) {
+      if (!evt.end) continue;
+      s.add(toDateKey(new Date(evt.end + "T00:00:00")));
+    }
+    return s;
+  }, [availability]);
 
   const blockedClasses = useMemo(() => {
     const map = new Map();
     for (const evt of availability) {
       if (!evt.start || !evt.end) continue;
+      const startKey = toDateKey(new Date(evt.start + "T00:00:00"));
+      const endKey = toDateKey(new Date(evt.end + "T00:00:00"));
       let cur = new Date(evt.start + "T00:00:00");
       const end = new Date(evt.end + "T00:00:00");
       while (cur < end) {
-        map.set(toDateKey(cur), true);
+        const key = toDateKey(cur);
+        if (key !== startKey && key !== endKey) {
+          map.set(key, true);
+        }
         cur.setDate(cur.getDate() + 1);
       }
     }
@@ -46,7 +66,16 @@ export default function AdminPage({
   }, [availability]);
 
   const dayCellClassNames = (arg) => {
-    return blockedClasses.has(toDateKey(arg.date)) ? ["blocked-date"] : [];
+    const dayKey = toDateKey(arg.date);
+    const classes = [];
+    if (blockedClasses.has(dayKey)) classes.push("blocked-date");
+    else if (existingCheckin.has(dayKey) && !existingCheckout.has(dayKey)) classes.push("existing-booking-checkin");
+    else if (existingCheckout.has(dayKey) && !existingCheckin.has(dayKey)) classes.push("date-checkout-only");
+    else if (existingCheckin.has(dayKey) && existingCheckout.has(dayKey)) classes.push("existing-booking-checkin");
+    if (adminForm.checkIn && dayKey === adminForm.checkIn) classes.push("selected-checkin");
+    if (adminForm.checkOut && dayKey === adminForm.checkOut) classes.push("selected-checkout");
+    if (adminForm.checkIn && adminForm.checkOut && dayKey > adminForm.checkIn && dayKey < adminForm.checkOut) classes.push("selected-range");
+    return classes;
   };
 
   const handleDateClick = (clickInfo) => {
