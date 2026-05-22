@@ -759,14 +759,14 @@ button {
   background: linear-gradient(to right, rgba(234, 179, 8, 0.45) 50%, transparent 50%) !important;
 }
 
-/* Existing booking check-in: full yellow */
+/* Existing booking check-in: right half yellow */
 .fc .existing-booking-checkin .fc-daygrid-day-frame {
-  background: rgba(234, 179, 8, 0.5) !important;
+  background: linear-gradient(to right, transparent 50%, rgba(234, 179, 8, 0.5) 50%) !important;
 }
 
-/* Existing booking check-out: full yellow */
+/* Existing booking check-out: left half yellow */
 .fc .existing-booking-checkout .fc-daygrid-day-frame {
-  background: rgba(234, 179, 8, 0.5) !important;
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.5) 50%, transparent 50%) !important;
 }
 
 /* If checkout-only date is selected as check-in, green wins */
