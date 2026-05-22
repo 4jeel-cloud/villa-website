@@ -26,13 +26,22 @@ export default function UserPage({
 
   const checkoutOnlyDates = new Set();
   const blockedClasses = new Map();
+  const existingCheckin = new Set();
+  const existingCheckout = new Set();
   for (const evt of availability) {
     if (!evt.start || !evt.end) continue;
-    checkoutOnlyDates.add(toDateKey(new Date(evt.end + "T00:00:00")));
+    const startKey = toDateKey(new Date(evt.start + "T00:00:00"));
+    const endKey = toDateKey(new Date(evt.end + "T00:00:00"));
+    checkoutOnlyDates.add(endKey);
+    existingCheckin.add(startKey);
+    existingCheckout.add(endKey);
     let cur = new Date(evt.start + "T00:00:00");
     const end = new Date(evt.end + "T00:00:00");
     while (cur < end) {
-      blockedClasses.set(toDateKey(cur), "blocked-date");
+      const key = toDateKey(cur);
+      if (key !== startKey && key !== endKey) {
+        blockedClasses.set(key, "blocked-date");
+      }
       cur.setDate(cur.getDate() + 1);
     }
   }
@@ -42,10 +51,12 @@ export default function UserPage({
     const { checkIn, checkOut } = bookingForm;
     const classes = [];
     if (blockedClasses.has(dayKey)) classes.push("blocked-date");
+    else if (existingCheckin.has(dayKey) && !existingCheckout.has(dayKey)) classes.push("existing-booking-checkin");
+    else if (existingCheckout.has(dayKey) && !existingCheckin.has(dayKey)) classes.push("date-checkout-only");
+    else if (existingCheckin.has(dayKey) && existingCheckout.has(dayKey)) classes.push("existing-booking-checkin");
     if (checkIn && dayKey === checkIn) classes.push("selected-checkin");
     if (checkIn && checkOut && dayKey === checkOut) classes.push("selected-checkout");
     if (checkIn && checkOut && dayKey > checkIn && dayKey < checkOut) classes.push("selected-range");
-    if (!blockedClasses.has(dayKey) && checkoutOnlyDates.has(dayKey)) classes.push("date-checkout-only");
     return classes;
   };
 
