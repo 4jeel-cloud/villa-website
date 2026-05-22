@@ -3,7 +3,7 @@
   publish = "dist"
 
 [build.environment]
-  SECRETS_SCAN_OMIT_KEYS = "apiKey,FIREBASE_API_KEY"
+  SECRETS_SCAN_OMIT_PATHS = "dist/*"
 
 [[redirects]]
   from = "/*"
