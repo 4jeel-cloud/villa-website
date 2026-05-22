@@ -762,23 +762,41 @@ button {
 
 @media (max-width: 768px) {
   .topNav {
-    padding: 12px;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    padding: 10px 12px;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 4px;
+  }
+
+  .brand {
+    font-size: 0.95rem;
   }
 
   .navCenter {
-    order: 3;
-    grid-column: 1 / -1;
-    justify-self: center;
+    gap: 2px;
   }
 
-  .navActions {
-    justify-self: end;
+  .navLink {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
+  .heroTextPrimary {
+    font-size: clamp(2.8rem, 10vw, 4.5rem);
+  }
+
+  .heroTextSecondary {
+    font-size: clamp(2rem, 7vw, 3.4rem);
+    margin-top: 8px;
+  }
+
+  .heroImage {
+    height: 60vh;
+    min-height: 400px;
   }
 
   .fc {
-    min-width: 640px;
+    min-width: 0;
+    font-size: 0.85rem;
   }
 
   .fc .fc-toolbar-title {
@@ -828,6 +846,41 @@ button {
   .card {
     margin-left: 8px;
     margin-right: 8px;
+  }
+
+  .heroTextPrimary {
+    font-size: clamp(2rem, 9vw, 2.8rem);
+  }
+
+  .heroTextSecondary {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+
+  .heroImage {
+    height: 50vh;
+    min-height: 320px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .room {
+    max-width: 100%;
+  }
+
+  .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .navLink {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+
+  .brand {
+    font-size: 0.85rem;
   }
 }
 

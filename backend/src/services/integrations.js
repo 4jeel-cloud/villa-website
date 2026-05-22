@@ -17,7 +17,7 @@ function getTransporter() {
   return transporter;
 }
 
-async function sendBookingEmail({ to, subject, text }) {
+async function sendBookingEmail({ to, subject, text, html }) {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.log("[Email] SMTP not configured, skipping:", to, subject);
     return;
@@ -30,7 +30,7 @@ async function sendBookingEmail({ to, subject, text }) {
       to,
       subject,
       text,
-      // No X-Priority or custom headers — they trigger spam filters
+      html,
     });
     console.log("[Email] Sent to", to, "messageId:", info.messageId);
   } catch (err) {

@@ -9,6 +9,7 @@ const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const store = require("./data/store");
 const { sendBookingEmail } = require("./services/integrations");
+const emailTemplates = require("./services/emailTemplates");
 
 const app = express();
 
@@ -189,28 +190,15 @@ app.post("/bookings", async (req, res) => {
 
     await sendBookingEmail({
       to: guestEmail,
-      subject: `Your stay at Creek View Villa is confirmed`,
-      text: `Hi ${guestName},
-
-Thank you for booking with us. Your reservation is confirmed.
-
-Room: ${booking.roomName}
-Check-in:  ${checkIn}
-Check-out: ${checkOut}
-Guests:    ${guests || "—"}
-
-If you have any questions before your stay, just reply to this email or call us directly.
-
-Looking forward to hosting you.
-
-Creek View Villa
-Padinjarathara, Wayanad, Kerala
-`,
+      subject: "Your stay at Creek View Villa is confirmed",
+      html: emailTemplates.guestConfirmation({
+        guestName, roomName: booking.roomName, checkIn, checkOut, guests,
+      }),
     });
     await sendBookingEmail({
       to: MANAGER_EMAIL,
       subject: "New Booking Alert – Creek View Villa",
-      text: `New booking from ${guestName} for ${booking.roomName}.\nCheck-in: ${checkIn}\nCheck-out: ${checkOut}\n`,
+      html: emailTemplates.managerAlert({ guestName, roomName: booking.roomName, checkIn, checkOut }),
     });
 
     return res.status(201).json(booking);
@@ -254,7 +242,7 @@ app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
   await sendBookingEmail({
     to: booking.guestEmail,
     subject: "Booking Cancelled – Creek View Villa",
-    text: `Hi ${booking.guestName}, your booking for ${booking.roomName} was cancelled.`,
+    html: emailTemplates.cancellation({ guestName: booking.guestName, roomName: booking.roomName, reason: req.body.reason }),
   });
 
   return res.json({
