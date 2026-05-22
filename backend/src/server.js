@@ -188,14 +188,14 @@ app.post("/bookings", async (req, res) => {
       razorpayPaymentId: req.body.razorpayPaymentId,
     });
 
-    await sendBookingEmail({
+    sendBookingEmail({
       to: guestEmail,
       subject: "Your stay at Creek View Villa is confirmed",
       html: emailTemplates.guestConfirmation({
         guestName, roomName: booking.roomName, checkIn, checkOut, guests,
       }),
     });
-    await sendBookingEmail({
+    sendBookingEmail({
       to: MANAGER_EMAIL,
       subject: "New Booking Alert – Creek View Villa",
       html: emailTemplates.managerAlert({ guestName, roomName: booking.roomName, checkIn, checkOut }),
@@ -239,7 +239,7 @@ app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
     cancelledBy: "admin",
   });
   if (!booking) return res.status(404).json({ message: "Booking not found." });
-  await sendBookingEmail({
+  sendBookingEmail({
     to: booking.guestEmail,
     subject: "Booking Cancelled – Creek View Villa",
     html: emailTemplates.cancellation({ guestName: booking.guestName, roomName: booking.roomName, reason: req.body.reason }),
