@@ -67,6 +67,7 @@ export default function UserPage({
             alt="Creek View Villa"
             className="heroImage"
             fetchpriority="high"
+            decoding="async"
           />
           <div className="heroText">
             <span className="heroTextPrimary">Your home,</span>

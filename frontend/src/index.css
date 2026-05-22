@@ -729,35 +729,35 @@ button {
 
 /* ── Selection styles ── */
 
-/* Check-in: left white, right green */
+/* Check-in: left yellow, right white */
 .fc .selected-checkin .fc-daygrid-day-frame {
-  background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.6) 50%, transparent 50%) !important;
 }
 .fc .selected-checkin .fc-daygrid-day-number {
   font-weight: 700;
 }
 
-/* Check-out: left green, right white */
+/* Check-out: left white, right yellow */
 .fc .selected-checkout .fc-daygrid-day-frame {
-  background: linear-gradient(to right, rgba(5, 150, 105, 0.7) 50%, transparent 50%) !important;
+  background: linear-gradient(to right, transparent 50%, rgba(234, 179, 8, 0.6) 50%) !important;
 }
 .fc .selected-checkout .fc-daygrid-day-number {
   font-weight: 700;
 }
 
-/* Middle nights: light green */
+/* Middle nights: light yellow */
 .fc .selected-range .fc-daygrid-day-frame {
-  background: rgba(5, 150, 105, 0.18) !important;
+  background: rgba(234, 179, 8, 0.18) !important;
 }
 
-/* ── Existing booking checkout-only date: left yellow, right white ── */
+/* ── Existing booking checkout-only date: left yellow ── */
 .fc .date-checkout-only .fc-daygrid-day-frame {
-  background: linear-gradient(to right, rgba(234, 179, 8, 0.55) 50%, transparent 50%) !important;
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.35) 50%, transparent 50%) !important;
 }
 
-/* If checkout-only date is selected as check-in, green wins */
+/* If checkout-only date is selected as check-in, yellow wins */
 .fc .date-checkout-only.selected-checkin .fc-daygrid-day-frame {
-  background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.6) 50%, transparent 50%) !important;
 }
 
 @media (max-width: 768px) {
@@ -958,9 +958,24 @@ button {
 }
 
 @media (max-width: 768px) {
-  .carousel-track {
-    padding: 0 40px;
+  .carousel { padding: 20px 0 40px; }
+  .carousel-track { padding: 0 40px; }
+  .carousel-row { margin-bottom: 10px; }
+  .carousel .carousel-item { width: 220px; height: 280px; margin: 8px; }
+  .carousel-btn { width: 36px; height: 36px; }
+  .carousel-btn--prev { left: 8px; }
+  .carousel-btn--next { right: 8px; }
+  .carousel .carousel-item .carousel-box {
+    transform: none !important;
   }
+}
+
+@media (max-width: 480px) {
+  .carousel .carousel-item { width: 160px; height: 210px; margin: 5px; }
+  .carousel .carousel-item .carousel-box {
+    transform: none !important;
+  }
+}
 
   .carousel-btn {
     width: 36px;
@@ -997,6 +1012,14 @@ button {
   align-items: center;
   transition: transform 0.15s ease;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  will-change: transform;
+}
+
+@media (hover: none) {
+  .carousel .carousel-item .carousel-box {
+    transition: none;
+    will-change: auto;
+  }
 }
 
 .carousel .carousel-item .carousel-box img {
@@ -1371,14 +1394,44 @@ button {
 }
 
 @media (max-width: 768px) {
+  .footer {
+    margin-top: 3rem;
+    min-height: 8rem;
+  }
+
   .footerContent {
     grid-template-columns: 1fr;
-    gap: 2rem;
-    padding: 1.5rem;
+    gap: 1.5rem;
+    padding: 1.25rem;
   }
 
   .footerLinks {
-    gap: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .footerGroup b {
+    font-size: 0.8rem;
+  }
+
+  .footerGroup a {
+    font-size: 0.7rem;
+  }
+
+  .footerLogo {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    margin-top: 2rem;
+    min-height: 6rem;
+  }
+
+  .footerContent {
+    gap: 1rem;
+    padding: 1rem;
   }
 }
 
