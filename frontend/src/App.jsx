@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import {
   cancelBooking,
@@ -13,10 +13,11 @@ import {
 import ErrorBoundary from "./components/ErrorBoundary";
 import UserPage from "./components/UserPage";
 import RoomsPage from "./components/RoomsPage";
-import NearbyPage from "./components/NearbyPage";
-import AdminPage from "./components/AdminPage";
-import AdminLoginPage from "./components/AdminLoginPage";
 import Footer from "./components/Footer";
+
+const NearbyPage = lazy(() => import("./components/NearbyPage"));
+const AdminPage = lazy(() => import("./components/AdminPage"));
+const AdminLoginPage = lazy(() => import("./components/AdminLoginPage"));
 
 function App() {
   const [rooms, setRooms] = useState([]);
@@ -478,13 +479,14 @@ function App() {
             }
           />
           <Route path="/rooms" element={<RoomsPage rooms={rooms} />} />
-          <Route path="/nearby" element={<NearbyPage />} />
+          <Route path="/nearby" element={<Suspense fallback={<div className="pageLoading" />}><NearbyPage /></Suspense>} />
           <Route
             path="/admin"
             element={
               !authChecked ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#64748b" }}>Checking auth…</div>
               ) : adminAuthed ? (
+              <Suspense fallback={<div className="pageLoading" />}>
               <AdminPage
                 rooms={rooms}
                 bookings={bookings}
@@ -504,8 +506,11 @@ function App() {
                 }
                 onRoomUpdate={handleRoomUpdate}
               />
+              </Suspense>
               ) : (
+                <Suspense fallback={<div className="pageLoading" />}>
                 <AdminLoginPage onLogin={() => setAdminAuthed(true)} />
+                </Suspense>
               )
             }
           />

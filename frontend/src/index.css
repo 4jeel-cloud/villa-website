@@ -73,6 +73,15 @@ body {
   overflow-x: hidden;
 }
 
+.pageLoading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
 .homeContent {
   display: flex;
   flex-direction: column;
@@ -643,7 +652,7 @@ button {
 }
 
 .calendarCard .fc {
-  font-family: "Montserrat", sans-serif;
+  font-family: Inter, Segoe UI, Arial, sans-serif;
 }
 
 .calendarCard .fc .fc-toolbar-title {
