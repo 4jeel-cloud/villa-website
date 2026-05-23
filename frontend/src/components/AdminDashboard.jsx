@@ -3,31 +3,24 @@ import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
 
-const COLORS = {
-  cream: "#F7F3EE",
-  warmWhite: "#FDFAF7",
-  bark: "#2C1F14",
-  gold: "#B8935A",
-  muted: "#9A8878",
-  border: "#E2D9D0",
-  blue: "#378ADD",
-  green: "#1D9E75",
-  amber: "#D97706",
-  red: "#DC2626",
-  purple: "#7C3AED",
-  coral: "#D85A30",
-  targetGreen: "#639922",
-  lightBlue: "#B5D4F4",
+const C = {
+  emerald: "#059669",
+  emeraldLight: "#10b981",
+  emeraldDark: "#065f46",
+  emeraldBg: "#ecfdf5",
+  emeraldBgLight: "#d1fae5",
+  warmWhite: "#ffffff",
+  bg: "#f7f8fb",
+  bark: "#0f172a",
+  text: "#334155",
+  muted: "#94a3b8",
+  mid: "#64748b",
+  border: "#e2e8f0",
+  red: "#ef4444",
+  amber: "#f59e0b",
+  blue: "#3b82f6",
+  purple: "#8b5cf6",
 };
-
-function formatCurrency(n) {
-  return "₹" + Math.round(n).toLocaleString("en-IN");
-}
-
-function formatCurrencyShort(n) {
-  if (n >= 100000) return "₹" + Math.round(n / 1000) + "k";
-  return "₹" + Math.round(n).toLocaleString("en-IN");
-}
 
 function now() {
   const d = new Date();
@@ -48,45 +41,24 @@ function startOfYear(d) {
   return new Date(d.getFullYear(), 0, 1);
 }
 
-function prevPeriodStart(currentStart, range) {
-  const diff = currentStart.getTime() - (range === "week"
-    ? startOfWeek(now())
-    : range === "month"
-      ? startOfMonth(now())
-      : startOfYear(now())).getTime();
-  if (diff === 0) {
-    if (range === "week") return new Date(currentStart.getTime() - 7 * 86400000);
-    if (range === "month") {
-      const m = new Date(currentStart);
-      m.setMonth(m.getMonth() - 1);
-      return m;
-    }
-    const y = new Date(currentStart);
-    y.setFullYear(y.getFullYear() - 1);
-    return y;
-  }
-  return currentStart;
-}
-
 function toDateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function isSameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+function formatCurrency(n) {
+  return "₹" + Math.round(n).toLocaleString("en-IN");
 }
 
 export default function AdminDashboard({ bookings }) {
   const [range, setRange] = useState("month");
-  const revChartRef = useRef(null);
-  const revVsBookChartRef = useRef(null);
-  const roomChartRef = useRef(null);
-  const revInstances = useRef({});
-  const roomInstances = useRef({});
-  const revVsBookInstances = useRef({});
+  const revRef = useRef(null);
+  const roomRef = useRef(null);
+  const revVsRef = useRef(null);
+  const revChart = useRef(null);
+  const roomChart = useRef(null);
+  const revVsChart = useRef(null);
 
   const today = now();
-
   const rangeStart = range === "week" ? startOfWeek(today) : range === "month" ? startOfMonth(today) : startOfYear(today);
   let rangeEnd;
   if (range === "week") {
@@ -98,193 +70,142 @@ export default function AdminDashboard({ bookings }) {
     rangeEnd = new Date(rangeStart.getFullYear(), 11, 31);
   }
 
-  const prevStart = prevPeriodStart(rangeStart, range);
+  const prevStart = new Date(rangeStart.getTime() - (rangeEnd.getTime() - rangeStart.getTime()) - 86400000);
   const prevEnd = new Date(rangeStart.getTime() - 86400000);
 
-  const filteredBookings = useMemo(() => {
-    const startKey = toDateKey(rangeStart);
-    const endKey = toDateKey(rangeEnd);
-    return (bookings || []).filter((b) => {
-      if (b.status !== "confirmed") return false;
-      return b.checkIn <= endKey && b.checkOut >= startKey;
-    });
-  }, [bookings, range, rangeStart, rangeEnd]);
+  const filt = useMemo(() => {
+    const sk = toDateKey(rangeStart), ek = toDateKey(rangeEnd);
+    return (bookings || []).filter((b) => b.status === "confirmed" && b.checkIn <= ek && b.checkOut >= sk);
+  }, [bookings, rangeStart, rangeEnd]);
 
-  const prevBookings = useMemo(() => {
-    const startKey = toDateKey(prevStart);
-    const endKey = toDateKey(prevEnd);
-    return (bookings || []).filter((b) => {
-      if (b.status !== "confirmed") return false;
-      return b.checkIn <= endKey && b.checkOut >= startKey;
-    });
+  const prev = useMemo(() => {
+    const sk = toDateKey(prevStart), ek = toDateKey(prevEnd);
+    return (bookings || []).filter((b) => b.status === "confirmed" && b.checkIn <= ek && b.checkOut >= sk);
   }, [bookings, prevStart, prevEnd]);
 
-  function calcStats(list) {
-    let revenue = 0;
-    let bookingCount = 0;
-    let totalNights = 0;
-    let totalGuests = 0;
+  function calc(list) {
+    let rev = 0, cnt = 0, nights = 0, guests = 0;
     for (const b of list) {
-      bookingCount++;
-      const ci = new Date(b.checkIn + "T00:00:00");
-      const co = new Date(b.checkOut + "T00:00:00");
-      const nights = Math.max(1, Math.ceil((co - ci) / 86400000));
-      totalNights += nights;
-      totalGuests += parseInt(b.guests) || 0;
-      if (b.paymentStatus === "paid" || b.paymentStatus === "manual") {
-        revenue += parseFloat(b.amount) || 0;
-      }
+      cnt++;
+      const ci = new Date(b.checkIn + "T00:00:00"), co = new Date(b.checkOut + "T00:00:00");
+      nights += Math.max(1, Math.ceil((co - ci) / 86400000));
+      guests += parseInt(b.guests) || 0;
+      if (b.paymentStatus === "paid" || b.paymentStatus === "manual") rev += parseFloat(b.amount) || 0;
     }
-    return { revenue, bookingCount, totalNights, totalGuests };
+    return { rev, cnt, nights, guests };
   }
 
-  const stats = useMemo(() => calcStats(filteredBookings), [filteredBookings]);
-  const prevStats = useMemo(() => calcStats(prevBookings), [prevBookings]);
-  const avgNights = stats.bookingCount ? (stats.totalNights / stats.bookingCount) : 0;
-  const prevAvgNights = prevStats.bookingCount ? (prevStats.totalNights / prevStats.bookingCount) : 0;
-  const occupancy = stats.totalNights ? Math.min(100, Math.round((stats.totalNights / (range === "week" ? 14 : range === "month" ? 60 : 730)) * 100)) : 0;
+  const s = calc(filt), ps = calc(prev);
+  const avg = s.cnt ? s.nights / s.cnt : 0;
+  const pAvg = ps.cnt ? ps.nights / ps.cnt : 0;
+  const occ = s.nights ? Math.min(100, Math.round(s.nights / (range === "week" ? 14 : range === "month" ? 60 : 730) * 100)) : 0;
+  const pOcc = ps.nights ? Math.min(100, Math.round(ps.nights / (range === "week" ? 14 : range === "month" ? 60 : 730) * 100)) : 0;
 
-  function trend(current, previous) {
-    if (previous === 0 && current > 0) return { dir: "up", pct: "+100%" };
-    if (previous === 0) return { dir: "same", pct: "0%" };
-    const pct = Math.round(((current - previous) / previous) * 100);
-    if (pct > 0) return { dir: "up", pct: `+${pct}%` };
-    if (pct < 0) return { dir: "down", pct: `${pct}%` };
-    return { dir: "same", pct: "0%" };
+  function tr(c, p) {
+    if (p === 0 && c > 0) return "▲";
+    if (p === 0) return "–";
+    const pct = Math.round((c - p) / p * 100);
+    if (pct > 0) return `▲ +${pct}%`;
+    if (pct < 0) return `▼ ${pct}%`;
+    return "– 0%";
   }
-
-  function TrendIcon({ dir }) {
-    if (dir === "up") return <span style={{ color: COLORS.green }}>▲</span>;
-    if (dir === "down") return <span style={{ color: COLORS.red }}>▼</span>;
-    return <span style={{ color: COLORS.muted }}>–</span>;
-  }
-
-  const revenueTrend = trend(stats.revenue, prevStats.revenue);
-  const bookingsTrend = trend(stats.bookingCount, prevStats.bookingCount);
-  const occupancyTrend = trend(occupancy, prevStats.bookingCount ? Math.min(100, Math.round((prevStats.totalNights / (range === "week" ? 14 : range === "month" ? 60 : 730)) * 100)) : 0);
-  const avgNightsTrend = trend(avgNights, prevAvgNights);
-  const guestsTrend = trend(stats.totalGuests, prevStats.totalGuests);
 
   const metrics = [
-    { label: "Revenue", value: formatCurrency(stats.revenue), trend: revenueTrend, icon: "₹" },
-    { label: "Bookings", value: String(stats.bookingCount), trend: bookingsTrend, icon: "✓" },
-    { label: "Occupancy", value: occupancy + "%", trend: occupancyTrend, icon: "⌂" },
-    { label: "Avg nights", value: avgNights.toFixed(1), trend: avgNightsTrend, icon: "☾" },
-    { label: "Total guests", value: String(stats.totalGuests), trend: guestsTrend, icon: "👥" },
+    { label: "Revenue", value: formatCurrency(s.rev), trend: tr(s.rev, ps.rev) },
+    { label: "Bookings", value: String(s.cnt), trend: tr(s.cnt, ps.cnt) },
+    { label: "Occupancy", value: occ + "%", trend: tr(occ, pOcc) },
+    { label: "Avg nights", value: avg.toFixed(1), trend: tr(avg, pAvg) },
+    { label: "Total guests", value: String(s.guests), trend: tr(s.guests, ps.guests) },
   ];
 
   const statusCards = [
-    { label: "Confirmed", count: (bookings || []).filter((b) => b.status === "confirmed").length, color: COLORS.green, icon: "✓" },
-    { label: "Pending", count: (bookings || []).filter((b) => b.status === "pending" || b.status === "unpaid").length, color: COLORS.amber, icon: "◷" },
-    { label: "Checked in", count: (bookings || []).filter((b) => b.status === "confirmed" && b.checkIn <= toDateKey(today) && b.checkOut > toDateKey(today)).length, color: COLORS.blue, icon: "→" },
-    { label: "Cancelled", count: (bookings || []).filter((b) => b.status === "cancelled").length, color: COLORS.red, icon: "✕" },
-    { label: "Checkout today", count: (bookings || []).filter((b) => b.status === "confirmed" && b.checkOut === toDateKey(today)).length, color: COLORS.purple, icon: "←" },
+    { label: "Confirmed", count: (bookings || []).filter((b) => b.status === "confirmed").length, bg: C.emeraldBg, color: C.emeraldDark },
+    { label: "Pending", count: (bookings || []).filter((b) => b.status === "pending" || b.status === "unpaid").length, bg: "#fffbeb", color: "#92400e" },
+    { label: "Checked in", count: (bookings || []).filter((b) => b.status === "confirmed" && b.checkIn <= toDateKey(today) && b.checkOut > toDateKey(today)).length, bg: "#eff6ff", color: "#1e40af" },
+    { label: "Cancelled", count: (bookings || []).filter((b) => b.status === "cancelled").length, bg: "#fef2f2", color: "#991b1b" },
+    { label: "Checkout today", count: (bookings || []).filter((b) => b.status === "confirmed" && b.checkOut === toDateKey(today)).length, bg: "#faf5ff", color: "#6b21a8" },
   ];
 
-  const revenueData = useMemo(() => {
-    if (range === "week") {
-      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      return days.map((d) => {
-        const dayBookings = filteredBookings.filter((b) => {
-          const ci = new Date(b.checkIn + "T00:00:00");
-          const co = new Date(b.checkOut + "T00:00:00");
-          return ci <= new Date(rangeStart.getTime() + days.indexOf(d) * 86400000) && co > new Date(rangeStart.getTime() + days.indexOf(d) * 86400000);
-        });
-        return dayBookings.reduce((s, b) => s + (parseFloat(b.amount) || 0), 0);
-      });
-    }
-    if (range === "month") {
-      const weeks = ["Wk1", "Wk2", "Wk3", "Wk4", "Wk5"];
-      return weeks.map((_, wi) => {
-        const ws = new Date(rangeStart.getTime() + wi * 7 * 86400000);
-        const we = new Date(ws.getTime() + 6 * 86400000);
-        return filteredBookings.filter((b) => b.checkIn <= toDateKey(we) && b.checkOut >= toDateKey(ws))
-          .reduce((s, b) => s + (parseFloat(b.amount) || 0), 0);
-      });
-    }
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return months.map((_, mi) => {
-      const ms = new Date(rangeStart.getFullYear(), mi, 1);
-      const me = new Date(rangeStart.getFullYear(), mi + 1, 0);
-      return filteredBookings.filter((b) => b.checkIn <= toDateKey(me) && b.checkOut >= toDateKey(ms))
-        .reduce((s, b) => s + (parseFloat(b.amount) || 0), 0);
-    });
-  }, [filteredBookings, range, rangeStart]);
+  const labels = range === "week" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : range === "month" ? ["Wk1","Wk2","Wk3","Wk4","Wk5"] : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  const bookingsCountData = useMemo(() => {
+  const revData = useMemo(() => labels.map((_, i) => {
+    let start, end;
     if (range === "week") {
-      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      return days.map((_, di) => {
-        const d = new Date(rangeStart.getTime() + di * 86400000);
-        const dk = toDateKey(d);
-        return filteredBookings.filter((b) => b.checkIn <= dk && b.checkOut > dk).length;
-      });
+      start = new Date(rangeStart.getTime() + i * 86400000);
+      end = new Date(start);
+      end.setDate(end.getDate() + 1);
+    } else if (range === "month") {
+      start = new Date(rangeStart.getTime() + i * 7 * 86400000);
+      end = new Date(start);
+      end.setDate(end.getDate() + 6);
+    } else {
+      start = new Date(rangeStart.getFullYear(), i, 1);
+      end = new Date(rangeStart.getFullYear(), i + 1, 0);
     }
-    if (range === "month") {
-      const weeks = ["Wk1", "Wk2", "Wk3", "Wk4", "Wk5"];
-      return weeks.map((_, wi) => {
-        const ws = new Date(rangeStart.getTime() + wi * 7 * 86400000);
-        const we = new Date(ws.getTime() + 6 * 86400000);
-        return filteredBookings.filter((b) => b.checkIn <= toDateKey(we) && b.checkOut >= toDateKey(ws)).length;
-      });
-    }
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return months.map((_, mi) => {
-      const ms = new Date(rangeStart.getFullYear(), mi, 1);
-      const me = new Date(rangeStart.getFullYear(), mi + 1, 0);
-      return filteredBookings.filter((b) => b.checkIn <= toDateKey(me) && b.checkOut >= toDateKey(ms)).length;
-    });
-  }, [filteredBookings, range, rangeStart]);
+    const sk = toDateKey(start), ek = toDateKey(end);
+    return filt.filter((b) => b.checkIn <= ek && b.checkOut >= sk).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
+  }), [filt, labels, rangeStart, range]);
 
-  const roomLabels = ["Standard Room", "Deluxe Room", "Family Room", "Entire Homestay"];
-  const roomPcts = useMemo(() => {
-    const counts = [0, 0, 0, 0];
-    for (const b of filteredBookings) {
-      const idx = roomLabels.findIndex((r) => b.roomName?.includes(r.split(" ")[0]));
-      if (idx >= 0) counts[idx]++;
-      else counts[0]++;
+  const bkgData = useMemo(() => labels.map((_, i) => {
+    let start, end;
+    if (range === "week") {
+      start = new Date(rangeStart.getTime() + i * 86400000);
+      end = new Date(start);
+      end.setDate(end.getDate() + 1);
+    } else if (range === "month") {
+      start = new Date(rangeStart.getTime() + i * 7 * 86400000);
+      end = new Date(start);
+      end.setDate(end.getDate() + 6);
+    } else {
+      start = new Date(rangeStart.getFullYear(), i, 1);
+      end = new Date(rangeStart.getFullYear(), i + 1, 0);
     }
-    const total = counts.reduce((s, c) => s + c, 0);
-    return total ? counts.map((c) => Math.round((c / total) * 100)) : [25, 35, 22, 18];
-  }, [filteredBookings]);
+    const sk = toDateKey(start), ek = toDateKey(end);
+    return filt.filter((b) => b.checkIn <= ek && b.checkOut >= sk).length;
+  }), [filt, labels, rangeStart, range]);
+
+  const rLabels = ["Standard Room","Deluxe Room","Family Room","Entire Homestay"];
+  const rColors = [C.emerald, C.emeraldLight, C.blue, C.purple];
+  const rPcts = useMemo(() => {
+    const c = [0,0,0,0];
+    for (const b of filt) {
+      const idx = rLabels.findIndex((r) => b.roomName?.includes(r.split(" ")[0]));
+      if (idx >= 0) c[idx]++; else c[0]++;
+    }
+    const t = c.reduce((a, b) => a + b, 0);
+    return t ? c.map((v) => Math.round(v / t * 100)) : [25, 35, 22, 18];
+  }, [filt]);
 
   const occDays = useMemo(() => {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
     return days.map((_, di) => {
-      const d = new Date(rangeStart.getTime() + di * 86400000);
-      const dk = toDateKey(d);
-      const occupied = filteredBookings.filter((b) => b.checkIn <= dk && b.checkOut > dk).length;
-      return Math.min(100, Math.round((occupied / 2) * 100));
+      const d = toDateKey(new Date(rangeStart.getTime() + di * 86400000));
+      const occupied = filt.filter((b) => b.checkIn <= d && b.checkOut > d).length;
+      return Math.min(100, Math.round(occupied / 2 * 100));
     });
-  }, [filteredBookings, rangeStart]);
-
-  const revenueLabels = range === "week"
-    ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    : range === "month"
-      ? ["Wk1", "Wk2", "Wk3", "Wk4", "Wk5"]
-      : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  }, [filt, rangeStart]);
 
   useEffect(() => {
-    if (!revChartRef.current) return;
-    if (revInstances.current.chart) revInstances.current.chart.destroy();
-    const ctx = revChartRef.current.getContext("2d");
-    revInstances.current.chart = new Chart(ctx, {
+    if (!revRef.current) return;
+    if (revChart.current) revChart.current.destroy();
+    const ctx = revRef.current.getContext("2d");
+    revChart.current = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: revenueLabels,
+        labels,
         datasets: [
           {
             label: "Revenue",
-            data: revenueData,
-            backgroundColor: COLORS.blue,
-            borderRadius: 4,
-            barPercentage: 0.65,
+            data: revData,
+            backgroundColor: C.emerald,
+            borderRadius: 3,
+            barPercentage: 0.6,
           },
           {
             label: "Target",
-            data: revenueData.map(() => 45000),
+            data: revData.map(() => 45000),
             type: "line",
-            borderColor: COLORS.targetGreen,
+            borderColor: C.emeraldLight,
             borderDash: [5, 4],
             borderWidth: 2,
             pointRadius: 0,
@@ -297,366 +218,133 @@ export default function AdminDashboard({ bookings }) {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: (v) => "₹" + Math.round(v / 1000) + "k",
-            },
-          },
-          x: {
-            ticks: { autoSkip: false, maxRotation: 45, font: { size: 11 } },
-          },
+          y: { beginAtZero: true, border: { display: false }, grid: { color: "#f1f5f9" }, ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k", font: { size: 11 } } },
+          x: { border: { display: false }, grid: { display: false }, ticks: { font: { size: 11 } } },
         },
       },
     });
-    return () => {
-      if (revInstances.current.chart) revInstances.current.chart.destroy();
-    };
-  }, [revenueData, revenueLabels]);
+    return () => revChart.current?.destroy();
+  }, [revData, labels]);
 
   useEffect(() => {
-    if (!roomChartRef.current) return;
-    if (roomInstances.current.chart) roomInstances.current.chart.destroy();
-    const ctx = roomChartRef.current.getContext("2d");
-    roomInstances.current.chart = new Chart(ctx, {
+    if (!roomRef.current) return;
+    if (roomChart.current) roomChart.current.destroy();
+    const ctx = roomRef.current.getContext("2d");
+    roomChart.current = new Chart(ctx, {
       type: "doughnut",
-      data: {
-        labels: roomLabels,
-        datasets: [
-          {
-            data: roomPcts,
-            backgroundColor: [COLORS.blue, COLORS.green, COLORS.amber, COLORS.purple],
-            borderWidth: 0,
-          },
-        ],
-      },
+      data: { labels: rLabels, datasets: [{ data: rPcts, backgroundColor: rColors, borderWidth: 0 }] },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "65%",
+        responsive: true, maintainAspectRatio: false,
+        cutout: "70%",
         plugins: { legend: { display: false } },
       },
     });
-    return () => {
-      if (roomInstances.current.chart) roomInstances.current.chart.destroy();
-    };
-  }, [roomPcts]);
+    return () => roomChart.current?.destroy();
+  }, [rPcts]);
 
   useEffect(() => {
-    if (!revVsBookChartRef.current) return;
-    if (revVsBookInstances.current.chart) revVsBookInstances.current.chart.destroy();
-    const ctx = revVsBookChartRef.current.getContext("2d");
-    revVsBookInstances.current.chart = new Chart(ctx, {
+    if (!revVsRef.current) return;
+    if (revVsChart.current) revVsChart.current.destroy();
+    const ctx = revVsRef.current.getContext("2d");
+    revVsChart.current = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: revenueLabels,
+        labels,
         datasets: [
-          {
-            label: "Revenue",
-            data: revenueData,
-            backgroundColor: COLORS.blue,
-            borderRadius: 4,
-            barPercentage: 0.6,
-            yAxisID: "y",
-          },
-          {
-            label: "Bookings",
-            data: bookingsCountData,
-            type: "line",
-            borderColor: COLORS.coral,
-            borderDash: [4, 3],
-            borderWidth: 2,
-            pointBackgroundColor: COLORS.coral,
-            pointRadius: 4,
-            fill: false,
-            yAxisID: "y1",
-          },
+          { label: "Revenue", data: revData, backgroundColor: C.emerald, borderRadius: 3, barPercentage: 0.6, yAxisID: "y" },
+          { label: "Bookings", data: bkgData, type: "line", borderColor: C.amber, borderDash: [4,3], borderWidth: 2, pointBackgroundColor: C.amber, pointRadius: 3, fill: false, yAxisID: "y1" },
         ],
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: {
-            beginAtZero: true,
-            position: "left",
-            ticks: {
-              callback: (v) => "₹" + Math.round(v / 1000) + "k",
-            },
-          },
-          y1: {
-            beginAtZero: true,
-            position: "right",
-            grid: { drawOnChartArea: false },
-            ticks: {
-              callback: (v) => Math.round(v),
-            },
-          },
-          x: {
-            ticks: { autoSkip: false, maxRotation: 45, font: { size: 11 } },
-          },
+          y: { beginAtZero: true, position: "left", border: { display: false }, grid: { color: "#f1f5f9" }, ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k", font: { size: 11 } } },
+          y1: { beginAtZero: true, position: "right", grid: { drawOnChartArea: false }, border: { display: false }, ticks: { font: { size: 11 } } },
+          x: { border: { display: false }, grid: { display: false }, ticks: { font: { size: 11 } } },
         },
       },
     });
-    return () => {
-      if (revVsBookInstances.current.chart) revVsBookInstances.current.chart.destroy();
-    };
-  }, [revenueData, bookingsCountData, revenueLabels]);
-
-  const barColor = (pct) => {
-    if (pct >= 80) return COLORS.green;
-    if (pct >= 60) return COLORS.blue;
-    return COLORS.lightBlue;
-  };
-
-  const s = {
-    container: {
-      fontFamily: "'DM Sans', Inter, Arial, sans-serif",
-      color: COLORS.bark,
-      padding: "24px 0",
-    },
-    tabs: {
-      display: "flex",
-      gap: 8,
-      marginBottom: 20,
-    },
-    tab: (active) => ({
-      padding: "8px 20px",
-      border: active ? "none" : "0.5px solid " + COLORS.border,
-      borderRadius: 8,
-      background: active ? COLORS.gold : COLORS.warmWhite,
-      color: active ? "#fff" : COLORS.muted,
-      fontWeight: 500,
-      fontSize: 14,
-      cursor: "pointer",
-      fontFamily: "inherit",
-      minHeight: 44,
-    }),
-    metricGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-      gap: 10,
-      marginBottom: 20,
-    },
-    metricCard: {
-      background: COLORS.cream,
-      borderRadius: 8,
-      padding: "14px 16px",
-    },
-    metricIcon: {
-      color: COLORS.muted,
-      fontSize: 13,
-      marginBottom: 4,
-    },
-    metricValue: {
-      fontSize: 24,
-      fontWeight: 500,
-      lineHeight: 1.2,
-      marginBottom: 4,
-    },
-    trend: (dir) => ({
-      fontSize: 12,
-      color: dir === "up" ? COLORS.green : dir === "down" ? COLORS.red : COLORS.muted,
-      display: "flex",
-      alignItems: "center",
-      gap: 4,
-    }),
-    statusGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
-      gap: 10,
-      marginBottom: 24,
-    },
-    statusCard: {
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      background: COLORS.warmWhite,
-      border: "0.5px solid " + COLORS.border,
-      borderRadius: 8,
-      padding: "12px 14px",
-    },
-    statusIcon: (color) => ({
-      width: 36,
-      height: 36,
-      borderRadius: 8,
-      background: color,
-      color: "#fff",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 16,
-      fontWeight: 700,
-      flexShrink: 0,
-    }),
-    statusText: {
-      display: "flex",
-      flexDirection: "column",
-    },
-    statusCount: {
-      fontSize: 18,
-      fontWeight: 500,
-      lineHeight: 1.2,
-    },
-    statusLabel: {
-      fontSize: 11,
-      color: COLORS.muted,
-    },
-    chartGrid: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 16,
-    },
-    chartFull: {
-      gridColumn: "1 / -1",
-    },
-    chartCard: {
-      background: COLORS.warmWhite,
-      border: "0.5px solid " + COLORS.border,
-      borderRadius: 12,
-      padding: "16px 16px 8px",
-    },
-    chartTitle: {
-      fontFamily: "'Cormorant Garamond', serif",
-      fontWeight: 400,
-      fontSize: 20,
-      margin: "0 0 12px",
-      color: COLORS.bark,
-    },
-    legendRow: {
-      display: "flex",
-      gap: 16,
-      marginBottom: 8,
-      flexWrap: "wrap",
-    },
-    legendItem: {
-      display: "flex",
-      alignItems: "center",
-      gap: 6,
-      fontSize: 12,
-      color: COLORS.muted,
-    },
-    legendDot: (color) => ({
-      width: 10,
-      height: 10,
-      borderRadius: "50%",
-      background: color,
-      flexShrink: 0,
-    }),
-    occRow: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 6,
-    },
-    occDay: {
-      width: 28,
-      fontSize: 12,
-      color: COLORS.muted,
-      flexShrink: 0,
-    },
-    occBarBg: {
-      flex: 1,
-      height: 18,
-      background: COLORS.cream,
-      borderRadius: 4,
-      overflow: "hidden",
-    },
-    occBar: (pct, color) => ({
-      width: pct + "%",
-      height: "100%",
-      background: color,
-      borderRadius: 4,
-      transition: "width 0.3s ease",
-    }),
-    occPct: {
-      width: 36,
-      fontSize: 12,
-      fontWeight: 500,
-      textAlign: "right" },
-  };
+    return () => revVsChart.current?.destroy();
+  }, [revData, bkgData, labels]);
 
   return (
-    <div style={s.container}>
-      <div style={s.tabs}>
-        {["week", "month", "year"].map((r) => (
-          <button key={r} style={s.tab(range === r)} onClick={() => setRange(r)}>
-            This {r.charAt(0).toUpperCase() + r.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      <div style={s.metricGrid}>
-        {metrics.map((m) => (
-          <div key={m.label} style={s.metricCard}>
-            <div style={s.metricIcon}>{m.icon} {m.label}</div>
-            <div style={s.metricValue}>{m.value}</div>
-            <div style={s.trend(m.trend.dir)}>
-              <TrendIcon dir={m.trend.dir} />
-              {m.trend.pct} vs last period
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={s.statusGrid}>
-        {statusCards.map((c) => (
-          <div key={c.label} style={s.statusCard}>
-            <div style={s.statusIcon(c.color)}>{c.icon}</div>
-            <div style={s.statusText}>
-              <span style={s.statusCount}>{c.count}</span>
-              <span style={s.statusLabel}>{c.label}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
+    <div style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, maxWidth: 1100, margin: "0 auto", padding: "24px 0" }}>
       <style>{`
-        @media (max-width: 768px) {
-          .dashChartGrid { grid-template-columns: 1fr !important; }
+        @media (max-width: 700px) {
+          .dash-grid { grid-template-columns: 1fr !important; }
+          .dash-full { grid-column: 1 !important; }
+          .dash-metrics { grid-template-columns: repeat(2, 1fr) !important; }
+          .dash-status { grid-template-columns: repeat(3, 1fr) !important; }
         }
-        .dashChartGrid > div[data-full="true"] { grid-column: 1 / -1; }
       `}</style>
 
-      <div className="dashChartGrid" style={s.chartGrid}>
-        <div data-full="true" style={s.chartCard}>
-          <h3 style={s.chartTitle}>Revenue over time</h3>
-          <canvas id="revChart" ref={revChartRef} role="img" aria-label="Revenue chart" style={{ width: "100%", height: 220 }}>Revenue chart</canvas>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {["week","month","year"].map((r) => (
+          <button key={r} onClick={() => setRange(r)} style={{
+            padding: "8px 20px", borderRadius: 6, fontWeight: 500, fontSize: 13, fontFamily: "inherit", cursor: "pointer", border: "none", minHeight: 40,
+            background: range === r ? C.emerald : C.bg, color: range === r ? "#fff" : C.mid,
+          }}>This {r.charAt(0).toUpperCase() + r.slice(1)}</button>
+        ))}
+      </div>
+
+      <div className="dash-metrics" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 20 }}>
+        {metrics.map((m) => (
+          <div key={m.label} style={{ background: C.bg, borderRadius: 8, padding: "14px 14px 12px" }}>
+            <div style={{ fontSize: 12, color: C.mid, marginBottom: 2 }}>{m.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, marginBottom: 6 }}>{m.value}</div>
+            <div style={{ fontSize: 11, color: m.trend.includes("▲") ? C.emerald : m.trend.includes("▼") ? C.red : C.mid }}>{m.trend}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="dash-status" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 24 }}>
+        {statusCards.map((c) => (
+          <div key={c.label} style={{ background: c.bg, borderRadius: 8, padding: "10px 14px" }}>
+            <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: c.color }}>{c.count}</div>
+            <div style={{ fontSize: 12, color: c.color, opacity: 0.8 }}>{c.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="dash-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div className="dash-full" style={{ gridColumn: "1 / -1", background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
+          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Revenue over time</h3>
+          <canvas ref={revRef} style={{ width: "100%", height: 240 }} />
         </div>
 
-        <div style={s.chartCard}>
-          <h3 style={s.chartTitle}>Bookings by room</h3>
-          <div style={s.legendRow}>
-            {roomLabels.map((l, i) => (
-              <div key={l} style={s.legendItem}>
-                <div style={s.legendDot([COLORS.blue, COLORS.green, COLORS.amber, COLORS.purple][i])} />
-                {l} {roomPcts[i]}%
+        <div style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
+          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Bookings by room</h3>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
+            {rLabels.map((l, i) => (
+              <div key={l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.mid }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: rColors[i], flexShrink: 0 }} />
+                {l} {rPcts[i]}%
               </div>
             ))}
           </div>
-          <canvas id="roomChart" ref={roomChartRef} role="img" aria-label="Bookings by room chart" style={{ width: "100%", height: 180 }}>Bookings by room</canvas>
+          <canvas ref={roomRef} style={{ width: "100%", height: 190 }} />
         </div>
 
-        <div style={s.chartCard}>
-          <h3 style={s.chartTitle}>Occupancy by day</h3>
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => {
+        <div style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
+          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 12px", color: C.bark }}>Occupancy by day</h3>
+          {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d, i) => {
             const pct = occDays[i];
             return (
-              <div key={d} style={s.occRow}>
-                <span style={s.occDay}>{d}</span>
-                <div style={s.occBarBg}>
-                  <div style={s.occBar(pct, barColor(pct))} />
+              <div key={d} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                <span style={{ width: 28, fontSize: 12, color: C.mid, flexShrink: 0 }}>{d}</span>
+                <div style={{ flex: 1, height: 16, background: C.bg, borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: pct + "%", height: "100%", background: pct >= 80 ? C.emerald : pct >= 50 ? C.emeraldLight : "#d1fae5", borderRadius: 3, transition: "width 0.3s" }} />
                 </div>
-                <span style={s.occPct}>{pct}%</span>
+                <span style={{ width: 34, fontSize: 12, fontWeight: 500, textAlign: "right" }}>{pct}%</span>
               </div>
             );
           })}
         </div>
 
-        <div data-full="true" style={s.chartCard}>
-          <h3 style={s.chartTitle}>Revenue vs bookings</h3>
-          <canvas id="revVsBookChart" ref={revVsBookChartRef} role="img" aria-label="Revenue vs bookings chart" style={{ width: "100%", height: 220 }}>Revenue vs bookings</canvas>
+        <div className="dash-full" style={{ gridColumn: "1 / -1", background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
+          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Revenue vs bookings</h3>
+          <canvas ref={revVsRef} style={{ width: "100%", height: 240 }} />
         </div>
       </div>
     </div>
