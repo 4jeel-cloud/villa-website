@@ -338,7 +338,15 @@ function App() {
 
   const handleAdminDateClick = (clickInfo) => {
     const clickedDate = clickInfo.dateStr;
-    setAdminForm((prev) => ({ ...prev, checkIn: clickedDate }));
+    setAdminForm((prev) => {
+      if (!prev.checkIn) return { ...prev, checkIn: clickedDate };
+      if (prev.checkIn && !prev.checkOut) {
+        const ci = new Date(prev.checkIn + "T00:00:00");
+        const co = new Date(clickedDate + "T00:00:00");
+        if (co > ci) return { ...prev, checkOut: clickedDate };
+      }
+      return { ...prev, checkIn: clickedDate, checkOut: "" };
+    });
   };
 
   const handleAdminBooking = async (event) => {

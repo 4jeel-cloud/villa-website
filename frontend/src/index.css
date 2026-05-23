@@ -323,9 +323,6 @@ body {
   grid-template-columns: 2fr auto 1.2fr;
   gap: 0;
   align-items: start;
-  max-width: 1200px;
-  margin: 24px auto;
-  padding: 0 16px;
 }
 
 .bookingCalendar {

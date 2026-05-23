@@ -85,7 +85,7 @@ export default function AdminPage({
       (b) => clickedDate >= b.checkIn && clickedDate < b.checkOut && b.status === "confirmed"
     );
     if (foundBooking) {
-      setSelectedAdminBooking((prev) => prev?.id === foundBooking.id ? null : foundBooking);
+      setSelectedAdminBooking(foundBooking);
     } else {
       setSelectedAdminBooking(null);
       onAdminDateClick(clickInfo);
@@ -236,7 +236,7 @@ export default function AdminPage({
                     </div>
                     <div className="formField">
                       <label className="formLabel">Check-out</label>
-                      <input className="formInput" type="date" value={adminForm.checkOut} onChange={(e) => onAdminFormChange({ checkOut: e.target.value })} required />
+                      <input className="formInput" value={adminForm.checkOut} placeholder="Click date on calendar" readOnly />
                     </div>
                   </div>
                   <div className="formField">
