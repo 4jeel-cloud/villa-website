@@ -116,7 +116,7 @@ function App() {
     try {
       setLoading(true);
       let bookingsData = [];
-      if (adminToken) try { bookingsData = await getBookings(adminToken); } catch { }
+      if (adminToken) try { bookingsData = await getBookings(adminToken); } catch (e) { console.warn("Admin token invalid or expired", e); }
       const [roomsData, availabilityData] = await Promise.all([
         getRooms(),
         getAvailability()
@@ -247,6 +247,10 @@ function App() {
           },
         };
 
+        if (typeof window.Razorpay === "undefined") {
+          showNotification("error", "Payment system still loading. Please try again.");
+          return;
+        }
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {

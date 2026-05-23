@@ -262,15 +262,7 @@ export default function AdminDashboard({ bookings }) {
     ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     : range === "month"
       ? ["Wk1", "Wk2", "Wk3", "Wk4", "Wk5"]
-      : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dev"];
-
-  useEffect(() => {
-    const ids = ["revChart", "roomChart", "revVsBookChart"];
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) el.getContext("2d");
-    });
-  }, []);
+      : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   useEffect(() => {
     if (!revChartRef.current) return;
