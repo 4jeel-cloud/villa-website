@@ -276,7 +276,7 @@ export default function AdminPage({
         </div>
 
         <h3>Update Room Price & Pictures</h3>
-        <div className="list">
+        <div className="list" style={{ gridTemplateColumns: "1fr 1fr" }}>
           {rooms.map((room) => (
             <div className="listItem" key={room.id}>
               <p><strong>{room.name}</strong> — ₹{(roomSettings[room.id]?.basePrice ?? room.basePrice).toLocaleString("en-IN")}/night</p>
