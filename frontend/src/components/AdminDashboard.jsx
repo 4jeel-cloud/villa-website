@@ -310,7 +310,7 @@ export default function AdminDashboard({ bookings }) {
       <div className="dash-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <div className="dash-full" style={{ gridColumn: "1 / -1", background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
           <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Revenue over time</h3>
-          <canvas ref={revRef} style={{ width: "100%", height: 240 }} />
+          <div style={{ position: "relative", height: 240 }}><canvas ref={revRef} style={{ width: "100%", height: "100%" }} /></div>
         </div>
 
         <div style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
@@ -323,7 +323,7 @@ export default function AdminDashboard({ bookings }) {
               </div>
             ))}
           </div>
-          <canvas ref={roomRef} style={{ width: "100%", height: 190 }} />
+          <div style={{ position: "relative", height: 190 }}><canvas ref={roomRef} style={{ width: "100%", height: "100%" }} /></div>
         </div>
 
         <div style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
@@ -344,7 +344,7 @@ export default function AdminDashboard({ bookings }) {
 
         <div className="dash-full" style={{ gridColumn: "1 / -1", background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
           <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Revenue vs bookings</h3>
-          <canvas ref={revVsRef} style={{ width: "100%", height: 240 }} />
+          <div style={{ position: "relative", height: 240 }}><canvas ref={revVsRef} style={{ width: "100%", height: "100%" }} /></div>
         </div>
       </div>
     </div>
