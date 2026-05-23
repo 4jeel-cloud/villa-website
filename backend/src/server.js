@@ -40,7 +40,8 @@ const adminLimiter = rateLimit({
 app.use("/api/", apiLimiter);
 app.use("/admin/", adminLimiter);
 
-const MANAGER_EMAIL = process.env.MANAGER_EMAIL || "manager@homestay.local";
+const MANAGER_EMAILS = (process.env.MANAGER_EMAIL || "manager@homestay.local")
+  .split(",").map((s) => s.trim()).filter(Boolean);
 const PORT = process.env.PORT || 4000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "";
@@ -195,11 +196,13 @@ app.post("/bookings", async (req, res) => {
         guestName, roomName: booking.roomName, checkIn, checkOut, guests,
       }),
     });
-    sendBookingEmail({
-      to: MANAGER_EMAIL,
-      subject: "New Booking Alert – Creek View Villa",
-      html: emailTemplates.managerAlert({ guestName, roomName: booking.roomName, checkIn, checkOut }),
-    });
+    for (const email of MANAGER_EMAILS) {
+      sendBookingEmail({
+        to: email,
+        subject: "New Booking Alert – Creek View Villa",
+        html: emailTemplates.managerAlert({ guestName, roomName: booking.roomName, checkIn, checkOut }),
+      });
+    }
 
     return res.status(201).json(booking);
   } catch (err) {
