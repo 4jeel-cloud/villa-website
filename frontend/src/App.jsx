@@ -339,6 +339,8 @@ function App() {
   const handleAdminDateClick = (clickInfo) => {
     const clickedDate = clickInfo.dateStr;
     setAdminForm((prev) => {
+      if (prev.checkIn === clickedDate) return { ...prev, checkIn: "", checkOut: "" };
+      if (prev.checkOut === clickedDate) return { ...prev, checkOut: "" };
       if (!prev.checkIn) return { ...prev, checkIn: clickedDate };
       if (prev.checkIn && !prev.checkOut) {
         const ci = new Date(prev.checkIn + "T00:00:00");

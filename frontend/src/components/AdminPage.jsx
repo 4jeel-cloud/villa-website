@@ -81,6 +81,11 @@ export default function AdminPage({
 
   const handleDateClick = (clickInfo) => {
     const clickedDate = clickInfo.dateStr;
+    if (adminForm.checkIn) {
+      setSelectedAdminBooking(null);
+      onAdminDateClick(clickInfo);
+      return;
+    }
     const foundBooking = bookings.find(
       (b) => clickedDate >= b.checkIn && clickedDate < b.checkOut && b.status === "confirmed"
     );
