@@ -3,6 +3,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { toDateKey } from "../utils";
+import AdminDashboard from "./AdminDashboard";
 
 export default function AdminPage({
   rooms,
@@ -102,6 +103,8 @@ export default function AdminPage({
 
   return (
     <>
+      <AdminDashboard bookings={bookings} />
+
       <section className="card">
         <h2>Admin Dashboard</h2>
 
