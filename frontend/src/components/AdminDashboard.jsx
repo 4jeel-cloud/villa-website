@@ -226,7 +226,7 @@ export default function AdminDashboard({ bookings }) {
   }, [revData, bkgData, labels]);
 
   return (
-    <div style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, width: "100%", padding: "24px 0" }}>
+    <div style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, width: "100%", padding: "24px 20px" }}>
       <style>{`
         @media (max-width: 700px) {
           .dash-grid { grid-template-columns: 1fr !important; }
