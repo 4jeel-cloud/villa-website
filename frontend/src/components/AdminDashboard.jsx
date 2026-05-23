@@ -51,10 +51,8 @@ function formatCurrency(n) {
 
 export default function AdminDashboard({ bookings }) {
   const [range, setRange] = useState("month");
-  const revRef = useRef(null);
   const roomRef = useRef(null);
   const revVsRef = useRef(null);
-  const revChart = useRef(null);
   const roomChart = useRef(null);
   const revVsChart = useRef(null);
 
@@ -186,47 +184,6 @@ export default function AdminDashboard({ bookings }) {
   }, [filt, rangeStart]);
 
   useEffect(() => {
-    if (!revRef.current) return;
-    if (revChart.current) revChart.current.destroy();
-    const ctx = revRef.current.getContext("2d");
-    revChart.current = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Revenue",
-            data: revData,
-            backgroundColor: C.emerald,
-            borderRadius: 3,
-            barPercentage: 0.6,
-          },
-          {
-            label: "Target",
-            data: revData.map(() => 45000),
-            type: "line",
-            borderColor: C.emeraldLight,
-            borderDash: [5, 4],
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: false,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, border: { display: false }, grid: { color: "#f1f5f9" }, ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k", font: { size: 11 } } },
-          x: { border: { display: false }, grid: { display: false }, ticks: { font: { size: 11 } } },
-        },
-      },
-    });
-    return () => revChart.current?.destroy();
-  }, [revData, labels]);
-
-  useEffect(() => {
     if (!roomRef.current) return;
     if (roomChart.current) roomChart.current.destroy();
     const ctx = roomRef.current.getContext("2d");
@@ -269,7 +226,7 @@ export default function AdminDashboard({ bookings }) {
   }, [revData, bkgData, labels]);
 
   return (
-    <div style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, maxWidth: 1100, margin: "0 auto", padding: "24px 0" }}>
+    <div style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, width: "100%", padding: "24px 0" }}>
       <style>{`
         @media (max-width: 700px) {
           .dash-grid { grid-template-columns: 1fr !important; }
@@ -308,11 +265,6 @@ export default function AdminDashboard({ bookings }) {
       </div>
 
       <div className="dash-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div className="dash-full" style={{ gridColumn: "1 / -1", background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
-          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Revenue over time</h3>
-          <div style={{ position: "relative", height: 240 }}><canvas ref={revRef} style={{ width: "100%", height: "100%" }} /></div>
-        </div>
-
         <div style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
           <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Bookings by room</h3>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
