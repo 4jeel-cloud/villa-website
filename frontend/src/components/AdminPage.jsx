@@ -236,7 +236,7 @@ export default function AdminPage({
                     </div>
                     <div className="formField">
                       <label className="formLabel">Check-out</label>
-                      <input className="formInput" value={adminForm.checkOut} placeholder="Click date on calendar" readOnly />
+                      <input className="formInput" type="date" value={adminForm.checkOut} onChange={(e) => onAdminFormChange({ checkOut: e.target.value })} required />
                     </div>
                   </div>
                   <div className="formField">
