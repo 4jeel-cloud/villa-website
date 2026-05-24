@@ -28,6 +28,7 @@ function App() {
   const [notification, setNotification] = useState(null);
   const notifTimeout = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const showNotification = (type, text) => {
     if (notifTimeout.current) clearTimeout(notifTimeout.current);
@@ -156,6 +157,13 @@ function App() {
   useEffect(() => {
     if (authChecked) loadData();
   }, [authChecked, adminToken]);
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const [searchParams] = useSearchParams();
 
@@ -433,7 +441,7 @@ function App() {
   return (
     <ErrorBoundary>
     <main className="wrapper">
-      <header className="topNav">
+      <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/admin","/rooms","/nearby"].includes(location.pathname) ? "topNav--light" : ""}`}>
         <button className={`hamburger${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
           <span></span><span></span><span></span>
         </button>
