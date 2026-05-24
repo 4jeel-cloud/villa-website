@@ -91,6 +91,8 @@ body {
   width: 100%;
 }
 
+.carousel, .bookingLayout, .footer { content-visibility: auto; contain-intrinsic-size: 400px; }
+
 .topNav {
   position: fixed;
   top: 0;
@@ -302,10 +304,9 @@ body {
 .heroImage {
   width: 100%;
   display: block;
-  height: 100vh;
   height: 100dvh;
   object-fit: cover;
-  max-height: none;
+  will-change: transform;
 }
 
 .heroText {
@@ -899,7 +900,17 @@ button {
   }
 
   .heroTextPrimary {
-    font-size: clamp(2.8rem, 10vw, 4.5rem);
+    font-size: clamp(3.4rem, 12vw, 5.5rem);
+  }
+
+  .heroTextSecondary {
+    font-size: clamp(2.6rem, 9vw, 4.2rem);
+    margin-top: 10px;
+  }
+
+  .heroImage {
+    height: calc(100dvh - 56px);
+    min-height: unset;
   }
 
   .heroTextSecondary {
@@ -968,16 +979,15 @@ button {
   }
 
   .heroTextPrimary {
-    font-size: clamp(2rem, 9vw, 2.8rem);
+    font-size: clamp(2.6rem, 11vw, 3.4rem);
   }
 
   .heroTextSecondary {
-    font-size: clamp(1.5rem, 6vw, 2rem);
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
   }
 
   .heroImage {
-    height: 100vh;
-    height: 100dvh;
+    height: calc(100dvh - 56px);
     min-height: unset;
   }
 
