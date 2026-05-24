@@ -777,6 +777,11 @@ button {
   background: linear-gradient(to right, rgba(234, 179, 8, 0.5) 50%, transparent 50%) !important;
 }
 
+/* Turnover date: check-out + check-in on same day, full yellow */
+.fc .turnover-date .fc-daygrid-day-frame {
+  background: rgba(234, 179, 8, 0.45) !important;
+}
+
 /* If checkout-only date is selected as check-in, green wins */
 .fc .date-checkout-only.selected-checkin .fc-daygrid-day-frame {
   background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;

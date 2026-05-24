@@ -61,9 +61,9 @@ export default function AdminPage({
     const dayKey = toDateKey(arg.date);
     const classes = [];
     if (blockedClasses.has(dayKey)) classes.push("blocked-date");
-    else if (existingCheckin.has(dayKey) && !existingCheckout.has(dayKey)) classes.push("existing-booking-checkin");
-    else if (existingCheckout.has(dayKey) && !existingCheckin.has(dayKey)) classes.push("date-checkout-only");
-    else if (existingCheckin.has(dayKey) && existingCheckout.has(dayKey)) classes.push("existing-booking-checkin");
+    else if (existingCheckin.has(dayKey) && existingCheckout.has(dayKey)) classes.push("turnover-date");
+    else if (existingCheckin.has(dayKey)) classes.push("existing-booking-checkin");
+    else if (existingCheckout.has(dayKey)) classes.push("date-checkout-only");
     if (adminForm.checkIn && dayKey === adminForm.checkIn) classes.push("selected-checkin");
     if (adminForm.checkOut && dayKey === adminForm.checkOut) classes.push("selected-checkout");
     if (adminForm.checkIn && adminForm.checkOut && dayKey > adminForm.checkIn && dayKey < adminForm.checkOut) classes.push("selected-range");
