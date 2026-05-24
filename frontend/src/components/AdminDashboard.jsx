@@ -58,6 +58,7 @@ export default function AdminDashboard({ bookings, rooms }) {
 
   const today = now();
   const rangeStart = range === "week" ? startOfWeek(today) : range === "month" ? startOfMonth(today) : startOfYear(today);
+  const daysInRange = range === "week" ? 7 : range === "month" ? new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0).getDate() : 365;
   let rangeEnd;
   if (range === "week") {
     rangeEnd = new Date(rangeStart);
@@ -70,6 +71,8 @@ export default function AdminDashboard({ bookings, rooms }) {
 
   const prevStart = new Date(rangeStart.getTime() - (rangeEnd.getTime() - rangeStart.getTime()) - 86400000);
   const prevEnd = new Date(rangeStart.getTime() - 86400000);
+
+  const roomCount = rooms?.length || 2;
 
   const filt = useMemo(() => {
     const sk = toDateKey(rangeStart), ek = toDateKey(rangeEnd);
@@ -96,8 +99,9 @@ export default function AdminDashboard({ bookings, rooms }) {
   const s = calc(filt), ps = calc(prev);
   const avg = s.cnt ? s.nights / s.cnt : 0;
   const pAvg = ps.cnt ? ps.nights / ps.cnt : 0;
-  const occ = s.nights ? Math.min(100, Math.round(s.nights / (range === "week" ? 14 : range === "month" ? 60 : 730) * 100)) : 0;
-  const pOcc = ps.nights ? Math.min(100, Math.round(ps.nights / (range === "week" ? 14 : range === "month" ? 60 : 730) * 100)) : 0;
+  const maxNights = roomCount * daysInRange;
+  const occ = maxNights ? Math.min(100, Math.round(s.nights / maxNights * 100)) : 0;
+  const pOcc = maxNights ? Math.min(100, Math.round(ps.nights / (roomCount * (prevEnd.getTime() - prevStart.getTime()) / 86400000) * 100)) : 0;
 
   function tr(c, p) {
     if (p === 0 && c > 0) return "▲";
@@ -126,41 +130,47 @@ export default function AdminDashboard({ bookings, rooms }) {
 
   const labels = range === "week" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : range === "month" ? ["Wk1","Wk2","Wk3","Wk4","Wk5"] : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  const revData = useMemo(() => labels.map((_, i) => {
-    let start, end;
-    if (range === "week") {
-      start = new Date(rangeStart.getTime() + i * 86400000);
-      end = new Date(start);
-      end.setDate(end.getDate() + 1);
-    } else if (range === "month") {
-      start = new Date(rangeStart.getTime() + i * 7 * 86400000);
-      end = new Date(start);
-      end.setDate(end.getDate() + 6);
-    } else {
-      start = new Date(rangeStart.getFullYear(), i, 1);
-      end = new Date(rangeStart.getFullYear(), i + 1, 0);
-    }
-    const sk = toDateKey(start), ek = toDateKey(end);
-    return filt.filter((b) => b.checkIn <= ek && b.checkOut >= sk).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
-  }), [filt, labels, rangeStart, range]);
+  const revData = useMemo(() => {
+    if (range === "week") return labels.map((_, i) => {
+      const d = toDateKey(new Date(rangeStart.getTime() + i * 86400000));
+      return filt.filter((b) => b.checkIn === d).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
+    });
+    if (range === "month") return labels.map((_, i) => {
+      const ws = i * 7, we = ws + 6;
+      const ds = toDateKey(new Date(rangeStart.getTime() + ws * 86400000));
+      const de = toDateKey(new Date(rangeStart.getTime() + Math.min(we, daysInRange - 1) * 86400000));
+      return filt.filter((b) => b.checkIn >= ds && b.checkIn <= de).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
+    });
+    return labels.map((_, i) => {
+      const ms = new Date(rangeStart.getFullYear(), i, 1);
+      const me = new Date(rangeStart.getFullYear(), i + 1, 0);
+      return filt.filter((b) => {
+        const ci = new Date(b.checkIn + "T00:00:00");
+        return ci >= ms && ci <= me;
+      }).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
+    });
+  }, [filt, labels, rangeStart, range, daysInRange]);
 
-  const bkgData = useMemo(() => labels.map((_, i) => {
-    let start, end;
-    if (range === "week") {
-      start = new Date(rangeStart.getTime() + i * 86400000);
-      end = new Date(start);
-      end.setDate(end.getDate() + 1);
-    } else if (range === "month") {
-      start = new Date(rangeStart.getTime() + i * 7 * 86400000);
-      end = new Date(start);
-      end.setDate(end.getDate() + 6);
-    } else {
-      start = new Date(rangeStart.getFullYear(), i, 1);
-      end = new Date(rangeStart.getFullYear(), i + 1, 0);
-    }
-    const sk = toDateKey(start), ek = toDateKey(end);
-    return filt.filter((b) => b.checkIn <= ek && b.checkOut >= sk).length;
-  }), [filt, labels, rangeStart, range]);
+  const bkgData = useMemo(() => {
+    if (range === "week") return labels.map((_, i) => {
+      const d = toDateKey(new Date(rangeStart.getTime() + i * 86400000));
+      return filt.filter((b) => b.checkIn === d).length;
+    });
+    if (range === "month") return labels.map((_, i) => {
+      const ws = i * 7, we = ws + 6;
+      const ds = toDateKey(new Date(rangeStart.getTime() + ws * 86400000));
+      const de = toDateKey(new Date(rangeStart.getTime() + Math.min(we, daysInRange - 1) * 86400000));
+      return filt.filter((b) => b.checkIn >= ds && b.checkIn <= de).length;
+    });
+    return labels.map((_, i) => {
+      const ms = new Date(rangeStart.getFullYear(), i, 1);
+      const me = new Date(rangeStart.getFullYear(), i + 1, 0);
+      return filt.filter((b) => {
+        const ci = new Date(b.checkIn + "T00:00:00");
+        return ci >= ms && ci <= me;
+      }).length;
+    });
+  }, [filt, labels, rangeStart, range, daysInRange]);
 
   const rLabels = useMemo(() => (rooms || []).map((r) => r.name), [rooms]);
   const rColors = [C.emerald, C.emeraldLight, C.blue, C.purple];
@@ -169,20 +179,21 @@ export default function AdminDashboard({ bookings, rooms }) {
     for (const b of filt) {
       const name = b.roomName || "";
       if (c.has(name)) c.set(name, c.get(name) + 1);
-      else if (c.size > 0) c.set(c.keys().next().value, c.get(c.keys().next().value) + 1);
+      else if (c.size > 0) c.set([...c.keys()][0], c.get([...c.keys()][0]) + 1);
     }
     const t = [...c.values()].reduce((a, b) => a + b, 0);
     return t ? [...c.values()].map((v) => Math.round(v / t * 100)) : (rooms || []).map(() => Math.round(100 / (rooms.length || 1)));
   }, [filt, rooms]);
 
   const occDays = useMemo(() => {
+    const weekStart = startOfWeek(today);
     const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
     return days.map((_, di) => {
-      const d = toDateKey(new Date(rangeStart.getTime() + di * 86400000));
+      const d = toDateKey(new Date(weekStart.getTime() + di * 86400000));
       const occupied = filt.filter((b) => b.checkIn <= d && b.checkOut > d).length;
-      return Math.min(100, Math.round(occupied / 2 * 100));
+      return Math.min(100, Math.round(occupied / roomCount * 100));
     });
-  }, [filt, rangeStart]);
+  }, [filt, roomCount]);
 
   useEffect(() => {
     if (!roomRef.current) return;

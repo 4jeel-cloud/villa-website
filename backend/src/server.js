@@ -192,8 +192,10 @@ app.post("/bookings", async (req, res) => {
     sendBookingEmail({
       to: guestEmail,
       subject: "Your stay at Creek View Villa is confirmed",
-      html: emailTemplates.guestConfirmation({
-        guestName, roomName: booking.roomName, checkIn, checkOut, guests,
+      html: emailTemplates.confirmationEmail({
+        name: guestName, room: booking.roomName, checkin: checkIn, checkout: checkOut,
+        nights: Math.max(1, Math.ceil((new Date(checkOut + "T00:00:00") - new Date(checkIn + "T00:00:00")) / 86400000)),
+        guests, phone: guestPhone,
       }),
     });
     for (const email of MANAGER_EMAILS) {
@@ -245,7 +247,7 @@ app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
   sendBookingEmail({
     to: booking.guestEmail,
     subject: "Booking Cancelled – Creek View Villa",
-    html: emailTemplates.cancellation({ guestName: booking.guestName, roomName: booking.roomName, reason: req.body.reason }),
+    html: emailTemplates.cancellationEmail({ name: booking.guestName, room: booking.roomName, checkin: booking.checkIn, checkout: booking.checkOut }),
   });
   for (const email of MANAGER_EMAILS) {
     sendBookingEmail({

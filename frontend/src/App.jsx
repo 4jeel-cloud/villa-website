@@ -11,6 +11,7 @@ import {
   updateRoomPrice
 } from "./api";
 import ErrorBoundary from "./components/ErrorBoundary";
+import LoadingScreen from "./components/LoadingScreen";
 import UserPage from "./components/UserPage";
 import RoomsPage from "./components/RoomsPage";
 import Footer from "./components/Footer";
@@ -288,6 +289,28 @@ function App() {
 
     checkoutOnly.forEach(d => fullyBusy.delete(d));
 
+    const toDateKey2 = (d) => {
+      const dt = typeof d === "string" ? new Date(d + "T00:00:00") : d;
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    };
+    const roomCount = rooms.length;
+    if (roomCount > 0) {
+      const occMap = new Map();
+      for (const b of bookings || []) {
+        if (b.status !== "confirmed") continue;
+        let cur = new Date(b.checkIn + "T00:00:00");
+        const end = new Date(b.checkOut + "T00:00:00");
+        while (cur < end) {
+          const key = toDateKey2(cur);
+          occMap.set(key, (occMap.get(key) || 0) + 1);
+          cur.setDate(cur.getDate() + 1);
+        }
+      }
+      for (const [date, count] of occMap) {
+        if (count >= roomCount) fullyBusy.add(date);
+      }
+    }
+
     if (fullyBusy.has(clickedDate)) {
       showNotification("error", "This date is already booked. Please select an available date.");
       return;
@@ -413,7 +436,7 @@ function App() {
   };
 
   if (loading) {
-    return <main className="wrapper">Loading...</main>;
+    return <LoadingScreen />;
   }
 
   return (

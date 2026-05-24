@@ -54,6 +54,23 @@ export default function AdminPage({
         cur.setDate(cur.getDate() + 1);
       }
     }
+    const roomCount = (rooms || []).length;
+    if (roomCount > 0) {
+      const occMap = new Map();
+      for (const b of (bookings || [])) {
+        if (b.status !== "confirmed") continue;
+        let cur = new Date(b.checkIn + "T00:00:00");
+        const end = new Date(b.checkOut + "T00:00:00");
+        while (cur < end) {
+          const key = toDateKey(cur);
+          occMap.set(key, (occMap.get(key) || 0) + 1);
+          cur.setDate(cur.getDate() + 1);
+        }
+      }
+      for (const [key, count] of occMap) {
+        if (count >= roomCount) bk.set(key, true);
+      }
+    }
     return { existingCheckin: ci, existingCheckout: co, blockedClasses: bk };
   }, [bookings, availability]);
 
