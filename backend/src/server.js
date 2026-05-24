@@ -178,10 +178,6 @@ app.post("/bookings", async (req, res) => {
     }
   }
 
-  if (!(await store.isRoomAvailable(roomId, checkIn, checkOut))) {
-    return res.status(409).json({ message: "Room is already booked or blocked in selected dates." });
-  }
-
   try {
     const booking = await store.createBooking({
       roomId, checkIn, checkOut, guestName, guestEmail, guestPhone, guests, guestType, createdBy,

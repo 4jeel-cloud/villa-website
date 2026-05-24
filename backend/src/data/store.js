@@ -231,6 +231,10 @@ async function createBooking(data) {
   const room = rooms.find((r) => r.id === data.roomId);
   if (!room) throw new Error("Room not found");
 
+  if (!isRoomAvailable(data.roomId, data.checkIn, data.checkOut)) {
+    throw new Error("Room is already booked or blocked in selected dates.");
+  }
+
   const booking = {
     id: crypto.randomUUID(),
     roomId: data.roomId,
