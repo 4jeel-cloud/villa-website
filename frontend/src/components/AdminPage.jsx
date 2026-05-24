@@ -113,7 +113,7 @@ export default function AdminPage({
       <section className="card">
         <h2>Admin Dashboard</h2>
 
-        <div className="bookingLayout">
+        <div className="bookingLayout" style={{ maxWidth: "none", margin: "24px 0", padding: 0 }}>
           <div className="bookingCalendar">
             <div className="calendarCard">
               <h2 className="calendarTitle">{displayMonthYear}</h2>

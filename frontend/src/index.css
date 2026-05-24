@@ -323,6 +323,9 @@ body {
   grid-template-columns: 2fr auto 1.2fr;
   gap: 0;
   align-items: start;
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
 }
 
 .bookingCalendar {
@@ -720,6 +723,15 @@ button {
 
 .fc .blocked-date .fc-daygrid-day-frame {
   background: rgba(239, 68, 68, 0.85) !important;
+}
+
+.fc .fc-day-disabled .fc-daygrid-day-frame {
+  background: #f1f5f9 !important;
+  opacity: 0.5;
+  cursor: default !important;
+}
+.fc .fc-day-disabled .fc-daygrid-day-number {
+  color: #cbd5e1 !important;
 }
 
 .fc .fc-toolbar {
