@@ -1398,13 +1398,13 @@ button {
   right: 0;
   height: 1rem;
   background: var(--footer-bg);
-  filter: url("#blob");
+  overflow: hidden;
 }
 
 .footerBubble {
   position: absolute;
   left: var(--position, 50%);
-  background: var(--footer-bg);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 100%;
   animation:
     footerBubbleSize var(--time, 4s) ease-in infinite var(--delay, 0s),
