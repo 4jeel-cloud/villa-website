@@ -5,7 +5,7 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: "creekviewvilla@gmail.com",
+    user: process.env.BREVO_SMTP_USER || "creekviewvilla@gmail.com",
     pass: process.env.BREVO_API_KEY || process.env.SMTP_PASS || "",
   },
 });
