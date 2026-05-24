@@ -29,42 +29,33 @@ export default function AdminPage({
       classNames: ["admin-booking-event"]
     }));
 
-  const existingCheckin = useMemo(() => {
-    const s = new Set();
-    for (const evt of availability) {
-      if (!evt.start) continue;
-      s.add(toDateKey(new Date(evt.start + "T00:00:00")));
-    }
-    return s;
-  }, [availability]);
-
-  const existingCheckout = useMemo(() => {
-    const s = new Set();
-    for (const evt of availability) {
-      if (!evt.end) continue;
-      s.add(toDateKey(new Date(evt.end + "T00:00:00")));
-    }
-    return s;
-  }, [availability]);
-
-  const blockedClasses = useMemo(() => {
-    const map = new Map();
-    for (const evt of availability) {
-      if (!evt.start || !evt.end) continue;
-      const startKey = toDateKey(new Date(evt.start + "T00:00:00"));
-      const endKey = toDateKey(new Date(evt.end + "T00:00:00"));
-      let cur = new Date(evt.start + "T00:00:00");
-      const end = new Date(evt.end + "T00:00:00");
+  const { existingCheckin, existingCheckout, blockedClasses } = useMemo(() => {
+    const ci = new Set(), co = new Set(), bk = new Map();
+    for (const b of (bookings || [])) {
+      if (b.status !== "confirmed") continue;
+      const sk = b.checkIn, ek = b.checkOut;
+      ci.add(sk); co.add(ek);
+      let cur = new Date(sk + "T00:00:00");
+      const end = new Date(ek + "T00:00:00");
       while (cur < end) {
         const key = toDateKey(cur);
-        if (key !== startKey && key !== endKey) {
-          map.set(key, true);
-        }
+        if (key !== sk && key !== ek) bk.set(key, true);
         cur.setDate(cur.getDate() + 1);
       }
     }
-    return map;
-  }, [availability]);
+    for (const evt of (availability || [])) {
+      if (!evt.start || !evt.end) continue;
+      const sk = evt.start, ek = evt.end;
+      let cur = new Date(sk + "T00:00:00");
+      const end = new Date(ek + "T00:00:00");
+      while (cur < end) {
+        const key = toDateKey(cur);
+        if (key !== sk && key !== ek && !bk.has(key)) bk.set(key, true);
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+    return { existingCheckin: ci, existingCheckout: co, blockedClasses: bk };
+  }, [bookings, availability]);
 
   const dayCellClassNames = (arg) => {
     const dayKey = toDateKey(arg.date);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -8,6 +8,7 @@ import MapSection from "./MapSection";
 
 export default function UserPage({
   availability,
+  bookings,
   rooms,
   bookingForm,
   roomOptions,
@@ -24,27 +25,36 @@ export default function UserPage({
     if (!bookingForm.checkIn) setFormStep(1);
   }, [bookingForm.checkIn]);
 
-  const checkoutOnlyDates = new Set();
-  const blockedClasses = new Map();
-  const existingCheckin = new Set();
-  const existingCheckout = new Set();
-  for (const evt of availability) {
-    if (!evt.start || !evt.end) continue;
-    const startKey = toDateKey(new Date(evt.start + "T00:00:00"));
-    const endKey = toDateKey(new Date(evt.end + "T00:00:00"));
-    checkoutOnlyDates.add(endKey);
-    existingCheckin.add(startKey);
-    existingCheckout.add(endKey);
-    let cur = new Date(evt.start + "T00:00:00");
-    const end = new Date(evt.end + "T00:00:00");
-    while (cur < end) {
-      const key = toDateKey(cur);
-      if (key !== startKey && key !== endKey) {
-        blockedClasses.set(key, "blocked-date");
+  const { blockedClasses, existingCheckin, existingCheckout } = useMemo(() => {
+    const ck = new Map();
+    const ci = new Set();
+    const co = new Set();
+    for (const b of (bookings || [])) {
+      if (b.status !== "confirmed") continue;
+      const sk = b.checkIn, ek = b.checkOut;
+      ci.add(sk);
+      co.add(ek);
+      let cur = new Date(sk + "T00:00:00");
+      const end = new Date(ek + "T00:00:00");
+      while (cur < end) {
+        const key = toDateKey(cur);
+        if (key !== sk && key !== ek) ck.set(key, "blocked-date");
+        cur.setDate(cur.getDate() + 1);
       }
-      cur.setDate(cur.getDate() + 1);
     }
-  }
+    for (const evt of (availability || [])) {
+      if (!evt.start || !evt.end) continue;
+      const sk = evt.start, ek = evt.end;
+      let cur = new Date(sk + "T00:00:00");
+      const end = new Date(ek + "T00:00:00");
+      while (cur < end) {
+        const key = toDateKey(cur);
+        if (key !== sk && key !== ek && !ck.has(key)) ck.set(key, "blocked-date");
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+    return { blockedClasses: ck, existingCheckin: ci, existingCheckout: co };
+  }, [bookings, availability]);
 
   const dayCellClassNames = (arg) => {
     const dayKey = toDateKey(arg.date);

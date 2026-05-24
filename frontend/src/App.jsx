@@ -493,6 +493,7 @@ function App() {
             element={
               <UserPage
                 availability={availability}
+                bookings={bookings}
                 rooms={rooms}
                 bookingForm={bookingForm}
                 roomOptions={roomOptions}
