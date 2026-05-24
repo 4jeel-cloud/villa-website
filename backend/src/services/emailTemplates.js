@@ -21,25 +21,23 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
         and have reserved your room. Here are your booking details.
       </p>
 
-      <div style="background:#EAF3EA;border-radius:6px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <span style="font-size:13px;color:#5A8A6A;font-weight:400">Total stay</span>
-        <span style="font-size:22px;font-weight:400;color:#1C3A28">${nights} night${nights > 1 ? 's' : ''}</span>
-      </div>
-
       <div style="background:#F5F9F5;border:1px solid #C8DCC8;border-radius:8px;overflow:hidden;margin-bottom:20px">
         <div style="padding:12px 18px;border-bottom:1px solid #C8DCC8;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#5A8A6A">
           Reservation details
         </div>
         ${[
+          ['Total stay', `${nights} night${nights > 1 ? 's' : ''}`],
           ['Room', room],
           ['Check-in', `${checkin} — 2:00 PM`],
           ['Check-out', `${checkout} — 11:00 AM`],
           ['Guests', `${guests} guest${guests > 1 ? 's' : ''}`],
         ].map(([label, val], i, arr) => `
-        <div style="display:flex;justify-content:space-between;padding:12px 18px;${i < arr.length - 1 ? 'border-bottom:1px solid #E8F0E8' : ''}">
-          <span style="font-size:13px;color:#7A9A7A">${label}</span>
-          <span style="font-size:13px;font-weight:500;color:#1C3A28">${val}</span>
-        </div>`).join('')}
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-bottom:${i < arr.length - 1 ? '1px solid #E8F0E8' : 'none'}">
+          <tr>
+            <td style="padding:16px 20px;font-size:13px;color:#7A9A7A">${label}</td>
+            <td style="padding:16px 20px;font-size:13px;font-weight:500;color:#1C3A28;text-align:right;white-space:nowrap">${val}</td>
+          </tr>
+        </table>`).join('')}
       </div>
 
       <hr style="border:none;border-top:1px solid #D8E4D8;margin:0 0 20px">
@@ -94,10 +92,12 @@ function cancellationEmail({ name, room, checkin, checkout }) {
           ['Check-in', checkin],
           ['Check-out', checkout],
         ].map(([label, val], i, arr) => `
-        <div style="display:flex;justify-content:space-between;padding:12px 18px;${i < arr.length - 1 ? 'border-bottom:1px solid #F0E8E8' : ''}">
-          <span style="font-size:13px;color:#9A7A7A">${label}</span>
-          <span style="font-size:13px;font-weight:500;color:#3A1C1C;text-decoration:line-through">${val}</span>
-        </div>`).join('')}
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-bottom:${i < arr.length - 1 ? '1px solid #F0E8E8' : 'none'}">
+          <tr>
+            <td style="padding:16px 20px;font-size:13px;color:#9A7A7A">${label}</td>
+            <td style="padding:16px 20px;font-size:13px;font-weight:500;color:#3A1C1C;text-align:right;white-space:nowrap;text-decoration:line-through">${val}</td>
+          </tr>
+        </table>`).join('')}
       </div>
 
       <a href="https://villa-website-drt.pages.dev/" style="display:block;text-align:center;background:#3A1C1C;color:#ffffff;padding:13px 24px;border-radius:4px;font-size:12px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;margin-bottom:20px">
@@ -148,10 +148,12 @@ function managerAlert({ guestName, roomName, checkIn, checkOut }) {
           ['Check-in', checkIn],
           ['Check-out', checkOut],
         ].map(([label, val], i, arr) => `
-        <div style="display:flex;justify-content:space-between;padding:12px 18px;${i < arr.length - 1 ? 'border-bottom:1px solid #E8F0E8' : ''}">
-          <span style="font-size:13px;color:#7A9A7A">${label}</span>
-          <span style="font-size:13px;font-weight:500;color:#1C3A28">${val}</span>
-        </div>`).join('')}
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-bottom:${i < arr.length - 1 ? '1px solid #E8F0E8' : 'none'}">
+          <tr>
+            <td style="padding:16px 20px;font-size:13px;color:#7A9A7A">${label}</td>
+            <td style="padding:16px 20px;font-size:13px;font-weight:500;color:#1C3A28;text-align:right;white-space:nowrap">${val}</td>
+          </tr>
+        </table>`).join('')}
       </div>
     </div>
 

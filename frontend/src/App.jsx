@@ -27,6 +27,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
   const notifTimeout = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const showNotification = (type, text) => {
     if (notifTimeout.current) clearTimeout(notifTimeout.current);
@@ -68,7 +69,6 @@ function App() {
 
   const [roomSettings, setRoomSettings] = useState({});
   const [waitingForCheckout, setWaitingForCheckout] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [focusedDate, setFocusedDate] = useState("");
   const [adminAuthed, setAdminAuthed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -156,15 +156,6 @@ function App() {
   useEffect(() => {
     if (authChecked) loadData();
   }, [authChecked, adminToken]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      setIsScrolled(window.scrollY > 24);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const [searchParams] = useSearchParams();
 
@@ -442,13 +433,16 @@ function App() {
   return (
     <ErrorBoundary>
     <main className="wrapper">
-      <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/admin","/rooms","/nearby"].includes(location.pathname) ? "topNav--light" : ""}`}>
+      <header className="topNav">
+        <button className={`hamburger${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
         <Link className="brand" to="/" style={{ textDecoration: "none" }}>CreekViewVilla</Link>
         <nav className="navCenter">
-          <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms">Rooms</Link>
-          <Link className={`navLink${location.pathname === "/" && location.hash === "#photos" ? " active" : ""}`} to="/#photos">Photos</Link>
-          <Link className={`navLink${location.pathname === "/" && location.hash === "#location" ? " active" : ""}`} to="/#location">Location</Link>
-          <Link className={`navLink${location.pathname === "/nearby" ? " active" : ""}`} to="/nearby">Nearby</Link>
+          <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
+          <Link className={`navLink${location.pathname === "/" && location.hash === "#photos" ? " active" : ""}`} to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
+          <Link className={`navLink${location.pathname === "/" && location.hash === "#location" ? " active" : ""}`} to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
+          <Link className={`navLink${location.pathname === "/nearby" ? " active" : ""}`} to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
         </nav>
         <nav className="navActions">
           {location.pathname === "/admin" ? (
@@ -489,6 +483,15 @@ function App() {
           )}
         </nav>
       </header>
+
+      <div className={`sidebarOverlay${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(false)} />
+      <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
+        <div className="sidebarBrand">Creek View Villa</div>
+        <Link className="sidebarLink" to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
+        <Link className="sidebarLink" to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
+        <Link className="sidebarLink" to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
+        <Link className="sidebarLink" to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
+      </aside>
 
       {notification && (
         <div className={`notification notification--${notification.type}`} onClick={() => { if (notifTimeout.current) clearTimeout(notifTimeout.current); setNotification(null); }}>

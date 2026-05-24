@@ -238,17 +238,23 @@ export default function AdminDashboard({ bookings, rooms }) {
   }, [revData, bkgData, labels]);
 
   return (
-    <div style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, width: "100%", padding: "24px 20px" }}>
+    <div className="dash-wrap" style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, width: "100%", padding: "24px 20px" }}>
       <style>{`
         @media (max-width: 700px) {
+          .dash-wrap { padding: 16px 12px !important; }
           .dash-grid { grid-template-columns: 1fr !important; }
           .dash-full { grid-column: 1 !important; }
           .dash-metrics { grid-template-columns: repeat(2, 1fr) !important; }
           .dash-status { grid-template-columns: repeat(3, 1fr) !important; }
         }
+        @media (max-width: 400px) {
+          .dash-metrics { grid-template-columns: 1fr 1fr !important; }
+          .dash-range { flex-wrap: wrap; gap: 6px; }
+          .dash-range button { flex: 1; min-width: 0; padding: 8px 10px !important; font-size: 12px !important; }
+        }
       `}</style>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+      <div className="dash-range" style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {["week","month","year"].map((r) => (
           <button key={r} onClick={() => setRange(r)} style={{
             padding: "8px 20px", borderRadius: 6, fontWeight: 500, fontSize: 13, fontFamily: "inherit", cursor: "pointer", border: "none", minHeight: 40,

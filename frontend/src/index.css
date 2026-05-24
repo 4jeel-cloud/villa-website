@@ -97,17 +97,10 @@ body {
   left: 0;
   right: 0;
   z-index: 1000;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 8px 20px;
-  background: transparent;
-  border-bottom: 1px solid transparent;
-  border-radius: 0 0 16px 16px;
-  transition: background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease, border-radius 260ms ease;
-}
-
-.topNav.scrolled {
   background: #059669;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
@@ -116,8 +109,10 @@ body {
 .brand {
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  justify-self: start;
+  font-size: 1.05rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .navLink {
@@ -126,24 +121,17 @@ body {
   color: #ffffff;
   font-weight: 700;
   font-size: 0.95rem;
-  transition: color 260ms ease;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   outline: none;
 }
 
 .navActions {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  justify-self: end;
+  gap: 4px;
+  align-items: center;
 }
 
 .navCenter {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  justify-self: center;
+  display: none;
 }
 
 .navLink--admin {
@@ -154,22 +142,96 @@ body {
   line-height: 0;
 }
 
-.topNav.scrolled .brand,
-.topNav--light .brand {
-  color: #ffffff;
-  text-shadow: none;
+/* Hamburger */
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 4px;
+  z-index: 1001;
+}
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.hamburger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
 }
 
-.topNav.scrolled .navLink,
-.topNav--light .navLink {
-  color: #ffffff;
-  text-shadow: none;
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 260px;
+  height: 100vh;
+  height: 100dvh;
+  background: #ffffff;
+  z-index: 999;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 72px 0 24px;
+  transition: left 0.28s ease;
+}
+.sidebar.open {
+  left: 0;
+}
+.sidebarOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+.sidebarOverlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sidebarLink {
+  display: block;
+  padding: 14px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1C3A28;
+  text-decoration: none;
+  border-bottom: 1px solid #E8F0E8;
+  transition: background 0.2s;
+}
+.sidebarLink:hover {
+  background: #F0F7F0;
+}
+.sidebarBrand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  color: #1C3A28;
+  padding: 0 24px 16px;
+  border-bottom: 1px solid #D8E4D8;
+  margin-bottom: 8px;
 }
 
-.topNav--light {
-  background: #059669;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+/* Desktop nav */
+@media (min-width: 769px) {
+  .hamburger { display: none; }
+  .brand { position: static; transform: none; }
+  .navCenter { display: flex; gap: 16px; justify-content: center; flex: 1; }
+  .topNav { display: grid; grid-template-columns: 1fr auto 1fr; }
 }
 
 
@@ -199,7 +261,9 @@ body {
   width: 100%;
   display: block;
   height: 100vh;
+  height: 100dvh;
   object-fit: cover;
+  max-height: none;
 }
 
 .heroText {
@@ -790,21 +854,6 @@ button {
 @media (max-width: 768px) {
   .topNav {
     padding: 10px 12px;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 4px;
-  }
-
-  .brand {
-    font-size: 0.95rem;
-  }
-
-  .navCenter {
-    gap: 2px;
-  }
-
-  .navLink {
-    padding: 6px 8px;
-    font-size: 0.8rem;
   }
 
   .heroTextPrimary {
@@ -817,8 +866,9 @@ button {
   }
 
   .heroImage {
-    height: 60vh;
-    min-height: 400px;
+    height: 100vh;
+    height: 100dvh;
+    min-height: unset;
   }
 
   .fc {
@@ -884,8 +934,9 @@ button {
   }
 
   .heroImage {
-    height: 50vh;
-    min-height: 320px;
+    height: 100vh;
+    height: 100dvh;
+    min-height: unset;
   }
 
   .grid {
@@ -901,14 +952,7 @@ button {
     gap: 8px;
   }
 
-  .navLink {
-    padding: 4px 6px;
-    font-size: 0.75rem;
-  }
 
-  .brand {
-    font-size: 0.85rem;
-  }
 }
 
 /* ===== 3D Carousel Section ===== */
