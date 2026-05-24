@@ -247,6 +247,13 @@ app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
     subject: "Booking Cancelled – Creek View Villa",
     html: emailTemplates.cancellation({ guestName: booking.guestName, roomName: booking.roomName, reason: req.body.reason }),
   });
+  for (const email of MANAGER_EMAILS) {
+    sendBookingEmail({
+      to: email,
+      subject: "Booking Cancelled – Creek View Villa",
+      html: emailTemplates.managerAlert({ guestName: booking.guestName, roomName: booking.roomName, checkIn: booking.checkIn, checkOut: booking.checkOut }),
+    });
+  }
 
   return res.json({
     id: booking.id,
