@@ -306,7 +306,6 @@ body {
   display: block;
   height: 100dvh;
   object-fit: cover;
-  will-change: transform;
 }
 
 .heroText {
@@ -900,12 +899,12 @@ button {
   }
 
   .heroTextPrimary {
-    font-size: clamp(3.4rem, 12vw, 5.5rem);
+    font-size: clamp(3.8rem, 13vw, 6rem);
   }
 
   .heroTextSecondary {
-    font-size: clamp(2.6rem, 9vw, 4.2rem);
-    margin-top: 10px;
+    font-size: clamp(2.8rem, 10vw, 4.5rem);
+    margin-top: 12px;
   }
 
   .heroImage {
@@ -979,11 +978,11 @@ button {
   }
 
   .heroTextPrimary {
-    font-size: clamp(2.6rem, 11vw, 3.4rem);
+    font-size: clamp(3rem, 12vw, 3.8rem);
   }
 
   .heroTextSecondary {
-    font-size: clamp(1.8rem, 8vw, 2.6rem);
+    font-size: clamp(2.2rem, 9vw, 2.8rem);
   }
 
   .heroImage {
@@ -1504,13 +1503,18 @@ button {
 
 @media (max-width: 768px) {
   .footer {
-    margin-top: 3rem;
-    min-height: 8rem;
+    margin-top: 2rem;
+    min-height: unset;
+  }
+
+  .footerBubbles,
+  .footerBubble {
+    display: none;
   }
 
   .footerContent {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
     padding: 1.25rem;
   }
 
@@ -1519,28 +1523,43 @@ button {
   }
 
   .footerGroup b {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .footerGroup a {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .footerLogo {
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .footerBrand p {
+    font-size: 0.65rem;
   }
 }
 
 @media (max-width: 480px) {
   .footer {
-    margin-top: 2rem;
-    min-height: 6rem;
+    margin-top: 1.5rem;
   }
 
   .footerContent {
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .footerGroup b {
+    font-size: 0.7rem;
+  }
+
+  .footerGroup a {
+    font-size: 0.6rem;
+  }
+
+  .footerBrand p {
+    font-size: 0.6rem;
   }
 }
 
