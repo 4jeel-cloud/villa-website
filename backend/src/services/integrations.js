@@ -1,23 +1,29 @@
-const { Resend } = require("resend");
-
-const resend = new Resend(process.env.RESEND_API_KEY || "re_xxxxxxxxx");
-
 async function sendBookingEmail({ to, subject, html }) {
-  if (!process.env.RESEND_API_KEY) {
-    console.log("[Email] No RESEND_API_KEY configured, skipping:", to, subject);
+  const apiKey = process.env.BREVO_API_KEY || process.env.SMTP_PASS;
+  if (!apiKey) {
+    console.log("[Email] No BREVO_API_KEY configured, skipping:", to, subject);
     return;
   }
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Creek View Villa <onboarding@resend.dev>",
-      to,
-      subject,
-      html,
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "Creek View Villa", email: "creekviewvilla@gmail.com" },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
     });
-    if (error) {
-      console.error("[Email] Failed to", to, "—", error);
+    if (res.ok) {
+      const data = await res.json();
+      console.log("[Email] Sent to", to, "id:", data.messageId);
     } else {
-      console.log("[Email] Sent to", to, "id:", data?.id);
+      const errText = await res.text();
+      console.error("[Email] Failed to", to, "—", res.status, errText.slice(0, 500));
     }
   } catch (err) {
     console.error("[Email] Failed to", to, "—", err.message);
