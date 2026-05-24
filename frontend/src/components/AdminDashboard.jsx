@@ -4,11 +4,11 @@ import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
 
 const C = {
-  emerald: "#059669",
-  emeraldLight: "#10b981",
-  emeraldDark: "#065f46",
-  emeraldBg: "#ecfdf5",
-  emeraldBgLight: "#d1fae5",
+  emerald: "#06402B",
+  emeraldLight: "#0a6a42",
+  emeraldDark: "#042a1d",
+  emeraldBg: "#e8f2ea",
+  emeraldBgLight: "#cde2d5",
   warmWhite: "#ffffff",
   bg: "#f7f8fb",
   bark: "#0f172a",
@@ -304,7 +304,7 @@ export default function AdminDashboard({ bookings, rooms }) {
               <div key={d} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                 <span style={{ width: 28, fontSize: 12, color: C.mid, flexShrink: 0 }}>{d}</span>
                 <div style={{ flex: 1, height: 16, background: C.bg, borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ width: pct + "%", height: "100%", background: pct >= 80 ? C.emerald : pct >= 50 ? C.emeraldLight : "#d1fae5", borderRadius: 3, transition: "width 0.3s" }} />
+                  <div style={{ width: pct + "%", height: "100%", background: pct >= 80 ? C.emerald : pct >= 50 ? C.emeraldLight : "#cde2d5", borderRadius: 3, transition: "width 0.3s" }} />
                 </div>
                 <span style={{ width: 34, fontSize: 12, fontWeight: 500, textAlign: "right" }}>{pct}%</span>
               </div>

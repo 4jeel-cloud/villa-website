@@ -240,7 +240,7 @@ function App() {
             email: bookingForm.guestEmail,
             contact: bookingForm.guestPhone,
           },
-          theme: { color: "#059669" },
+          theme: { color: "#06402B" },
           modal: {
             ondismiss: () => {
               showNotification("error", "Payment cancelled. Booking not confirmed.");
@@ -443,11 +443,15 @@ function App() {
     <ErrorBoundary>
     <main className="wrapper">
       <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/admin","/rooms","/nearby","/amenities"].includes(location.pathname) ? "topNav--light" : ""}`}>
-        <button className={`hamburger${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
-          <span></span><span></span><span></span>
-        </button>
+        <div className="navLeft">
+          {location.pathname !== "/" && <Link className="navBack" to="/#hero" aria-label="Back to home">&lt;</Link>}
+          <button className={`hamburger${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
         <Link className="brand" to="/" style={{ textDecoration: "none" }}>CreekViewVilla</Link>
         <nav className="navCenter">
+          {location.pathname !== "/" && <Link className={`navLink${location.pathname === "/" ? " active" : ""}`} to="/#hero" onClick={() => setSidebarOpen(false)}>Home</Link>}
           <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
           <Link className={`navLink${location.pathname === "/amenities" ? " active" : ""}`} to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
           <Link className={`navLink${location.pathname === "/" && location.hash === "#photos" ? " active" : ""}`} to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>

@@ -110,13 +110,13 @@ body {
 }
 
 .topNav.scrolled {
-  background: #059669;
+  background: #06402B;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
 .topNav--light {
-  background: #059669;
+  background: #06402B;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
@@ -124,7 +124,7 @@ body {
 /* Mobile: always green */
 @media (max-width: 768px) {
   .topNav {
-    background: #059669;
+    background: #06402B;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
     border-radius: 0;
@@ -133,6 +133,9 @@ body {
   .topNav .brand,
   .topNav .navLink {
     text-shadow: none;
+  }
+  .navBack {
+    display: flex;
   }
 }
 
@@ -168,6 +171,30 @@ body {
   gap: 4px;
   align-items: center;
   margin-left: auto;
+}
+
+.navLeft {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navBack {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 6px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.navBack:active {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .navCenter {
@@ -356,7 +383,7 @@ body {
 .roomsPage h2 {
   font-family: "Oswald", sans-serif;
   text-transform: uppercase;
-  color: #059669;
+  color: #06402B;
   font-size: clamp(1.1rem, 2vw, 1.4rem);
   letter-spacing: 1px;
   margin: 0 0 16px;
@@ -381,7 +408,7 @@ body {
 }
 
 .calendarTitle {
-  color: #059669;
+  color: #06402B;
   font-family: "Oswald", sans-serif;
   text-transform: uppercase;
   font-size: clamp(1.2rem, 2.5vw, 1.6rem);
@@ -396,14 +423,14 @@ body {
 }
 
 .calendarSide {
-  border-left: 1px dotted #a7f3d0;
+  border-left: 1px dotted #9bc8b0;
   padding-left: 14px;
   align-self: center;
   min-width: 0;
 }
 
 .calendarSideLabel {
-  color: #059669;
+  color: #06402B;
   letter-spacing: 1px;
   text-transform: uppercase;
   font-size: 0.7rem;
@@ -411,7 +438,7 @@ body {
 
 .calendarSideDay {
   margin: 2px 0;
-  color: #059669;
+  color: #06402B;
   font-family: "Oswald", sans-serif;
   font-size: clamp(2.5rem, 5vw, 4rem);
   line-height: 0.95;
@@ -477,8 +504,8 @@ body {
 }
 
 .bookingDividerIcon {
-  color: #059669;
-  background: #ecfdf5;
+  color: #06402B;
+  background: #e8f2ea;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -498,7 +525,7 @@ body {
 
 .bookingFormTitle {
   font-family: "Oswald", sans-serif;
-  color: #059669;
+  color: #06402B;
   text-transform: uppercase;
   font-size: clamp(1.2rem, 2.5vw, 1.6rem);
   margin: 0;
@@ -537,8 +564,8 @@ body {
 }
 
 .formInput:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  border-color: #06402B;
+  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.15);
   background: #ffffff;
 }
 
@@ -555,7 +582,7 @@ body {
 .formSubmit {
   width: 100%;
   padding: 12px;
-  background: linear-gradient(135deg, #059669, #10b981);
+  background: linear-gradient(135deg, #06402B, #085238);
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -686,7 +713,7 @@ body {
   align-items: center;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #059669;
+  color: #06402B;
 }
 
 .roomImgPreview {
@@ -720,9 +747,9 @@ button {
 
 .message {
   margin-top: 14px;
-  background: #dcfce7;
+  background: #d0ecd8;
   color: #166534;
-  border: 1px solid #86efac;
+  border: 1px solid #80d8a0;
   border-radius: 8px;
   padding: 10px;
 }
@@ -759,12 +786,12 @@ button {
 
 .calendarCard .fc .fc-toolbar-title {
   font-family: "Oswald", sans-serif;
-  color: #059669;
+  color: #06402B;
   font-size: 1rem;
 }
 
 .calendarCard .fc .fc-button {
-  background: #ecfdf5;
+  background: #e8f2ea;
   border: 1px solid #a7f3d0;
   color: #065f46;
   padding: 4px 10px;
@@ -782,7 +809,7 @@ button {
 }
 
 .calendarCard .fc .fc-col-header-cell-cushion {
-  color: #10b981;
+  color: #0a6a42;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 0.75rem;
@@ -810,7 +837,7 @@ button {
 }
 
 .calendarCard .fc .fc-day-today .fc-daygrid-day-number {
-  background: #059669;
+  background: #06402B;
   color: #ffffff;
   border-radius: 50%;
   width: 26px;
@@ -935,7 +962,7 @@ button {
 
   .calendarSide {
     border-left: none;
-    border-top: 1px dotted #a7f3d0;
+    border-top: 1px dotted #9bc8b0;
     padding-left: 0;
     padding-top: 12px;
   }
@@ -1260,7 +1287,7 @@ button {
 
 .sectionHeading {
   font-family: "Oswald", sans-serif;
-  color: #059669;
+  color: #06402B;
   text-transform: uppercase;
   font-size: clamp(1rem, 2.5vw, 1.4rem);
   margin: 0 16px 12px;
@@ -1338,7 +1365,7 @@ button {
 
 .mapInfoTitle {
   font-family: "Oswald", sans-serif;
-  color: #059669;
+  color: #06402B;
   text-transform: uppercase;
   font-size: 1.2rem;
   margin: 0;
@@ -1384,7 +1411,7 @@ button {
 
 .footer {
   z-index: 1;
-  --footer-bg: #059669;
+  --footer-bg: #06402B;
   display: grid;
   position: relative;
   min-height: 12rem;
@@ -1582,7 +1609,7 @@ button {
 .nearbyHero h2 {
   font-family: "Oswald", sans-serif;
   text-transform: uppercase;
-  color: #059669;
+  color: #06402B;
   font-size: clamp(1.2rem, 2.5vw, 1.6rem);
   letter-spacing: 1px;
   margin: 0 0 4px;
@@ -1632,8 +1659,8 @@ button {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #059669;
-  background: #ecfdf5;
+  color: #06402B;
+  background: #e8f2ea;
   padding: 3px 10px;
   border-radius: 20px;
   width: fit-content;
@@ -1684,20 +1711,20 @@ button {
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #059669;
+  color: #06402B;
   text-decoration: none;
   padding: 8px 14px;
-  border: 1.5px solid #a7f3d0;
+  border: 1.5px solid #9bc8b0;
   border-radius: 8px;
-  background: #f0fdf4;
+  background: #eaf5ee;
   width: fit-content;
   margin-top: 4px;
   transition: background 200ms ease, border-color 200ms ease;
 }
 
 .nearbyMapBtn:hover {
-  background: #dcfce7;
-  border-color: #059669;
+  background: #d0ecd8;
+  border-color: #06402B;
 }
 
 .nearbyMapWrap {
