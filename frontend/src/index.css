@@ -1730,4 +1730,16 @@ button {
   .nearbyCard {
     padding: 24px 20px;
   }
+
+  /* Rooms page — stack cards vertically */
+  .roomCard {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 420px) {
+  /* Amenities count strip — stack into a 2×2 grid */
+  .amenitiesCountStrip {
+    gap: 16px !important;
+  }
 }

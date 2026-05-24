@@ -125,7 +125,7 @@ export default function Amenities() {
             Creek View Villa is designed to make you feel at home — with every comfort and experience thoughtfully provided.
           </p>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
+          <div className="amenitiesCountStrip" style={{ display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
             {[
               { num: totalCount, label: "Total amenities" },
               { num: 5,          label: "Outdoor features" },
