@@ -104,6 +104,7 @@ export default function UserPage({
                   fixedWeekCount={false}
                   dayMaxEventRows={2}
                   handleWindowResize={true}
+                  validRange={{ start: new Date() }}
                 />
               </div>
               <aside className="calendarSide">

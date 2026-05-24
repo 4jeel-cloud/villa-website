@@ -49,7 +49,7 @@ function formatCurrency(n) {
   return "₹" + Math.round(n).toLocaleString("en-IN");
 }
 
-export default function AdminDashboard({ bookings }) {
+export default function AdminDashboard({ bookings, rooms }) {
   const [range, setRange] = useState("month");
   const roomRef = useRef(null);
   const revVsRef = useRef(null);
@@ -162,17 +162,18 @@ export default function AdminDashboard({ bookings }) {
     return filt.filter((b) => b.checkIn <= ek && b.checkOut >= sk).length;
   }), [filt, labels, rangeStart, range]);
 
-  const rLabels = ["Standard Room","Deluxe Room","Family Room","Entire Homestay"];
+  const rLabels = useMemo(() => (rooms || []).map((r) => r.name), [rooms]);
   const rColors = [C.emerald, C.emeraldLight, C.blue, C.purple];
   const rPcts = useMemo(() => {
-    const c = [0,0,0,0];
+    const c = new Map((rooms || []).map((r) => [r.name, 0]));
     for (const b of filt) {
-      const idx = rLabels.findIndex((r) => b.roomName?.includes(r.split(" ")[0]));
-      if (idx >= 0) c[idx]++; else c[0]++;
+      const name = b.roomName || "";
+      if (c.has(name)) c.set(name, c.get(name) + 1);
+      else if (c.size > 0) c.set(c.keys().next().value, c.get(c.keys().next().value) + 1);
     }
-    const t = c.reduce((a, b) => a + b, 0);
-    return t ? c.map((v) => Math.round(v / t * 100)) : [25, 35, 22, 18];
-  }, [filt]);
+    const t = [...c.values()].reduce((a, b) => a + b, 0);
+    return t ? [...c.values()].map((v) => Math.round(v / t * 100)) : (rooms || []).map(() => Math.round(100 / (rooms.length || 1)));
+  }, [filt, rooms]);
 
   const occDays = useMemo(() => {
     const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];

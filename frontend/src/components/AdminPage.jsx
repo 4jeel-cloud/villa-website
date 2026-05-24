@@ -108,7 +108,7 @@ export default function AdminPage({
 
   return (
     <>
-      <AdminDashboard bookings={bookings} />
+      <AdminDashboard bookings={bookings} rooms={rooms} />
 
       <section className="card">
         <h2>Admin Dashboard</h2>
@@ -134,6 +134,7 @@ export default function AdminPage({
                   fixedWeekCount={false}
                   dayMaxEventRows={2}
                   handleWindowResize={true}
+                  validRange={{ start: new Date() }}
                 />
               </div>
               <aside className="calendarSide">
