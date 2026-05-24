@@ -1,30 +1,28 @@
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "creekviewvilla@gmail.com",
+    pass: process.env.BREVO_API_KEY || process.env.SMTP_PASS || "",
+  },
+});
+
 async function sendBookingEmail({ to, subject, html }) {
-  const apiKey = process.env.BREVO_API_KEY || process.env.SMTP_PASS;
-  if (!apiKey) {
-    console.log("[Email] No BREVO_API_KEY configured, skipping:", to, subject);
+  if (!transporter.options.auth.pass) {
+    console.log("[Email] No SMTP password configured, skipping:", to, subject);
     return;
   }
   try {
-    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "api-key": apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        sender: { name: "Creek View Villa", email: "creekviewvilla@gmail.com" },
-        to: [{ email: to }],
-        subject,
-        htmlContent: html,
-      }),
+    const info = await transporter.sendMail({
+      from: '"Creek View Villa" <creekviewvilla@gmail.com>',
+      to,
+      subject,
+      html,
     });
-    if (res.ok) {
-      const data = await res.json();
-      console.log("[Email] Sent to", to, "id:", data.messageId);
-    } else {
-      const errText = await res.text();
-      console.error("[Email] Failed to", to, "—", res.status, errText.slice(0, 500));
-    }
+    console.log("[Email] Sent to", to, "id:", info.messageId);
   } catch (err) {
     console.error("[Email] Failed to", to, "—", err.message);
   }
