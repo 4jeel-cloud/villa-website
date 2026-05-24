@@ -5,15 +5,15 @@ const sections = [
       { icon: "wifi",           name: "Free WiFi",        desc: "High-speed internet throughout the property",    highlight: false },
       { icon: "car",            name: "Free parking",     desc: "Secure on-site parking for all guests",          highlight: false },
       { icon: "droplet",        name: "Hot water",        desc: "24-hour hot water in all bathrooms",             highlight: false },
-      { icon: "tool-kitchen-2", name: "Kitchen",          desc: "Fully equipped kitchenette for self-use",        highlight: false },
-      { icon: "pool",           name: "Swimming pool",    desc: "Private pool open all day",                      highlight: true  },
+      { icon: "tools-kitchen-2", name: "Kitchen",         desc: "Fully equipped kitchenette for self-use",        highlight: false },
+      { icon: "swimming",       name: "Swimming pool",    desc: "Private pool open all day",                      highlight: true  },
     ],
   },
   {
     label: "Outdoors & nature",
     items: [
       { icon: "tree",     name: "Garden & lawn",     desc: "Lush garden perfect for morning walks",    highlight: false },
-      { icon: "waves",    name: "Creek view",        desc: "Scenic creek views from the property",     highlight: true  },
+      { icon: "droplet",  name: "Creek view",        desc: "Scenic creek views from the property",     highlight: true  },
       { icon: "building", name: "Balcony & terrace", desc: "Private balcony with open-air views",      highlight: false },
       { icon: "flame",    name: "Bonfire area",      desc: "Evening bonfires under the open sky",      highlight: false },
       { icon: "grill",    name: "BBQ area",          desc: "Outdoor barbecue setup for guests",        highlight: false },

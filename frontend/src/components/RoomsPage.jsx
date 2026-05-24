@@ -21,7 +21,7 @@ const ROOM_DISPLAY = [
   },
 ];
 
-function RoomCard({ display, images, index }) {
+function RoomCard({ display, images, index, roomId }) {
   const [imgIdx, setImgIdx] = useState(0);
   const hasImages = images && images.length > 0;
   const currentImg = hasImages ? images[imgIdx % images.length] : null;
@@ -176,7 +176,7 @@ function RoomCard({ display, images, index }) {
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
-            <a href="/booking" style={{
+            <a href={`/?room=${roomId}`} style={{
               flex:          1,
               background:    "#1C3A28",
               color:         "#ffffff",
@@ -191,7 +191,7 @@ function RoomCard({ display, images, index }) {
             }}>
               Book now
             </a>
-            <a href={`/rooms/${display.name.toLowerCase().replace(/\s+/g, "-")}`} style={{
+            <a href="/nearby" style={{
               flex:          1,
               background:    "transparent",
               color:         "#1C3A28",
@@ -256,6 +256,7 @@ export default function RoomsPage({ rooms }) {
               display={display}
               images={rooms[i]?.images || []}
               index={i}
+              roomId={rooms[i]?.id || ""}
             />
           ))}
         </div>
@@ -295,7 +296,7 @@ export default function RoomsPage({ rooms }) {
 
         {/* cta */}
         <div style={{ textAlign: "center" }}>
-          <a href="/booking" style={{
+          <a href="/#booking" style={{
             display: "inline-block",
             background: "#1C3A28",
             color: "#ffffff",
