@@ -17,6 +17,7 @@ import RoomsPage from "./components/RoomsPage";
 import Footer from "./components/Footer";
 
 const NearbyPage = lazy(() => import("./components/NearbyPage"));
+const AmenitiesPage = lazy(() => import("./pages/Amenities"));
 const AdminPage = lazy(() => import("./components/AdminPage"));
 const AdminLoginPage = lazy(() => import("./components/AdminLoginPage"));
 
@@ -441,13 +442,14 @@ function App() {
   return (
     <ErrorBoundary>
     <main className="wrapper">
-      <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/admin","/rooms","/nearby"].includes(location.pathname) ? "topNav--light" : ""}`}>
+      <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/admin","/rooms","/nearby","/amenities"].includes(location.pathname) ? "topNav--light" : ""}`}>
         <button className={`hamburger${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
           <span></span><span></span><span></span>
         </button>
         <Link className="brand" to="/" style={{ textDecoration: "none" }}>CreekViewVilla</Link>
         <nav className="navCenter">
           <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
+          <Link className={`navLink${location.pathname === "/amenities" ? " active" : ""}`} to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
           <Link className={`navLink${location.pathname === "/" && location.hash === "#photos" ? " active" : ""}`} to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
           <Link className={`navLink${location.pathname === "/" && location.hash === "#location" ? " active" : ""}`} to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
           <Link className={`navLink${location.pathname === "/nearby" ? " active" : ""}`} to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
@@ -496,6 +498,7 @@ function App() {
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="sidebarBrand">Creek View Villa</div>
         <Link className="sidebarLink" to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
+        <Link className="sidebarLink" to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
         <Link className="sidebarLink" to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
         <Link className="sidebarLink" to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
         <Link className="sidebarLink" to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
@@ -541,6 +544,7 @@ function App() {
             }
           />
           <Route path="/rooms" element={<RoomsPage rooms={rooms} />} />
+          <Route path="/amenities" element={<Suspense fallback={<div className="pageLoading" />}><AmenitiesPage /></Suspense>} />
           <Route path="/nearby" element={<Suspense fallback={<div className="pageLoading" />}><NearbyPage /></Suspense>} />
           <Route
             path="/admin"
