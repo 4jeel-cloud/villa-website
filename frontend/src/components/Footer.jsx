@@ -67,7 +67,7 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <svg style={{ position: "fixed", top: "100vh", pointerEvents: "none" }}>
+      <svg style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}>
         <defs>
           <filter id="blob">
             <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
