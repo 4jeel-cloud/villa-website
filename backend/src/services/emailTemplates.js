@@ -1,10 +1,10 @@
 function confirmationEmail({ name, room, checkin, checkout, nights, guests, phone }) {
   return `
-  <div style="background:#F5F7F5;padding:24px;font-family:sans-serif">
+  <div style="background:#F5F7F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #D8E4D8">
 
     <div style="background:#1C3A28;padding:32px;text-align:center">
-      <p style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#A8C8B0;margin:0 0 10px">Creek View Villa</p>
+      <p style="font-size:11px;letter-spacing:0.24em;text-transform:uppercase;color:#A8C8B0;margin:0 0 10px">Creek View Villa</p>
       <h1 style="font-size:26px;font-weight:300;color:#ffffff;margin:0 0 4px;line-height:1.2">
         Your stay is <em>confirmed</em>
       </h1>
@@ -15,19 +15,19 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
     </div>
 
     <div style="padding:28px 32px">
-      <p style="font-size:18px;font-weight:300;color:#1C3A28;margin:0 0 6px">Dear ${name},</p>
+      <p style="font-size:17px;font-weight:300;color:#1C3A28;margin:0 0 6px">Dear ${name},</p>
       <p style="font-size:13px;color:#5A6A5A;line-height:1.7;margin:0 0 20px">
         Thank you for choosing Creek View Villa. We are delighted to welcome you 
         and have reserved your room. Here are your booking details.
       </p>
 
-      <div style="background:#EAF3EA;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <span style="font-size:12px;color:#5A8A6A">Total stay</span>
-        <span style="font-size:20px;font-weight:400;color:#1C3A28">${nights} night${nights > 1 ? 's' : ''}</span>
+      <div style="background:#EAF3EA;border-radius:6px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <span style="font-size:13px;color:#5A8A6A;font-weight:400">Total stay</span>
+        <span style="font-size:22px;font-weight:400;color:#1C3A28">${nights} night${nights > 1 ? 's' : ''}</span>
       </div>
 
       <div style="background:#F5F9F5;border:1px solid #C8DCC8;border-radius:8px;overflow:hidden;margin-bottom:20px">
-        <div style="padding:10px 16px;border-bottom:1px solid #C8DCC8;font-size:10px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#5A8A6A">
+        <div style="padding:12px 18px;border-bottom:1px solid #C8DCC8;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#5A8A6A">
           Reservation details
         </div>
         ${[
@@ -36,16 +36,16 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
           ['Check-out', `${checkout} — 11:00 AM`],
           ['Guests', `${guests} guest${guests > 1 ? 's' : ''}`],
         ].map(([label, val], i, arr) => `
-        <div style="display:flex;justify-content:space-between;padding:10px 16px;${i < arr.length - 1 ? 'border-bottom:1px solid #E8F0E8' : ''}">
-          <span style="font-size:12px;color:#7A9A7A">${label}</span>
-          <span style="font-size:12px;font-weight:500;color:#1C3A28">${val}</span>
+        <div style="display:flex;justify-content:space-between;padding:12px 18px;${i < arr.length - 1 ? 'border-bottom:1px solid #E8F0E8' : ''}">
+          <span style="font-size:13px;color:#7A9A7A">${label}</span>
+          <span style="font-size:13px;font-weight:500;color:#1C3A28">${val}</span>
         </div>`).join('')}
       </div>
 
       <hr style="border:none;border-top:1px solid #D8E4D8;margin:0 0 20px">
-      <p style="font-size:12px;color:#5A6A5A;margin:0;line-height:1.7">
+      <p style="font-size:13px;color:#5A6A5A;margin:0;line-height:1.7">
         For any questions, reach us at 
-        <strong style="color:#1C3A28">+91 XXXXX XXXXX</strong> 
+        <strong style="color:#1C3A28">+91 95442 42879</strong> 
         or reply to this email.
       </p>
     </div>
@@ -53,8 +53,8 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
     <div style="padding:20px 32px;border-top:1px solid #D8E4D8;text-align:center">
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#1C3A28;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#9AB09A;line-height:1.8;margin:0">
-        123 Creek Road, Kozhikode, Kerala 673001<br>
-        creekviewvilla@gmail.com · +91 XXXXX XXXXX
+        Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
+        creekviewvilla@gmail.com · +91 95442 42879
       </p>
     </div>
 
@@ -64,11 +64,11 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
 
 function cancellationEmail({ name, room, checkin, checkout }) {
   return `
-  <div style="background:#F7F5F5;padding:24px;font-family:sans-serif">
+  <div style="background:#F7F5F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #E4D8D8">
 
     <div style="background:#2C1C1C;padding:32px;text-align:center">
-      <p style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#C8A8A8;margin:0 0 10px">Creek View Villa</p>
+      <p style="font-size:11px;letter-spacing:0.24em;text-transform:uppercase;color:#C8A8A8;margin:0 0 10px">Creek View Villa</p>
       <h1 style="font-size:26px;font-weight:300;color:#ffffff;margin:0 0 4px;line-height:1.2">
         Your booking has <em>been cancelled</em>
       </h1>
@@ -79,14 +79,14 @@ function cancellationEmail({ name, room, checkin, checkout }) {
     </div>
 
     <div style="padding:28px 32px">
-      <p style="font-size:18px;font-weight:300;color:#3A1C1C;margin:0 0 6px">Dear ${name},</p>
+      <p style="font-size:17px;font-weight:300;color:#3A1C1C;margin:0 0 6px">Dear ${name},</p>
       <p style="font-size:13px;color:#6A5A5A;line-height:1.7;margin:0 0 20px">
         We are sorry to see you go. Your booking has been successfully cancelled 
         as requested. Here is a summary of the cancelled reservation.
       </p>
 
       <div style="background:#F9F5F5;border:1px solid #DCC8C8;border-radius:8px;overflow:hidden;margin-bottom:20px">
-        <div style="padding:10px 16px;border-bottom:1px solid #DCC8C8;font-size:10px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#8A5A5A">
+        <div style="padding:12px 18px;border-bottom:1px solid #DCC8C8;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#8A5A5A">
           Cancelled reservation
         </div>
         ${[
@@ -94,28 +94,28 @@ function cancellationEmail({ name, room, checkin, checkout }) {
           ['Check-in', checkin],
           ['Check-out', checkout],
         ].map(([label, val], i, arr) => `
-        <div style="display:flex;justify-content:space-between;padding:10px 16px;${i < arr.length - 1 ? 'border-bottom:1px solid #F0E8E8' : ''}">
-          <span style="font-size:12px;color:#9A7A7A">${label}</span>
-          <span style="font-size:12px;font-weight:500;color:#3A1C1C;text-decoration:line-through;opacity:0.5">${val}</span>
+        <div style="display:flex;justify-content:space-between;padding:12px 18px;${i < arr.length - 1 ? 'border-bottom:1px solid #F0E8E8' : ''}">
+          <span style="font-size:13px;color:#9A7A7A">${label}</span>
+          <span style="font-size:13px;font-weight:500;color:#3A1C1C;text-decoration:line-through">${val}</span>
         </div>`).join('')}
       </div>
 
-      <a href="https://yourcreekviewvilla.com/booking" style="display:block;text-align:center;background:#3A1C1C;color:#ffffff;padding:13px 24px;border-radius:4px;font-size:12px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;margin-bottom:20px">
+      <a href="https://villa-website-drt.pages.dev/" style="display:block;text-align:center;background:#3A1C1C;color:#ffffff;padding:13px 24px;border-radius:4px;font-size:12px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;margin-bottom:20px">
         Book again
       </a>
 
       <hr style="border:none;border-top:1px solid #E4D8D8;margin:0 0 20px">
-      <p style="font-size:12px;color:#6A5A5A;margin:0;line-height:1.7">
+      <p style="font-size:13px;color:#6A5A5A;margin:0;line-height:1.7">
         We hope to welcome you another time. Reach us at 
-        <strong style="color:#3A1C1C">+91 XXXXX XXXXX</strong> for any assistance.
+        <strong style="color:#3A1C1C">+91 95442 42879</strong> for any assistance.
       </p>
     </div>
 
     <div style="padding:20px 32px;border-top:1px solid #E4D8D8;text-align:center">
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#3A1C1C;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#B09A9A;line-height:1.8;margin:0">
-        123 Creek Road, Kozhikode, Kerala 673001<br>
-        creekviewvilla@gmail.com · +91 XXXXX XXXXX
+        Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
+        creekviewvilla@gmail.com · +91 95442 42879
       </p>
     </div>
 
@@ -125,11 +125,11 @@ function cancellationEmail({ name, room, checkin, checkout }) {
 
 function managerAlert({ guestName, roomName, checkIn, checkOut }) {
   return `
-  <div style="background:#F5F7F5;padding:24px;font-family:sans-serif">
+  <div style="background:#F5F7F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #D8E4D8">
 
     <div style="background:#7AB890;padding:28px;text-align:center">
-      <p style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#ffffff;margin:0 0 10px">Creek View Villa</p>
+      <p style="font-size:11px;letter-spacing:0.24em;text-transform:uppercase;color:#ffffff;margin:0 0 10px">Creek View Villa</p>
       <h1 style="font-size:22px;font-weight:300;color:#ffffff;margin:0">New booking received</h1>
     </div>
 
@@ -139,7 +139,7 @@ function managerAlert({ guestName, roomName, checkIn, checkOut }) {
       </p>
 
       <div style="background:#F5F9F5;border:1px solid #C8DCC8;border-radius:8px;overflow:hidden;margin-bottom:16px">
-        <div style="padding:10px 16px;border-bottom:1px solid #C8DCC8;font-size:10px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#5A8A6A">
+        <div style="padding:12px 18px;border-bottom:1px solid #C8DCC8;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#5A8A6A">
           Booking details
         </div>
         ${[
@@ -148,9 +148,9 @@ function managerAlert({ guestName, roomName, checkIn, checkOut }) {
           ['Check-in', checkIn],
           ['Check-out', checkOut],
         ].map(([label, val], i, arr) => `
-        <div style="display:flex;justify-content:space-between;padding:10px 16px;${i < arr.length - 1 ? 'border-bottom:1px solid #E8F0E8' : ''}">
-          <span style="font-size:12px;color:#7A9A7A">${label}</span>
-          <span style="font-size:12px;font-weight:500;color:#1C3A28">${val}</span>
+        <div style="display:flex;justify-content:space-between;padding:12px 18px;${i < arr.length - 1 ? 'border-bottom:1px solid #E8F0E8' : ''}">
+          <span style="font-size:13px;color:#7A9A7A">${label}</span>
+          <span style="font-size:13px;font-weight:500;color:#1C3A28">${val}</span>
         </div>`).join('')}
       </div>
     </div>
