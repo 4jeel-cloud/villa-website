@@ -727,11 +727,10 @@ button {
 
 .fc .fc-day-disabled .fc-daygrid-day-frame {
   background: #f1f5f9 !important;
-  opacity: 0.5;
   cursor: default !important;
 }
 .fc .fc-day-disabled .fc-daygrid-day-number {
-  color: #cbd5e1 !important;
+  color: #94a3b8 !important;
 }
 
 .fc .fc-toolbar {
