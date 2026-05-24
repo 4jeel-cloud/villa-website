@@ -26,7 +26,8 @@ async function sendBookingEmail({ to, subject, text, html }) {
       console.log("[Email] Sent to", to, "status:", res.status);
     } else {
       const errText = await res.text();
-      console.error("[Email] Failed to", to, "—", res.status, errText.slice(0, 200));
+      console.error("[Email] Failed to", to, "—", res.status, errText.slice(0, 500));
+      console.error("[Email] Full response body:", errText.slice(0, 1000));
     }
   } catch (err) {
     console.error("[Email] Failed to", to, "—", err.message);
