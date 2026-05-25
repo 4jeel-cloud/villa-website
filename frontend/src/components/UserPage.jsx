@@ -6,6 +6,8 @@ import { toDateKey } from "../utils";
 import GalleryCarousel from "./GalleryCarousel";
 import Location from "../sections/Location";
 import HomeAmenities from "../sections/HomeAmenities";
+import WhatsIncluded from "../sections/WhatsIncluded";
+import WhyCreekView from "../sections/WhyCreekView";
 
 export default function UserPage({
   availability,
@@ -231,6 +233,10 @@ export default function UserPage({
       </div>
 
       <HomeAmenities />
+
+      <WhatsIncluded />
+
+      <WhyCreekView />
 
       <div id="photos">
         <GalleryCarousel />
