@@ -14,111 +14,129 @@ const reasons = [
     title: "Luxury without pretense",
     desc:  "Pool, breakfast, bonfire and BBQ — every comfort included, delivered with genuine Kerala warmth.",
   },
-  {
-    icon:  "compass",
-    title: "Adventure awaits",
-    desc:  "Trekking trails, wildlife spotting, and waterfall adventures just minutes from your doorstep.",
-  },
-  {
-    icon:  "leaf",
-    title: "Farm-fresh dining",
-    desc:  "Homemade Kerala meals prepared with ingredients sourced from local farms, served with warmth.",
-  },
-  {
-    icon:  "users",
-    title: "Built for togetherness",
-    desc:  "Spacious living areas, bonfire nights, and a layout designed for quality time with loved ones.",
-  },
 ];
-
-function Card({ icon, title, desc }) {
-  return (
-    <div style={{
-      border:       "0.5px solid #DCE8DC",
-      borderRadius: 14,
-      padding:      "24px 20px",
-      background:   "#ffffff",
-      boxShadow:    "0 2px 8px rgba(0,0,0,0.04)",
-    }}>
-      <i
-        className={`ti ti-${icon}`}
-        aria-hidden="true"
-        style={{ fontSize: 22, color: "#5A8A6A", display: "block", marginBottom: 12 }}
-      />
-      <div style={{
-        fontFamily:   "Cormorant Garamond, serif",
-        fontSize:     16,
-        fontWeight:   300,
-        fontStyle:    "italic",
-        color:        "#1C3A28",
-        marginBottom: 8,
-        lineHeight:   1.3,
-      }}>
-        {title}
-      </div>
-      <p style={{
-        fontSize:   12,
-        color:      "#7A9A7A",
-        lineHeight: 1.7,
-        margin:     0,
-        fontWeight: 300,
-      }}>
-        {desc}
-      </p>
-    </div>
-  );
-}
 
 export default function WhyCreekView() {
   return (
     <section style={{
-      background:  "#F5F9F5",
-      minHeight:   "100dvh",
-      display:     "flex",
-      alignItems:  "center",
-      padding:     "56px 40px",
-      fontFamily:  "DM Sans, sans-serif",
+      background: "#ffffff",
+      minHeight:  "100dvh",
+      display:    "flex",
+      alignItems: "center",
+      padding:    "60px 40px",
+      fontFamily: "DM Sans, sans-serif",
     }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", width: "100%" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", width: "100%" }}>
 
-        <div style={{
-          display:        "flex",
-          alignItems:     "flex-end",
-          justifyContent: "space-between",
-          marginBottom:   36,
-          flexWrap:       "wrap",
-          gap:            12,
-        }}>
-          <div>
-            <p style={{
-              fontSize:      10,
-              fontWeight:    500,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color:         "#7A9A7A",
-              marginBottom:  6,
-            }}>
-              Why Creek View Villa
-            </p>
-            <h2 style={{
-              fontFamily: "Cormorant Garamond, serif",
-              fontSize:   28,
-              fontWeight: 300,
-              fontStyle:  "italic",
-              color:      "#1C3A28",
-              lineHeight: 1.2,
-            }}>
-              Made for memories
-            </h2>
-          </div>
+        <div style={{ marginBottom: 48, maxWidth: 520 }}>
+          <p style={{
+            fontSize: 10, fontWeight: 500, letterSpacing: "0.18em",
+            textTransform: "uppercase", color: "#7A9A7A", marginBottom: 8,
+          }}>
+            Why Creek View Villa
+          </p>
+          <h2 style={{
+            fontFamily: "Cormorant Garamond, serif",
+            fontSize:   "clamp(24px, 3.5vw, 34px)",
+            fontWeight: 300,
+            fontStyle:  "italic",
+            color:      "#1C3A28",
+            lineHeight: 1.25,
+            margin:     0,
+          }}>
+            Three reasons guests<br />keep coming back
+          </h2>
         </div>
 
         <div style={{
           display:             "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap:                 16,
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap:                 20,
         }}>
-          {reasons.map(r => <Card key={r.title} {...r} />)}
+          {reasons.map(({ icon, title, desc }, i) => (
+            <div
+              key={title}
+              style={{
+                borderTop:     "2.5px solid #1C3A28",
+                paddingTop:    24,
+              }}
+            >
+              <div style={{
+                display:       "flex",
+                alignItems:    "center",
+                gap:           10,
+                marginBottom:  14,
+              }}>
+                <span style={{
+                  fontSize:      10,
+                  fontWeight:    500,
+                  color:         "#A0B8A0",
+                  letterSpacing: "0.1em",
+                }}>
+                  {(i + 1).toString().padStart(2, "0")}
+                </span>
+                <span style={{ width: "0.5px", height: 16, background: "#D0E0D0", display: "block" }} />
+                <i
+                  className={`ti ti-${icon}`}
+                  aria-hidden="true"
+                  style={{ fontSize: 18, color: "#3B6D11" }}
+                />
+              </div>
+              <h3 style={{
+                fontFamily:   "Cormorant Garamond, serif",
+                fontSize:     19,
+                fontWeight:   400,
+                fontStyle:    "italic",
+                color:        "#1C3A28",
+                margin:       "0 0 10px",
+                lineHeight:   1.25,
+              }}>
+                {title}
+              </h3>
+              <p style={{
+                fontSize:   13,
+                color:      "#7A9A7A",
+                lineHeight: 1.8,
+                margin:     0,
+                fontWeight: 300,
+              }}>
+                {desc}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          marginTop: 44,
+          paddingTop: 28,
+          borderTop: "0.5px solid #E0ECE0",
+          display: "flex",
+          justifyContent: "center",
+        }}>
+          <a
+            href="/rooms"
+            style={{
+              display:       "inline-flex",
+              alignItems:    "center",
+              gap:           8,
+              background:    "#ffffff",
+              border:        "0.5px solid #1C3A28",
+              color:         "#1C3A28",
+              padding:       "12px 32px",
+              borderRadius:  4,
+              fontSize:      11,
+              fontWeight:    500,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              textDecoration: "none",
+              transition:    "background 0.2s, color 0.2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#1C3A28"; e.currentTarget.style.color = "#ffffff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.color = "#1C3A28"; }}
+          >
+            Explore rooms
+            <i className="ti ti-arrow-right" aria-hidden="true" style={{ fontSize: 12 }} />
+          </a>
         </div>
 
       </div>
