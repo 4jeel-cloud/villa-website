@@ -196,7 +196,7 @@ function datesOverlap(startA, endA, startB, endB) {
   return startA < endB && startB < endA;
 }
 
-async function isRoomAvailable(roomId, checkIn, checkOut, ignoreBookingId = null) {
+function isRoomAvailable(roomId, checkIn, checkOut, ignoreBookingId = null) {
   const clashWithBooking = bookings.some((b) => {
     if (b.id === ignoreBookingId || b.status !== "confirmed") return false;
     return b.roomId === roomId && datesOverlap(checkIn, checkOut, b.checkIn, b.checkOut);
