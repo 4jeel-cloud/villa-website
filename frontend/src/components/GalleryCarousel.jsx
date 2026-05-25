@@ -1,267 +1,181 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const IMAGES = [
-  { img: "/carousel/1.webp" },
-  { img: "/carousel/2.webp" },
-  { img: "/carousel/DSC00989.webp" },
-  { img: "/carousel/DSC01011.webp" },
-  { img: "/carousel/DSC01019.webp" },
-  { img: "/carousel/DSC01082.webp" },
-  { img: "/carousel/DSC01097.webp" },
-  { img: "/carousel/DSC01077.webp" },
-  { img: "/carousel/DSC01105.webp" },
-  { img: "/carousel/DSC01115.webp" },
+const SLIDES = [
+  { img: "/carousel/1.webp",        tag: "Exteriors", name: "Front view" },
+  { img: "/carousel/2.webp",        tag: "Exteriors", name: "Villa entrance" },
+  { img: "/carousel/DSC00989.webp",  tag: "Interiors", name: "Living room" },
+  { img: "/carousel/DSC01011.webp",  tag: "Interiors", name: "Bedroom" },
+  { img: "/carousel/DSC01019.webp",  tag: "Views",     name: "Mountain view" },
+  { img: "/carousel/DSC01082.webp",  tag: "Outdoors",  name: "Pool area" },
+  { img: "/carousel/DSC01097.webp",  tag: "Garden",    name: "Lawn & seating" },
+  { img: "/carousel/DSC01077.webp",  tag: "Evenings",  name: "Sunset at villa" },
+  { img: "/carousel/DSC01105.webp",  tag: "Morning",   name: "Creek at dawn" },
+  { img: "/carousel/DSC01115.webp",  tag: "Views",     name: "Balcony view" },
 ];
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+const DELAY = 3500;
+const TOTAL = SLIDES.length;
 
 export default function GalleryCarousel() {
-  const [order] = useState(() => shuffle(IMAGES));
-  const [index, setIndex] = useState(10);
+  const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [lightboxData, setLightboxData] = useState(null);
-  const transitioning = useRef(true);
-  const [itemWidth, setItemWidth] = useState(0);
   const trackRef = useRef(null);
-  const pauseTimeout = useRef(null);
-  const touchStartX = useRef(0);
-  const touchOffset = useRef(0);
-  const [touchDelta, setTouchDelta] = useState(0);
-  const isSwiping = useRef(false);
+  const progressRef = useRef(null);
+  const autoTimer = useRef(null);
+  const dragStartX = useRef(null);
+  const touchStartX = useRef(null);
 
-  const len = order.length;
-  const items = useMemo(() => [...order, ...order, ...order], [order]);
-
-  const snap = useCallback((dir) => {
-    setIndex((prev) => prev + dir);
-    setTouchDelta(0);
-    touchOffset.current = 0;
-    setPaused(true);
-    if (pauseTimeout.current) clearTimeout(pauseTimeout.current);
-    pauseTimeout.current = setTimeout(() => setPaused(false), 4000);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (pauseTimeout.current) clearTimeout(pauseTimeout.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    const measure = () => {
-      const el = document.querySelector(".carousel .carousel-item");
-      if (el) {
-        const w = el.getBoundingClientRect().width;
-        const style = window.getComputedStyle(el);
-        const ml = parseFloat(style.marginLeft) || 0;
-        const mr = parseFloat(style.marginRight) || 0;
-        setItemWidth(w + ml + mr);
+  const go = useCallback((idx, resetTimer) => {
+    setIndex((prev) => {
+      const next = ((idx % TOTAL) + TOTAL) % TOTAL;
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translateX(-${next * 100}%)`;
       }
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, []);
+      return next;
+    });
+    if (resetTimer) {
+      clearInterval(autoTimer.current);
+      autoTimer.current = setInterval(() => go(index + 1, false), DELAY);
+    }
+  }, [index]);
+
+  useEffect(() => {
+    const timer = setInterval(() => go(index + 1, false), DELAY);
+    autoTimer.current = timer;
+    return () => clearInterval(timer);
+  }, [index, go]);
 
   useEffect(() => {
     if (paused) return;
-    const timer = setInterval(() => setIndex((prev) => prev + 1), 2500);
-    return () => clearInterval(timer);
-  }, [paused]);
+    const bar = progressRef.current;
+    if (!bar) return;
+    bar.style.transition = "none";
+    bar.style.width = "0%";
+    bar.offsetWidth;
+    bar.style.transition = `width ${DELAY}ms linear`;
+    bar.style.width = "100%";
+  }, [index, paused]);
 
   useEffect(() => {
-    if (index >= 2 * len) {
-      const timeout = setTimeout(() => {
-        transitioning.current = false;
-        setIndex((prev) => prev - len);
-      }, 500);
-      return () => clearTimeout(timeout);
-    }
-    if (index < len) {
-      const timeout = setTimeout(() => {
-        transitioning.current = false;
-        setIndex((prev) => prev + len);
-      }, 500);
-      return () => clearTimeout(timeout);
-    }
-    transitioning.current = true;
-  }, [index, len]);
-
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-
-    const onTouchStart = (e) => {
-      isSwiping.current = true;
-      touchStartX.current = e.touches[0].clientX;
-      touchOffset.current = 0;
-      setPaused(true);
-    };
-
-    const onTouchMove = (e) => {
-      if (!isSwiping.current) return;
-      touchOffset.current = e.touches[0].clientX - touchStartX.current;
-      setTouchDelta(touchOffset.current);
-    };
-
-    const onTouchEnd = () => {
-      if (!isSwiping.current) return;
-      isSwiping.current = false;
-      const delta = touchOffset.current;
-      if (Math.abs(delta) > 50) {
-        if (delta < 0) snap(1);
-        else snap(-1);
+    const imgs = document.querySelectorAll(".car-img");
+    imgs.forEach((img, i) => {
+      if (i === index) {
+        img.classList.remove("ken");
+        void img.offsetWidth;
+        img.classList.add("ken");
       } else {
-        setTouchDelta(0);
-        touchOffset.current = 0;
-        if (pauseTimeout.current) clearTimeout(pauseTimeout.current);
-        setPaused(false);
+        img.classList.remove("ken");
       }
-    };
-
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: true });
-    el.addEventListener("touchend", onTouchEnd, { passive: true });
-
-    return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
-    };
-  }, [snap]);
-
-  useEffect(() => {
-    const els = document.querySelectorAll(".carousel .carousel-item");
-    const handleMouseMove = (e, el) => {
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.x;
-      const y = e.clientY - rect.y;
-      const midX = rect.width / 2;
-      const midY = rect.height / 2;
-      const angleY = -(x - midX) / 6;
-      const angleX = (y - midY) / 6;
-      const box = el.querySelector(".carousel-box");
-      if (box) {
-        box.style.transform = `perspective(800px) rotateX(${angleX}deg) rotateY(${angleY}deg) scale3d(1.02,1.02,1.02)`;
-      }
-    };
-    const handleMouseLeave = (el) => {
-      const box = el.querySelector(".carousel-box");
-      if (box) {
-        box.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg)";
-      }
-    };
-    const handleEnter = () => setPaused(true);
-    const bound = [];
-    els.forEach((el) => {
-      const move = (e) => handleMouseMove(e, el);
-      const leave = () => handleMouseLeave(el);
-      el.addEventListener("mousemove", move);
-      el.addEventListener("mouseleave", leave);
-      el.addEventListener("mouseenter", handleEnter);
-      bound.push({ el, move, leave, handleEnter });
     });
-    const onExit = () => {
-      if (pauseTimeout.current) clearTimeout(pauseTimeout.current);
-      setPaused(false);
-    };
-    const container = document.querySelector(".carousel");
-    container?.addEventListener("mouseleave", onExit);
-    return () => {
-      bound.forEach(({ el, move, leave, handleEnter }) => {
-        el.removeEventListener("mousemove", move);
-        el.removeEventListener("mouseleave", leave);
-        el.removeEventListener("mouseenter", handleEnter);
-      });
-      container?.removeEventListener("mouseleave", onExit);
-    };
+  }, [index]);
+
+  const prev = useCallback(() => go(index - 1, true), [index, go]);
+  const next = useCallback(() => go(index + 1, true), [index, go]);
+
+  const handleMouseEnter = useCallback(() => {
+    setPaused(true);
+    clearInterval(autoTimer.current);
+    if (progressRef.current) {
+      progressRef.current.style.transition = "none";
+      progressRef.current.style.width = "0%";
+    }
   }, []);
 
-  useEffect(() => {
-    if (!lightboxData) return;
-    const handler = (e) => {
-      if (e.key === "Escape") setLightboxData(null);
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [lightboxData]);
+  const handleMouseLeave = useCallback(() => {
+    setPaused(false);
+    autoTimer.current = setInterval(() => go(index + 1, false), DELAY);
+  }, [index, go]);
 
-  const baseTransform = itemWidth ? -index * itemWidth : 0;
-  const currentOffset = baseTransform + touchDelta;
+  const handleTouchStart = useCallback((e) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
 
-  const row = (isTop) => (
-    <div className={`carousel-row${isTop ? "" : " carousel-row--reverse"}`}>
+  const handleTouchEnd = useCallback((e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1), true);
+    touchStartX.current = null;
+  }, [index, go]);
+
+  const handleMouseDown = useCallback((e) => {
+    dragStartX.current = e.clientX;
+  }, []);
+
+  const handleMouseUp = useCallback((e) => {
+    if (dragStartX.current === null) return;
+    const dx = e.clientX - dragStartX.current;
+    if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1), true);
+    dragStartX.current = null;
+  }, [index, go]);
+
+  return (
+    <div className="car-root">
       <div
-        className="carousel-track"
-        ref={isTop ? trackRef : null}
-        style={{
-          transform: `translateX(${currentOffset}px)`,
-          transition: isSwiping.current || transitioning.current === false
-            ? "none"
-            : "transform 0.5s ease"
-        }}
+        className="car-track-wrap"
+        id="car-wrap"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
-        {items.map((city, i) => (
-          <div className="carousel-item" key={i}>
-            <div className="carousel-box" onClick={() => setLightboxData(order[i % len])}>
-              <img src={city.img} loading="lazy" />
+        <div className="car-track" ref={trackRef}>
+          {SLIDES.map((s, i) => (
+            <div className="car-slide" key={i}>
+              <div
+                className={`car-img${i === index ? " ken" : ""}`}
+                style={{ backgroundImage: `url(${s.img})`, backgroundColor: "#8aab88" }}
+              />
+              <div className="car-scrim" />
+              <div className="car-info">
+                <div>
+                  <p className="car-tag">{s.tag}</p>
+                  <p className="car-name">{s.name}</p>
+                </div>
+                <span className="car-ctr">{i + 1} / {TOTAL}</span>
+              </div>
             </div>
+          ))}
+        </div>
+
+        <div className="car-progress" ref={progressRef} />
+
+        <button className="car-btn car-btn--prev" id="car-prev" onClick={prev} aria-label="Previous">
+          &#8592;
+        </button>
+        <button className="car-btn car-btn--next" id="car-next" onClick={next} aria-label="Next">
+          &#8594;
+        </button>
+      </div>
+
+      <div className="car-dots" id="car-dots">
+        {SLIDES.map((_, i) => (
+          <div
+            key={i}
+            className={`car-dot${i === index ? " active" : ""}`}
+            style={{ width: i === index ? "22px" : "6px" }}
+            onClick={() => go(i, true)}
+          />
+        ))}
+      </div>
+
+      <div className="thumb-strip" id="thumb-strip">
+        {SLIDES.map((s, i) => (
+          <div
+            key={i}
+            className={`thumb${i === index ? " active" : ""}`}
+            onClick={() => go(i, true)}
+          >
+            <div
+              className="thumb-img"
+              style={{
+                backgroundImage: `url(${s.img})`,
+                backgroundColor: "#8aab88",
+              }}
+            />
           </div>
         ))}
       </div>
     </div>
-  );
-
-  return (
-    <>
-      <div className="homeSection" style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "48px 0 20px",
-        borderBottom: "0.5px solid #E4EEE4"
-      }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", paddingBottom: 4, width: "100%" }}>
-          <h2 className="sectionHeading" style={{ paddingLeft: 0 }}>Photos</h2>
-        </div>
-        <div className="carousel">
-          <button className="carousel-btn carousel-btn--prev" onClick={() => snap(1)} aria-label="Next">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-
-          {row(true)}
-          {row(false)}
-
-          <button className="carousel-btn carousel-btn--next" onClick={() => snap(-1)} aria-label="Previous">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {lightboxData && (
-        <div className="lightbox" onClick={() => setLightboxData(null)}>
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <button className="lightbox-close" onClick={() => setLightboxData(null)}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-            <img src={lightboxData.img} />
-          </div>
-        </div>
-      )}
-    </>
   );
 }

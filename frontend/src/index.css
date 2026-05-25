@@ -91,7 +91,7 @@ body {
   width: 100%;
 }
 
-.carousel, .bookingLayout, .footer { content-visibility: auto; contain-intrinsic-size: 400px; }
+.bookingLayout, .footer { content-visibility: auto; contain-intrinsic-size: 400px; }
 
 .topNav {
   position: fixed;
@@ -1058,187 +1058,189 @@ button {
 
 }
 
-/* ===== 3D Carousel Section ===== */
+/* ===== Carousel ===== */
 
-.carousel {
+.car-root {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: "DM Sans", sans-serif;
+}
+
+.car-track-wrap {
+  overflow: hidden;
+  border-radius: 18px;
   position: relative;
-  width: 100%;
-  overflow: hidden;
-  padding: 36px 0 60px;
+  cursor: grab;
 }
+.car-track-wrap:active { cursor: grabbing; }
 
-.carousel-row {
-  overflow: hidden;
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.carousel-row:last-child {
-  margin-bottom: 0;
-}
-
-.carousel-row--reverse {
-  transform: scaleX(-1);
-}
-
-.carousel-row--reverse .carousel-item {
-  transform: scaleX(-1);
-}
-
-.carousel-track {
+.car-track {
   display: flex;
-  flex-wrap: nowrap;
+  transition: transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
   will-change: transform;
-  padding: 0 60px;
 }
 
-.carousel-btn {
+.car-slide {
+  flex: 0 0 100%;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+.car-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 8s linear;
+  transform: scale(1);
+}
+.car-img.ken { transform: scale(1.07); }
+
+.car-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.08) 45%, transparent 100%);
+}
+
+.car-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 22px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.car-tag {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 5px;
+}
+
+.car-name {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.car-ctr {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.car-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 0 2px 2px 0;
+  z-index: 5;
+}
+
+.car-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 5;
-  width: 44px;
-  height: 44px;
-  border: none;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  color: #1f2937;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(6px);
   cursor: pointer;
+  color: #ffffff;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.12s;
+  z-index: 10;
+  line-height: 1;
+  outline: none;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
-  backdrop-filter: blur(4px);
 }
+.car-btn:hover { background: rgba(0, 0, 0, 0.45); border-color: rgba(255, 255, 255, 0.75); }
+.car-btn:active { transform: translateY(-50%) scale(0.88); }
+#car-prev { left: 14px; }
+#car-next { right: 14px; }
 
-.carousel-btn:hover {
-  background: #ffffff;
-  transform: translateY(-50%) scale(1.08);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-.carousel-btn:active {
-  transform: translateY(-50%) scale(0.96);
-}
-
-.carousel-btn--prev {
-  left: 16px;
-}
-
-.carousel-btn--next {
-  right: 16px;
-}
-
-@media (max-width: 768px) {
-  .carousel { padding: 20px 0 40px; }
-  .carousel-track { padding: 0 40px; }
-  .carousel-row { margin-bottom: 10px; }
-  .carousel .carousel-item { width: 220px; height: 280px; margin: 8px; }
-  .carousel-btn { width: 36px; height: 36px; }
-  .carousel-btn--prev { left: 8px; }
-  .carousel-btn--next { right: 8px; }
-  .carousel .carousel-item .carousel-box {
-    transform: none !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .carousel .carousel-item { width: 160px; height: 210px; margin: 5px; }
-  .carousel .carousel-item .carousel-box {
-    transform: none !important;
-  }
-}
-
-.carousel .carousel-item {
-  position: relative;
-  flex: 0 0 auto;
-  width: 220px;
-  height: 280px;
-  margin: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.carousel .carousel-item .carousel-box {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
-  overflow: hidden;
+.car-dots {
   display: flex;
+  gap: 6px;
   justify-content: center;
+  margin-top: 14px;
   align-items: center;
-  transition: transform 0.15s ease;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  will-change: transform;
 }
 
-@media (hover: none) {
-  .carousel .carousel-item .carousel-box {
-    transition: none;
-    will-change: auto;
-  }
+.car-dot {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(26, 61, 43, 0.22);
+  cursor: pointer;
+  transition: width 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.25s;
+  border: none;
+  padding: 0;
+}
+.car-dot.active { background: #1a3d2b; }
+
+.thumb-strip {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-.carousel .carousel-item .carousel-box img {
+.thumb {
+  flex: 0 0 calc(12.5% - 7px);
+  aspect-ratio: 3 / 2;
+  border-radius: 9px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s, outline 0.18s;
+}
+
+.thumb-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  display: block;
-  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.35s;
 }
-
-.carousel .carousel-item .carousel-box::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, transparent 50%);
-  border-radius: 16px;
-  z-index: 1;
-  pointer-events: none;
-}
+.thumb:hover .thumb-img { transform: scale(1.1); }
+.thumb.active { outline: 2.5px solid #1a3d2b; outline-offset: 2px; opacity: 1; }
+.thumb:not(.active) { opacity: 0.5; }
+.thumb:hover:not(.active) { opacity: 0.78; }
 
 @media (max-width: 768px) {
-  .carousel {
-    padding: 20px 0 40px;
-  }
-
-  .carousel-track {
-    padding: 0 40px;
-  }
-
-  .carousel-row {
-    margin-bottom: 10px;
-  }
-
-  .carousel .carousel-item {
-    width: 220px;
-    height: 280px;
-    margin: 8px;
-  }
-
-  .carousel-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .carousel-btn--prev {
-    left: 8px;
-  }
-
-  .carousel-btn--next {
-    right: 8px;
-  }
+  .car-root { max-width: 100%; padding: 0 12px; }
+  .car-slide { border-radius: 14px; }
+  .car-track-wrap { border-radius: 14px; }
+  .car-name { font-size: 18px; }
+  .car-info { padding: 18px 16px 14px; }
+  .car-btn { width: 36px; height: 36px; font-size: 15px; }
+  #car-prev { left: 8px; }
+  #car-next { right: 8px; }
+  .thumb-strip { gap: 5px; }
+  .thumb { flex: 0 0 calc(20% - 4px); }
 }
 
 @media (max-width: 480px) {
-  .carousel .carousel-item {
-    width: 180px;
-    height: 230px;
-    margin: 6px;
-  }
+  .thumb { flex: 0 0 calc(25% - 4.5px); }
+  .car-btn { display: none; }
 }
 
 /* ===== Lightbox ===== */

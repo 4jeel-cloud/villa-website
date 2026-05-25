@@ -233,7 +233,7 @@ export default function UserPage({
 
       <WhatsIncluded />
 
-      <div id="photos" style={{ background: "#ffffff" }}>
+      <div id="photos" style={{ padding: "60px 0" }}>
         <GalleryCarousel />
       </div>
 
