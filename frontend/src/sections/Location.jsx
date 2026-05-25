@@ -76,17 +76,21 @@ export default function Location() {
       id="location"
       style={{
         background: "#1C3A28",
-        padding:    "64px 40px",
+        minHeight:  "100dvh",
+        display:    "flex",
+        alignItems: "center",
+        padding:    "60px 40px",
         fontFamily: "DM Sans, sans-serif",
       }}
     >
       <div
         className="locationGrid"
         style={{
-          maxWidth:            880,
+          maxWidth:            960,
           margin:              "0 auto",
+          width:               "100%",
           display:             "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "1.1fr 0.9fr",
           gap:                 "clamp(32px, 5vw, 80px)",
           alignItems:          "start",
         }}
@@ -150,13 +154,14 @@ export default function Location() {
               background:   "rgba(255,255,255,0.06)",
               border:       "0.5px solid rgba(255,255,255,0.12)",
               borderRadius: 12,
-              height:       360,
+              aspectRatio:  "16/9",
+              minHeight:    280,
               position:     "relative",
               overflow:     "hidden",
             }}
           >
             <iframe
-              src="https://www.google.com/maps?q=MXH5%2B974+Panthipoyil+Padinjarathara+Kerala&output=embed"
+              src="https://www.google.com/maps?q=MXH5%2B974+Panthipoyil+Padinjarathara+Kerala+673575&output=embed&z=16&hl=en"
               title="Creek View Villa Location"
               loading="lazy"
               allowFullScreen
@@ -165,11 +170,13 @@ export default function Location() {
                 height: "100%",
                 border: "none",
                 display: "block",
+                position: "absolute",
+                inset: 0,
               }}
             />
 
             <a
-              href="https://maps.google.com/?q=MXH5%2B974+Panthipoyil+Padinjarathara+Kerala+673575"
+              href="https://maps.google.com/maps?q=Creek+View+Villa+Padinjarathara+Kerala+673575"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -189,7 +196,7 @@ export default function Location() {
                 backdropFilter: "blur(4px)",
               }}
             >
-              <i className="ti ti-map-2" aria-hidden="true" style={{ fontSize: 13 }} />
+              <i className="ti ti-map-pin" aria-hidden="true" style={{ fontSize: 13 }} />
               Open in Maps
             </a>
           </div>
@@ -221,7 +228,7 @@ export default function Location() {
           </div>
 
           <a
-            href="https://maps.google.com/?q=MXH5%2B974+Panthipoyil+Padinjarathara+Kerala+673575"
+            href="https://maps.google.com/maps/dir//Creek+View+Villa+Padinjarathara+Kerala"
             target="_blank"
             rel="noreferrer"
             style={{
@@ -242,7 +249,7 @@ export default function Location() {
               textDecoration: "none",
             }}
           >
-            <i className="ti ti-navigation" aria-hidden="true" />
+            <i className="ti ti-map-2" aria-hidden="true" />
             Get directions
           </a>
         </div>

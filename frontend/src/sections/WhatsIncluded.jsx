@@ -17,10 +17,13 @@ export default function WhatsIncluded() {
   return (
     <section style={{
       background: "#1C3A28",
-      padding:    "72px 40px",
+      minHeight:  "100dvh",
+      display:    "flex",
+      alignItems: "center",
+      padding:    "60px 40px",
       fontFamily: "DM Sans, sans-serif",
     }}>
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", width: "100%" }}>
 
         <div style={{
           display:        "flex",

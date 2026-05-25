@@ -221,8 +221,15 @@ export default function GalleryCarousel() {
 
   return (
     <>
-      <div className="homeSection" style={{ paddingTop: 48, borderBottom: "0.5px solid #E4EEE4" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", paddingBottom: 4 }}>
+      <div className="homeSection" style={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "48px 0 20px",
+        borderBottom: "0.5px solid #E4EEE4"
+      }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", paddingBottom: 4, width: "100%" }}>
           <h2 className="sectionHeading" style={{ paddingLeft: 0 }}>Photos</h2>
         </div>
         <div className="carousel">
