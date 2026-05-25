@@ -13,6 +13,7 @@ import {
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingScreen from "./components/LoadingScreen";
 import Footer from "./components/Footer";
+import FloatingContact from "./components/FloatingContact";
 
 const UserPage = lazy(() => import("./components/UserPage"));
 const RoomsPage = lazy(() => import("./components/RoomsPage"));
@@ -598,6 +599,7 @@ function App() {
       </div>
 
       <Footer />
+      <FloatingContact />
     </main>
     </ErrorBoundary>
   );
