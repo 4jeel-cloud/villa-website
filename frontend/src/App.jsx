@@ -496,12 +496,15 @@ function App() {
               )}
             </>
           ) : (
+            <>
+            <Link className="navLink navLink--book" to="/#booking">Book Now</Link>
             <Link className="navLink navLink--admin" to="/admin">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
             </Link>
+            </>
           )}
         </nav>
       </header>
@@ -509,6 +512,7 @@ function App() {
       <div className={`sidebarOverlay${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(false)} />
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="sidebarBrand" style={{ fontFamily: "\"Cormorant Garamond\", serif", fontStyle: "italic", fontWeight: 600 }}>Creek View Villa</div>
+        <Link className="sidebarLink sidebarLink--book" to="/#booking" onClick={() => setSidebarOpen(false)}>Book Now</Link>
         <Link className="sidebarLink" to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
         <Link className="sidebarLink" to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
         <Link className="sidebarLink" to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>

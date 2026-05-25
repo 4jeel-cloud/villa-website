@@ -234,6 +234,26 @@ body {
   line-height: 0;
 }
 
+.navLink--book {
+  background: #ffffff;
+  color: #06402B;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-shadow: none;
+  transition: background 0.2s, transform 0.2s;
+}
+.topNav.scrolled .navLink--book,
+.topNav--light .navLink--book {
+  text-shadow: none;
+  color: #06402B;
+}
+.navLink--book:hover {
+  background: #E8F2EA;
+  transform: translateY(-1px);
+}
+
 /* Hamburger */
 .hamburger {
   display: flex;
@@ -307,6 +327,12 @@ body {
 }
 .sidebarLink:hover {
   background: #F0F7F0;
+}
+.sidebarLink--book {
+  font-weight: 700;
+  color: #06402B;
+  background: #E8F2EA;
+  border-bottom: 1px solid #D0E0D0;
 }
 .sidebarBrand {
   font-family: 'Cormorant Garamond', serif;
