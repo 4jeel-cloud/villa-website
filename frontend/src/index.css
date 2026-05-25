@@ -1128,10 +1128,12 @@ button {
   inset: 0;
   background-size: cover;
   background-position: center;
-  transition: transform 8s linear;
   transform: scale(1);
 }
-.car-img.ken { transform: scale(1.07); }
+.car-img.ken {
+  transition: transform 10s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: scale(1.07);
+}
 
 .car-scrim {
   position: absolute;
@@ -1272,6 +1274,8 @@ button {
   #car-next { right: 8px; }
   .thumb-strip { gap: 4px; margin-top: 8px; }
   .thumb { flex: 0 0 calc(14% - 3.4px); max-width: 60px; }
+  .car-img.ken { transition: none; transform: scale(1.03); }
+  .car-btn { backdrop-filter: none; }
 }
 
 @media (max-width: 480px) {

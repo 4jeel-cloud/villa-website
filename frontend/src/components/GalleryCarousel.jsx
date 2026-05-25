@@ -60,17 +60,11 @@ export default function GalleryCarousel() {
     bar.style.width = "100%";
   }, [index, paused]);
 
-  /* Ken Burns */
+  /* Ken Burns — only toggle the active slide */
   useEffect(() => {
     const imgs = document.querySelectorAll(".car-img");
     imgs.forEach((img, i) => {
-      if (i === index) {
-        img.classList.remove("ken");
-        void img.offsetWidth;
-        img.classList.add("ken");
-      } else {
-        img.classList.remove("ken");
-      }
+      img.classList.toggle("ken", i === index);
     });
   }, [index]);
 
