@@ -1111,8 +1111,7 @@ button {
 
 .car-track {
   display: flex;
-  transition: transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
-  will-change: transform;
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .car-slide {
@@ -1129,6 +1128,7 @@ button {
   background-size: cover;
   background-position: center;
   transform: scale(1);
+  transition: transform 0.7s ease-out;
 }
 .car-img.ken {
   transition: transform 10s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -1274,7 +1274,7 @@ button {
   #car-next { right: 8px; }
   .thumb-strip { gap: 4px; margin-top: 8px; }
   .thumb { flex: 0 0 calc(14% - 3.4px); max-width: 60px; }
-  .car-img.ken { transition: none; transform: scale(1.03); }
+  .car-img.ken { transition: transform 6s ease-out; transform: scale(1.02); }
   .car-btn { backdrop-filter: none; }
 }
 

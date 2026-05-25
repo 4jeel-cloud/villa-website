@@ -123,7 +123,10 @@ export default function GalleryCarousel() {
             <div className="car-slide" key={i}>
               <div
                 className={`car-img${i === index ? " ken" : ""}`}
-                style={{ backgroundImage: `url(${s.img})`, backgroundColor: "#8aab88" }}
+                style={{
+                  backgroundImage: Math.abs(i - index) <= 1 || SLIDES.length <= 3 ? `url(${s.img})` : undefined,
+                  backgroundColor: "#8aab88",
+                }}
               />
               <div className="car-scrim" />
               <div className="car-info">
@@ -168,7 +171,7 @@ export default function GalleryCarousel() {
             <div
               className="thumb-img"
               style={{
-                backgroundImage: `url(${s.img})`,
+                backgroundImage: Math.abs(i - index) <= 2 ? `url(${s.img})` : undefined,
                 backgroundColor: "#8aab88",
               }}
             />
