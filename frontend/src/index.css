@@ -168,9 +168,7 @@ body {
   color: #ffffff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   font-size: 1.5rem;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  margin-right: auto;
   transition: font-size 260ms ease;
 }
 
@@ -355,12 +353,11 @@ body {
   .navLeft { gap: 0; }
   .hamburger { display: none; }
   .navBack { display: none !important; }
-  .brand { position: static; transform: none; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
+  .brand { position: static; transform: none; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); margin-right: 0; }
   .navCenter { display: flex; gap: 16px; justify-content: center; flex: 1; }
   .navLink { text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
   .topNav { display: flex; align-items: center; }
-  .topNav .brand { position: absolute; left: 50%; transform: translateX(-50%); }
-  .navActions { margin-left: auto; }
+  .navActions { margin-left: auto; margin-right: 8px; }
   .topNav.scrolled .brand,
   .topNav--light .brand,
   .topNav.scrolled .navLink,

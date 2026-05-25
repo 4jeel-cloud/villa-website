@@ -450,7 +450,6 @@ function App() {
             <span></span><span></span><span></span>
           </button>
         </div>
-        {location.pathname !== "/admin" && <Link className="navLink navLink--book" to="/#booking">Book Now</Link>}
         <Link className="brand" to="/" style={{
           textDecoration: "none",
           fontFamily: "\"Cormorant Garamond\", serif",
@@ -497,12 +496,15 @@ function App() {
               )}
             </>
           ) : (
+            <>
+            <Link className="navLink navLink--book" to="/#booking">Book Now</Link>
             <Link className="navLink navLink--admin" to="/admin">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
             </Link>
+            </>
           )}
         </nav>
       </header>
