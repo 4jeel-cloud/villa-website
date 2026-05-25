@@ -4,7 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { toDateKey } from "../utils";
 import GalleryCarousel from "./GalleryCarousel";
-import MapSection from "./MapSection";
+import Location from "../sections/Location";
 
 export default function UserPage({
   availability,
@@ -233,10 +233,7 @@ export default function UserPage({
         <GalleryCarousel />
       </div>
 
-      <div id="location" className="homeSection mapSection">
-        <h2 className="sectionHeading">Location</h2>
-        <MapSection />
-      </div>
+      <Location />
     </section>
   );
 }

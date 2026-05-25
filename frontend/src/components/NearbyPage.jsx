@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+
 const DESTINATIONS = [
   {
     name: "Wayanad Adventure Camp",
@@ -47,6 +50,18 @@ const DESTINATIONS = [
 ];
 
 export default function NearbyPage() {
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const place = searchParams.get("place");
+    if (place) {
+      const id = place.toLowerCase().replace(/\s+/g, "-");
+      const el = document.getElementById(id);
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+    }
+  }, [searchParams]);
+
+  const slug = (name) => name.toLowerCase().replace(/\s+/g, "-");
   return (
     <section className="nearbyPage">
       <div className="nearbyHero">
@@ -87,7 +102,7 @@ export default function NearbyPage() {
             </div>
           );
           return (
-            <div key={place.name} className={`nearbyRow${isReversed ? " nearbyRow--reverse" : ""}`}>
+            <div key={place.name} id={slug(place.name)} className={`nearbyRow${isReversed ? " nearbyRow--reverse" : ""}`}>
               {isReversed ? <>{map}{card}</> : <>{card}{map}</>}
             </div>
           );

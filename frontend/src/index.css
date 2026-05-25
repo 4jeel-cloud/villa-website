@@ -1786,6 +1786,19 @@ button {
   .roomCard {
     grid-template-columns: 1fr !important;
   }
+
+  /* Location section — stack columns */
+  .locationGrid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .locationGrid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }
 
 @media (max-width: 420px) {
