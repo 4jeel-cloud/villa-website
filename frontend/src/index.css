@@ -1950,6 +1950,8 @@ button {
     font-size: 24px !important;
   }
   .locationMap {
-    min-height: 200px !important;
+    min-height: 240px !important;
+    aspect-ratio: auto !important;
+    height: 40vw !important;
   }
 }

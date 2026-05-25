@@ -2,10 +2,10 @@ import { Link } from "react-router-dom";
 
 const nearby = [
   { icon: "mountain",       name: "Chembra Peak",       dist: "12 km away" },
-  { icon: "waterfall",      name: "Soochipara Falls",   dist: "18 km away" },
+  { icon: "droplets",       name: "Soochipara Falls",   dist: "18 km away" },
   { icon: "ripple",         name: "Pookode Lake",       dist: "8 km away"  },
   { icon: "building-arch",  name: "Banasura Dam",       dist: "22 km away" },
-  { icon: "island",         name: "Kuruva Island",      dist: "15 km away" },
+  { icon: "leaf",           name: "Kuruva Island",      dist: "15 km away" },
   { icon: "paw",            name: "Wayanad Sanctuary",  dist: "10 km away" },
 ];
 
