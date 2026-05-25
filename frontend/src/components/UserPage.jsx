@@ -5,6 +5,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { toDateKey } from "../utils";
 import GalleryCarousel from "./GalleryCarousel";
 import Location from "../sections/Location";
+import HomeAmenities from "../sections/HomeAmenities";
 
 export default function UserPage({
   availability,
@@ -228,6 +229,8 @@ export default function UserPage({
           </div>
         </div>
       </div>
+
+      <HomeAmenities />
 
       <div id="photos">
         <GalleryCarousel />
