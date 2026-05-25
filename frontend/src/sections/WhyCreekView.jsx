@@ -19,10 +19,11 @@ const reasons = [
 function Card({ icon, title, desc }) {
   return (
     <div style={{
-      border:       "0.5px solid #E8F0E8",
-      borderRadius: 12,
-      padding:      "22px 18px",
+      border:       "0.5px solid #DCE8DC",
+      borderRadius: 14,
+      padding:      "24px 20px",
       background:   "#ffffff",
+      boxShadow:    "0 2px 8px rgba(0,0,0,0.04)",
     }}>
       <i
         className={`ti ti-${icon}`}
@@ -56,7 +57,7 @@ function Card({ icon, title, desc }) {
 export default function WhyCreekView() {
   return (
     <section style={{
-      background: "#ffffff",
+      background: "#F5F9F5",
       padding:    "56px 40px",
       fontFamily: "DM Sans, sans-serif",
     }}>

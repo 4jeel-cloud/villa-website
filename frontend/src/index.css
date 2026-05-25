@@ -1064,7 +1064,7 @@ button {
   position: relative;
   width: 100%;
   overflow: hidden;
-  padding: 40px 0 60px;
+  padding: 36px 0 60px;
 }
 
 .carousel-row {
@@ -1314,8 +1314,8 @@ button {
   color: #06402B;
   text-transform: uppercase;
   font-size: clamp(1rem, 2.5vw, 1.4rem);
-  margin: 0 16px 12px;
-  text-align: center;
+  margin: 0;
+  text-align: left;
 }
 
 .mapSection {

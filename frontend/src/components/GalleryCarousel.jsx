@@ -221,8 +221,10 @@ export default function GalleryCarousel() {
 
   return (
     <>
-      <div className="homeSection">
-        <h2 className="sectionHeading">Photos</h2>
+      <div className="homeSection" style={{ paddingTop: 48, borderBottom: "0.5px solid #E4EEE4" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", paddingBottom: 4 }}>
+          <h2 className="sectionHeading" style={{ paddingLeft: 0 }}>Photos</h2>
+        </div>
         <div className="carousel">
           <button className="carousel-btn carousel-btn--prev" onClick={() => snap(1)} aria-label="Next">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
