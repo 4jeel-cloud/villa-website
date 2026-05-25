@@ -12,10 +12,10 @@ import {
 } from "./api";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingScreen from "./components/LoadingScreen";
-import UserPage from "./components/UserPage";
-import RoomsPage from "./components/RoomsPage";
 import Footer from "./components/Footer";
 
+const UserPage = lazy(() => import("./components/UserPage"));
+const RoomsPage = lazy(() => import("./components/RoomsPage"));
 const NearbyPage = lazy(() => import("./components/NearbyPage"));
 const AmenitiesPage = lazy(() => import("./pages/Amenities"));
 const AdminPage = lazy(() => import("./components/AdminPage"));
@@ -539,6 +539,7 @@ function App() {
           <Route
             path="/"
             element={
+              <Suspense fallback={<LoadingScreen />}>
               <UserPage
                 availability={availability}
                 bookings={bookings}
@@ -552,9 +553,10 @@ function App() {
                 onGuestBooking={handleGuestBooking}
                 onNotify={showNotification}
               />
+              </Suspense>
             }
           />
-          <Route path="/rooms" element={<RoomsPage rooms={rooms} />} />
+          <Route path="/rooms" element={<Suspense fallback={<div className="pageLoading" />}><RoomsPage rooms={rooms} /></Suspense>} />
           <Route path="/amenities" element={<Suspense fallback={<div className="pageLoading" />}><AmenitiesPage /></Suspense>} />
           <Route path="/nearby" element={<Suspense fallback={<div className="pageLoading" />}><NearbyPage /></Suspense>} />
           <Route
