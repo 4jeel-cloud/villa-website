@@ -87,7 +87,7 @@ export default function Location() {
           margin:              "0 auto",
           display:             "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap:                 "clamp(24px, 4vw, 64px)",
+          gap:                 "clamp(32px, 5vw, 80px)",
           alignItems:          "start",
         }}
       >
@@ -150,13 +150,13 @@ export default function Location() {
               background:   "rgba(255,255,255,0.06)",
               border:       "0.5px solid rgba(255,255,255,0.12)",
               borderRadius: 12,
-              height:       280,
+              height:       360,
               position:     "relative",
               overflow:     "hidden",
             }}
           >
             <iframe
-              src="https://www.google.com/maps?q=Padinjarathara,Wayanad,Kerala&output=embed"
+              src="https://www.google.com/maps?q=MXH5%2B974+Panthipoyil+Padinjarathara+Kerala&output=embed"
               title="Creek View Villa Location"
               loading="lazy"
               allowFullScreen
@@ -169,7 +169,7 @@ export default function Location() {
             />
 
             <a
-              href="https://maps.google.com/?q=Padinjarathara,Wayanad,Kerala"
+              href="https://maps.google.com/?q=MXH5%2B974+Panthipoyil+Padinjarathara+Kerala+673575"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -220,8 +220,10 @@ export default function Location() {
             ))}
           </div>
 
-          <Link
-            to="/nearby"
+          <a
+            href="https://maps.google.com/?q=MXH5%2B974+Panthipoyil+Padinjarathara+Kerala+673575"
+            target="_blank"
+            rel="noreferrer"
             style={{
               display:        "flex",
               alignItems:     "center",
@@ -242,7 +244,7 @@ export default function Location() {
           >
             <i className="ti ti-navigation" aria-hidden="true" />
             Get directions
-          </Link>
+          </a>
         </div>
 
       </div>
