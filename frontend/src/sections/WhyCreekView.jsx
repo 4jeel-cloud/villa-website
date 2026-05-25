@@ -33,7 +33,7 @@ const reasons = [
 
 export default function WhyCreekView() {
   return (
-    <section style={{
+    <section className="whySection" style={{
       background: "#ffffff",
       minHeight:  "100dvh",
       display:    "flex",
@@ -63,7 +63,7 @@ export default function WhyCreekView() {
           </h2>
         </div>
 
-        <div style={{
+        <div className="whyGrid" style={{
           display:             "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap:                 20,

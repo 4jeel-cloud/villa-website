@@ -112,6 +112,7 @@ export default function Location() {
           </p>
 
           <h2
+            className="locationHeading"
             style={{
               fontFamily:   "Cormorant Garamond, serif",
               fontSize:     28,
@@ -150,6 +151,7 @@ export default function Location() {
           </p>
 
           <div
+            className="locationMap"
             style={{
               background:   "rgba(255,255,255,0.06)",
               border:       "0.5px solid rgba(255,255,255,0.12)",

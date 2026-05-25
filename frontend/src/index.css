@@ -1898,3 +1898,51 @@ button {
     gap: 16px !important;
   }
 }
+
+/* ===== Mobile Navbar optimizations ===== */
+@media (max-width: 768px) {
+  .brand {
+    font-size: 1.15rem;
+  }
+  .topNav.scrolled .brand,
+  .topNav--light .brand {
+    font-size: 1rem;
+  }
+  .navLink--book {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .navActions {
+    gap: 2px;
+  }
+}
+
+/* ===== Mobile WhyCreekView optimizations ===== */
+@media (max-width: 768px) {
+  .whySection {
+    padding: 48px 24px !important;
+    min-height: auto !important;
+  }
+  .whyGrid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+}
+@media (max-width: 480px) {
+  .whyGrid {
+    gap: 20px !important;
+  }
+}
+
+/* ===== Mobile Location map optimizations ===== */
+@media (max-width: 768px) {
+  #location {
+    padding: 48px 24px !important;
+  }
+  .locationHeading {
+    font-size: 24px !important;
+  }
+  .locationMap {
+    min-height: 200px !important;
+  }
+}
