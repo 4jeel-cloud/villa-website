@@ -449,7 +449,14 @@ function App() {
             <span></span><span></span><span></span>
           </button>
         </div>
-        <Link className="brand" to="/" style={{ textDecoration: "none" }}>CreekViewVilla</Link>
+        <Link className="brand" to="/" style={{
+          textDecoration: "none",
+          fontFamily: "\"Cormorant Garamond\", serif",
+          fontStyle: "italic",
+          fontWeight: 600,
+          fontSize: "1.15rem",
+          letterSpacing: "0.02em",
+        }}>Creek View Villa</Link>
         <nav className="navCenter">
           {location.pathname !== "/" && <Link className={`navLink${location.pathname === "/" ? " active" : ""}`} to="/#hero" onClick={() => setSidebarOpen(false)}>Home</Link>}
           <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
@@ -500,7 +507,7 @@ function App() {
 
       <div className={`sidebarOverlay${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(false)} />
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
-        <div className="sidebarBrand">Creek View Villa</div>
+        <div className="sidebarBrand" style={{ fontFamily: "\"Cormorant Garamond\", serif", fontStyle: "italic", fontWeight: 600 }}>Creek View Villa</div>
         <Link className="sidebarLink" to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
         <Link className="sidebarLink" to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
         <Link className="sidebarLink" to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
