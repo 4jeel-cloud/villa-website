@@ -1789,14 +1789,13 @@ button {
   /* Location section — stack columns */
   .locationGrid {
     grid-template-columns: 1fr !important;
-    gap: 32px !important;
+    gap: 28px !important;
   }
 }
 
 @media (max-width: 480px) {
-  .locationGrid {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+  #location {
+    padding: 48px 20px !important;
   }
 }
 

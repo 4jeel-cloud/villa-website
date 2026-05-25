@@ -83,11 +83,11 @@ export default function Location() {
       <div
         className="locationGrid"
         style={{
-          maxWidth:            900,
+          maxWidth:            820,
           margin:              "0 auto",
           display:             "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap:                 48,
+          gridTemplateColumns: "1.1fr 0.9fr",
+          gap:                 36,
           alignItems:          "start",
         }}
       >
