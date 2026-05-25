@@ -43,7 +43,7 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
       <hr style="border:none;border-top:1px solid #D8E4D8;margin:0 0 20px">
       <p style="font-size:13px;color:#5A6A5A;margin:0;line-height:1.7">
         For any questions, reach us at 
-        <strong style="color:#1C3A28">+91 95442 42879</strong> 
+        <strong style="color:#1C3A28">+91 73061 98968</strong> 
         or reply to this email.
       </p>
     </div>
@@ -52,7 +52,7 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#1C3A28;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#9AB09A;line-height:1.8;margin:0">
         Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
-        creekviewvilla@gmail.com · +91 95442 42879
+        creekviewvilla@gmail.com · +91 73061 98968
       </p>
     </div>
 
@@ -107,7 +107,7 @@ function cancellationEmail({ name, room, checkin, checkout }) {
       <hr style="border:none;border-top:1px solid #E4D8D8;margin:0 0 20px">
       <p style="font-size:13px;color:#6A5A5A;margin:0;line-height:1.7">
         We hope to welcome you another time. Reach us at 
-        <strong style="color:#3A1C1C">+91 95442 42879</strong> for any assistance.
+        <strong style="color:#3A1C1C">+91 73061 98968</strong> for any assistance.
       </p>
     </div>
 
@@ -115,7 +115,7 @@ function cancellationEmail({ name, room, checkin, checkout }) {
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#3A1C1C;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#B09A9A;line-height:1.8;margin:0">
         Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
-        creekviewvilla@gmail.com · +91 95442 42879
+        creekviewvilla@gmail.com · +91 73061 98968
       </p>
     </div>
 

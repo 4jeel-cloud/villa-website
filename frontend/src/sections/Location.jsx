@@ -135,10 +135,10 @@ export default function Location() {
           >
             Kerala, India<br />
             <a
-              href="tel:+919544242879"
+              href="tel:+917306198968"
               style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}
             >
-              +91 95442 42879
+              +91 73061 98968
             </a>
             <br />
             <a

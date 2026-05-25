@@ -2,7 +2,7 @@ export default function FloatingContact() {
   return (
     <div className="floatingContact">
       <a
-        href="https://wa.me/919544242879"
+        href="https://wa.me/917306198968"
         target="_blank"
         rel="noreferrer"
         className="floatingContactBtn floatingContactBtn--wa"

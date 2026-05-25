@@ -54,7 +54,7 @@ export default function Footer() {
           </div>
           <div className="footerGroup">
             <b>Contact</b>
-            <a href="tel:+919544242879">+91 95442 42879</a>
+            <a href="tel:+917306198968">+91 73061 98968</a>
             <a href="mailto:creekviewvilla@gmail.com">creekviewvilla@gmail.com</a>
             <a href="https://maps.google.com/?q=Creek+View+Villa+Padinjarathara+Kerala" target="_blank" rel="noopener noreferrer">Padinjarathara, Wayanad</a>
             <a href="https://maps.google.com/?q=Creek+View+Villa+Padinjarathara+Kerala" target="_blank" rel="noopener noreferrer">Kerala, India</a>
