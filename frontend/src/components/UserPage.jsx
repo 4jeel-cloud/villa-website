@@ -236,11 +236,11 @@ export default function UserPage({
 
       <WhatsIncluded />
 
-      <WhyCreekView />
-
       <div id="photos">
         <GalleryCarousel />
       </div>
+
+      <WhyCreekView />
 
       <Location />
     </section>
