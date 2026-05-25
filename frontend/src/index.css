@@ -1200,14 +1200,16 @@ button {
 
 .thumb-strip {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 12px;
+  justify-content: center;
 }
 
 .thumb {
-  flex: 0 0 calc(12.5% - 7px);
+  flex: 0 0 calc(10% - 5.4px);
+  max-width: 80px;
   aspect-ratio: 3 / 2;
-  border-radius: 9px;
+  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
   transition: opacity 0.2s, outline 0.18s;
@@ -1234,12 +1236,13 @@ button {
   .car-btn { width: 36px; height: 36px; font-size: 15px; }
   #car-prev { left: 8px; }
   #car-next { right: 8px; }
-  .thumb-strip { gap: 5px; }
-  .thumb { flex: 0 0 calc(20% - 4px); }
+  .thumb-strip { gap: 4px; margin-top: 8px; }
+  .thumb { flex: 0 0 calc(14% - 3.4px); max-width: 60px; }
 }
 
 @media (max-width: 480px) {
-  .thumb { flex: 0 0 calc(25% - 4.5px); }
+  .thumb { flex: 0 0 calc(18% - 3.2px); max-width: 50px; }
+  .thumb-strip { gap: 3px; }
   .car-btn { display: none; }
 }
 

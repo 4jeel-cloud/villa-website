@@ -24,27 +24,31 @@ export default function GalleryCarousel() {
   const autoTimer = useRef(null);
   const dragStartX = useRef(null);
   const touchStartX = useRef(null);
+  const indexRef = useRef(0);
 
   const go = useCallback((idx, resetTimer) => {
-    setIndex((prev) => {
-      const next = ((idx % TOTAL) + TOTAL) % TOTAL;
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translateX(-${next * 100}%)`;
-      }
-      return next;
-    });
+    const next = ((idx % TOTAL) + TOTAL) % TOTAL;
+    indexRef.current = next;
+    setIndex(next);
+    if (trackRef.current) {
+      trackRef.current.style.transform = `translateX(-${next * 100}%)`;
+    }
     if (resetTimer) {
       clearInterval(autoTimer.current);
-      autoTimer.current = setInterval(() => go(index + 1, false), DELAY);
+      autoTimer.current = setInterval(() => go(indexRef.current + 1, false), DELAY);
     }
-  }, [index]);
+    // else: auto-advance handled by the effect below
+  }, []);
 
+  /* auto-advance timer — runs when not paused */
   useEffect(() => {
-    const timer = setInterval(() => go(index + 1, false), DELAY);
+    if (paused) return;
+    const timer = setInterval(() => go(indexRef.current + 1, false), DELAY);
     autoTimer.current = timer;
     return () => clearInterval(timer);
-  }, [index, go]);
+  }, [paused, go]);
 
+  /* progress bar */
   useEffect(() => {
     if (paused) return;
     const bar = progressRef.current;
@@ -56,6 +60,7 @@ export default function GalleryCarousel() {
     bar.style.width = "100%";
   }, [index, paused]);
 
+  /* Ken Burns */
   useEffect(() => {
     const imgs = document.querySelectorAll(".car-img");
     imgs.forEach((img, i) => {
@@ -69,8 +74,8 @@ export default function GalleryCarousel() {
     });
   }, [index]);
 
-  const prev = useCallback(() => go(index - 1, true), [index, go]);
-  const next = useCallback(() => go(index + 1, true), [index, go]);
+  const prev = useCallback(() => go(indexRef.current - 1, true), [go]);
+  const next = useCallback(() => go(indexRef.current + 1, true), [go]);
 
   const handleMouseEnter = useCallback(() => {
     setPaused(true);
@@ -83,8 +88,7 @@ export default function GalleryCarousel() {
 
   const handleMouseLeave = useCallback(() => {
     setPaused(false);
-    autoTimer.current = setInterval(() => go(index + 1, false), DELAY);
-  }, [index, go]);
+  }, []);
 
   const handleTouchStart = useCallback((e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -93,9 +97,9 @@ export default function GalleryCarousel() {
   const handleTouchEnd = useCallback((e) => {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1), true);
+    if (Math.abs(dx) > 40) go(indexRef.current + (dx < 0 ? 1 : -1), true);
     touchStartX.current = null;
-  }, [index, go]);
+  }, [go]);
 
   const handleMouseDown = useCallback((e) => {
     dragStartX.current = e.clientX;
@@ -104,9 +108,9 @@ export default function GalleryCarousel() {
   const handleMouseUp = useCallback((e) => {
     if (dragStartX.current === null) return;
     const dx = e.clientX - dragStartX.current;
-    if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1), true);
+    if (Math.abs(dx) > 40) go(indexRef.current + (dx < 0 ? 1 : -1), true);
     dragStartX.current = null;
-  }, [index, go]);
+  }, [go]);
 
   return (
     <div className="car-root">
@@ -116,6 +120,7 @@ export default function GalleryCarousel() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
