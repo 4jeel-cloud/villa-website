@@ -14,6 +14,21 @@ const reasons = [
     title: "Luxury without pretense",
     desc:  "Pool, breakfast, bonfire and BBQ — every comfort included, delivered with genuine Kerala warmth.",
   },
+  {
+    icon:  "device-tv",
+    title: "Modern comforts",
+    desc:  "WiFi, smart TV, hot water, a fully equipped kitchen, and secure parking — everything for a hassle-free stay.",
+  },
+  {
+    icon:  "tree",
+    title: "Outdoor living",
+    desc:  "Garden, pool, bonfire nights, BBQ, and a private balcony overlooking the creek and forest canopy.",
+  },
+  {
+    icon:  "baby-carriage",
+    title: "Made for families",
+    desc:  "Child-friendly spaces, board games, guided nature walks, and 24-hour CCTV for complete peace of mind.",
+  },
 ];
 
 export default function WhyCreekView() {
@@ -44,7 +59,7 @@ export default function WhyCreekView() {
             lineHeight: 1.25,
             margin:     0,
           }}>
-            Three reasons guests<br />keep coming back
+            Six reasons guests<br />keep coming back
           </h2>
         </div>
 
