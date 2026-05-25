@@ -12,8 +12,9 @@ export default function AdminLoginPage({ onLogin }) {
     setError("");
     setLoading(true);
     try {
-      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      const { signInWithEmailAndPassword, setPersistence, browserSessionPersistence } = await import("firebase/auth");
       const { auth } = await import("../firebase");
+      await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
       onLogin();
     } catch (err) {
