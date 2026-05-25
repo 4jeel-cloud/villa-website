@@ -5,7 +5,6 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { toDateKey } from "../utils";
 import GalleryCarousel from "./GalleryCarousel";
 import Location from "../sections/Location";
-import HomeAmenities from "../sections/HomeAmenities";
 import WhatsIncluded from "../sections/WhatsIncluded";
 import WhyCreekView from "../sections/WhyCreekView";
 
@@ -231,8 +230,6 @@ export default function UserPage({
           </div>
         </div>
       </div>
-
-      <HomeAmenities />
 
       <WhatsIncluded />
 
