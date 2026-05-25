@@ -155,7 +155,18 @@ export default function Location() {
               overflow:     "hidden",
             }}
           >
-            <MapIllustration />
+            <iframe
+              src="https://www.google.com/maps?q=Padinjarathara,Wayanad,Kerala&output=embed"
+              title="Creek View Villa Location"
+              loading="lazy"
+              allowFullScreen
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                display: "block",
+              }}
+            />
 
             <a
               href="https://maps.google.com/?q=Padinjarathara,Wayanad,Kerala"

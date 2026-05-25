@@ -1435,11 +1435,10 @@ button {
 
 .footer {
   z-index: 1;
-  --footer-bg: #06402B;
+  --footer-bg: #1C3A28;
   display: grid;
   position: relative;
   min-height: 12rem;
-  margin-top: 6rem;
 }
 
 .footerBubbles {

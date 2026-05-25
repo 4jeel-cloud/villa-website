@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 
 const DESTINATIONS = [
   {
+    icon: "backpack",
     name: "Wayanad Adventure Camp",
     rating: "4.0",
     reviews: "4.0K",
@@ -12,6 +13,7 @@ const DESTINATIONS = [
     mapEmbed: "https://www.google.com/maps?q=Wayanad+Adventure+Camp+Karlad+Lake&output=embed",
   },
   {
+    icon: "sunset",
     name: "Dam Back Side View",
     rating: "4.7",
     reviews: "190",
@@ -21,6 +23,7 @@ const DESTINATIONS = [
     mapEmbed: "https://www.google.com/maps?q=Dam+Back+Side+View+Banasura+Sagar&output=embed",
   },
   {
+    icon: "waterfall",
     name: "Makkiyad Meenmutty Water Falls",
     rating: "4.2",
     reviews: "1.2K",
@@ -30,6 +33,7 @@ const DESTINATIONS = [
     mapEmbed: "https://www.google.com/maps?q=Makkiyad+Meenmutty+Waterfalls+Kanjirangad+Kerala&output=embed",
   },
   {
+    icon: "camera",
     name: "Waterfall Selfie Point",
     rating: "4.5",
     reviews: "66",
@@ -39,6 +43,7 @@ const DESTINATIONS = [
     mapEmbed: "https://www.google.com/maps?q=Waterfall+Selfie+Point+Padinjarathara&output=embed",
   },
   {
+    icon: "building-arch",
     name: "Banasura Sagar Dam",
     rating: "4.4",
     reviews: "12K",
@@ -73,7 +78,17 @@ export default function NearbyPage() {
           const isReversed = i % 2 !== 0;
           const card = (
             <div className="nearbyCard">
-              <span className="nearbyTag">{place.tag}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: "#ecfdf5", display: "flex",
+                  alignItems: "center", justifyContent: "center",
+                  color: "#06402B", fontSize: 18, flexShrink: 0,
+                }}>
+                  <i className={`ti ti-${place.icon}`} aria-hidden="true" />
+                </div>
+                <span className="nearbyTag">{place.tag}</span>
+              </div>
               <h3>{place.name}</h3>
               <div className="nearbyRating">
                 <span className="nearbyStars">{"★".repeat(Math.round(Number(place.rating)))}{"☆".repeat(5 - Math.round(Number(place.rating)))}</span>
