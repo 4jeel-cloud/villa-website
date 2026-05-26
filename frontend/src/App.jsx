@@ -10,7 +10,7 @@ import {
   updateRoomImages,
   updateRoomPrice
 } from "./api";
-import { fetchCalendarEvents, syncCalendarEvents, addCalendarEvent, removeCalendarEvent } from "./calendarDb";
+import { fetchCalendarEvents } from "./calendarDb";
 import { saveBookingCache, loadBookingCache } from "./bookingCache";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingScreen from "./components/LoadingScreen";
@@ -159,7 +159,6 @@ function App() {
         setRooms(roomsData);
         const merged = mergeBookingsIntoAvailability(availabilityData, []);
         setAvailability(merged);
-        syncCalendarEvents(merged);
         setRoomSettings((prev) => {
           const next = { ...prev };
           roomsData.forEach((room) => {
@@ -223,7 +222,6 @@ function App() {
     if (!dataLoaded || !bookingsFetched.current) return;
     setAvailability((prev) => {
       const merged = mergeBookingsIntoAvailability(prev, bookings);
-      syncCalendarEvents(merged);
       return merged;
     });
   }, [dataLoaded, bookings]);
@@ -263,7 +261,6 @@ function App() {
     setBookings((prev) => [...prev, booking]);
     const newEvent = { id: booking.id, title: `${booking.roomName} (Booked)`, start: booking.checkIn, end: booking.checkOut, color: "#ef4444", guestName: booking.guestName, roomName: booking.roomName };
     setAvailability((prev) => [...prev, newEvent]);
-    addCalendarEvent(newEvent);
     setBookingForm((prev) => ({ ...prev, checkIn: "", checkOut: "", guestName: "", guestEmail: "", guestPhone: "", guests: "", guestType: "Family" }));
   };
 
@@ -455,7 +452,6 @@ function App() {
       setBookings((prev) => [...prev, booking]);
       const newEvent = { id: booking.id, title: `${booking.roomName} (Booked)`, start: booking.checkIn, end: booking.checkOut, color: "#ef4444", guestName: booking.guestName, roomName: booking.roomName };
       setAvailability((prev) => [...prev, newEvent]);
-      addCalendarEvent(newEvent);
       showNotification("success", "Admin booking created.");
       setAdminForm((prev) => ({ ...prev, checkIn: "", checkOut: "", guestName: "", guestEmail: "", guestPhone: "", guests: "", guestType: "Family", amount: "" }));
     } catch (error) {
@@ -483,7 +479,6 @@ function App() {
               e.title && e.title.startsWith(cancelled.roomName)) return false;
           return true;
         });
-        removeCalendarEvent(bookingId);
         return filtered;
       });
       showNotification("success", "Booking cancelled.");
