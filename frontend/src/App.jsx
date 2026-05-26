@@ -36,6 +36,7 @@ function App() {
   const notifTimeout = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const bookingsFetched = useRef(false);
 
   const showNotification = (type, text) => {
     if (notifTimeout.current) clearTimeout(notifTimeout.current);
@@ -179,6 +180,7 @@ function App() {
   // Auth-aware: merge confirmed bookings into availability when admin token arrives
   useEffect(() => {
     if (!authChecked) return;
+    if (bookingsFetched.current) return;
     (async () => {
       if (!adminToken) return;
       setBookingsLoading(true);
@@ -187,9 +189,6 @@ function App() {
       const cached = await loadBookingCache();
       if (cached?.length) {
         setBookings(cached);
-        if (dataLoaded) {
-          setAvailability((prev) => mergeBookingsIntoAvailability(prev, cached));
-        }
       }
 
       // Then fetch fresh data from API
@@ -197,16 +196,20 @@ function App() {
         const bookingsData = await getBookings(adminToken);
         setBookings(bookingsData);
         saveBookingCache(bookingsData);
-        if (dataLoaded) {
-          setAvailability((prev) => mergeBookingsIntoAvailability(prev, bookingsData));
-        }
+        bookingsFetched.current = true;
       } catch (e) {
         console.warn("Admin token invalid or expired", e);
       } finally {
         setBookingsLoading(false);
       }
     })();
-  }, [authChecked, adminToken, dataLoaded]);
+  }, [authChecked, adminToken]);
+
+  // Merge bookings into availability when both are ready
+  useEffect(() => {
+    if (!dataLoaded || !bookingsFetched.current) return;
+    setAvailability((prev) => mergeBookingsIntoAvailability(prev, bookings));
+  }, [dataLoaded, bookings]);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 24);
@@ -316,10 +319,11 @@ function App() {
     const clickedDate = clickInfo.dateStr;
 
     const fullyBusy = new Set();
-    const checkoutOnly = new Set();
+    const excludeDates = new Set();
 
     for (const evt of availability) {
       if (!evt.start || !evt.end) continue;
+      if (selectedRoomName && !evt.title?.startsWith(selectedRoomName)) continue;
 
       const cur = new Date(evt.start + "T00:00:00");
       const end = new Date(evt.end   + "T00:00:00");
@@ -333,10 +337,11 @@ function App() {
         fullyBusy.add(toDateKey(cur));
         cur.setDate(cur.getDate() + 1);
       }
-      checkoutOnly.add(toDateKey(end));
+      excludeDates.add(toDateKey(end));
+      excludeDates.add(toDateKey(new Date(evt.start + "T00:00:00")));
     }
 
-    checkoutOnly.forEach(d => fullyBusy.delete(d));
+    excludeDates.forEach(d => fullyBusy.delete(d));
 
     const toDateKey2 = (d) => {
       const dt = typeof d === "string" ? new Date(d + "T00:00:00") : d;

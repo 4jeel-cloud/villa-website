@@ -31,8 +31,11 @@ export default function UserPage({
     const ck = new Map();
     const ci = new Set();
     const co = new Set();
+    const selectedRoom = rooms.find(r => r.id === bookingForm.roomId);
+    const selectedRoomName = selectedRoom?.name;
     for (const b of (bookings || [])) {
       if (b.status !== "confirmed") continue;
+      if (selectedRoomName && b.roomName !== selectedRoomName) continue;
       const sk = b.checkIn, ek = b.checkOut;
       ci.add(sk);
       co.add(ek);
@@ -46,6 +49,7 @@ export default function UserPage({
     }
     for (const evt of (availability || [])) {
       if (!evt.start || !evt.end) continue;
+      if (selectedRoomName && !evt.title?.startsWith(selectedRoomName)) continue;
       const sk = evt.start, ek = evt.end;
       let cur = new Date(sk + "T00:00:00");
       const end = new Date(ek + "T00:00:00");
@@ -73,7 +77,7 @@ export default function UserPage({
       }
     }
     return { blockedClasses: ck, existingCheckin: ci, existingCheckout: co };
-  }, [bookings, availability]);
+  }, [bookings, availability, bookingForm.roomId]);
 
   const dayCellClassNames = (arg) => {
     const dayKey = toDateKey(arg.date);
