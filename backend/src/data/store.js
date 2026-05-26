@@ -197,15 +197,27 @@ function datesOverlap(startA, endA, startB, endB) {
   return startA < endB && startB < endA;
 }
 
-function isRoomAvailable(roomId, checkIn, checkOut, ignoreBookingId = null) {
+async function isRoomAvailable(roomId, checkIn, checkOut, ignoreBookingId = null) {
+  // Check in-memory bookings (primary)
   const clashWithBooking = bookings.some((b) => {
     if (b.id === ignoreBookingId || b.status !== "confirmed") return false;
     return b.roomId === roomId && datesOverlap(checkIn, checkOut, b.checkIn, b.checkOut);
   });
+  if (clashWithBooking) return false;
+
+  // Check in-memory blocked dates
   const clashWithBlocks = blockedDates.some((b) => {
     return b.roomId === roomId && datesOverlap(checkIn, checkOut, b.startDate, b.endDate);
   });
-  return !clashWithBooking && !clashWithBlocks;
+  if (clashWithBlocks) return false;
+
+  // Check Firestore as fallback (catches cross-instance / cold-start gaps)
+  try {
+    const fsOverlap = await firestoreDb.hasOverlappingBooking(roomId, checkIn, checkOut, ignoreBookingId);
+    if (fsOverlap) return false;
+  } catch (_) { /* Firestore not available — trust in-memory check */ }
+
+  return true;
 }
 
 async function getAvailabilityEvents() {
@@ -232,7 +244,7 @@ async function createBooking(data) {
   const room = rooms.find((r) => r.id === data.roomId);
   if (!room) throw new Error("Room not found");
 
-  if (!isRoomAvailable(data.roomId, data.checkIn, data.checkOut)) {
+  if (!(await isRoomAvailable(data.roomId, data.checkIn, data.checkOut))) {
     throw new Error("Room is already booked or blocked in selected dates.");
   }
 

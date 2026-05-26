@@ -74,6 +74,20 @@ async function loadBookings() {
   return snap.docs.map(d => d.data());
 }
 
+async function hasOverlappingBooking(roomId, checkIn, checkOut, ignoreBookingId) {
+  if (!isConnected()) return false;
+  const snap = await firestore.collection("bookings")
+    .where("roomId", "==", roomId)
+    .where("status", "==", "confirmed")
+    .get();
+  for (const doc of snap.docs) {
+    const b = doc.data();
+    if (b.id === ignoreBookingId) continue;
+    if (b.checkIn < checkOut && checkIn < b.checkOut) return true;
+  }
+  return false;
+}
+
 async function insertBooking(booking) {
   if (!isConnected()) return;
   await firestore.collection("bookings").doc(booking.id).set(booking, { merge: true });
@@ -132,7 +146,7 @@ async function shutdown() {
 module.exports = {
   connect, isConnected, shutdown,
   loadRooms, upsertRoom, updateRoomPriceDb, updateRoomImagesDb,
-  loadBookings, insertBooking, cancelBookingDb,
+  loadBookings, insertBooking, cancelBookingDb, hasOverlappingBooking,
   loadBlockedDates, insertBlockedDate,
   syncCalendarEvents,
 };
