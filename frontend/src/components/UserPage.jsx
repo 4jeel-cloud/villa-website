@@ -80,6 +80,7 @@ export default function UserPage({
         if (rooms.size >= roomCount) ck.set(key, "blocked-date");
       }
     }
+    console.log("[UserPage] half-yellow debug:", { ci: [...ci], co: [...co], ck: [...ck.keys()], availCount: (availability || []).length });
     return { blockedClasses: ck, existingCheckin: ci, existingCheckout: co };
   }, [bookings, availability, bookingForm.roomId]);
 
