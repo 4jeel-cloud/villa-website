@@ -241,16 +241,30 @@ export default function AdminDashboard({ bookings, rooms }) {
     <div className="dash-wrap" style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, width: "100%", padding: "24px 20px" }}>
       <style>{`
         @media (max-width: 700px) {
-          .dash-wrap { padding: 16px 12px !important; }
+          .dash-wrap { padding: 12px 8px !important; }
           .dash-grid { grid-template-columns: 1fr !important; }
           .dash-full { grid-column: 1 !important; }
-          .dash-metrics { grid-template-columns: repeat(2, 1fr) !important; }
-          .dash-status { grid-template-columns: repeat(3, 1fr) !important; }
+          .dash-metrics { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+          .dash-status { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+          .dash-metric-card { padding: 10px 10px !important; }
+          .dash-metric-value { font-size: 18px !important; }
+          .dash-metric-label { font-size: 10px !important; }
+          .dash-status-card { padding: 8px 8px !important; }
+          .dash-status-count { font-size: 18px !important; }
+          .dash-status-label { font-size: 10px !important; }
+          .dash-chart { padding: 12px 10px 6px !important; }
+          .dash-chart-title { font-size: 16px !important; }
         }
         @media (max-width: 400px) {
-          .dash-metrics { grid-template-columns: 1fr 1fr !important; }
-          .dash-range { flex-wrap: wrap; gap: 6px; }
-          .dash-range button { flex: 1; min-width: 0; padding: 8px 10px !important; font-size: 12px !important; }
+          .dash-metrics { grid-template-columns: 1fr 1fr !important; gap: 5px !important; }
+          .dash-status { grid-template-columns: repeat(2, 1fr) !important; gap: 5px !important; }
+          .dash-range { flex-wrap: wrap; gap: 4px; }
+          .dash-range button { flex: 1; min-width: 0; padding: 6px 8px !important; font-size: 11px !important; min-height: 32px !important; }
+          .dash-wrap { padding: 8px 6px !important; }
+          .dash-metric-card { padding: 8px 8px !important; }
+          .dash-metric-value { font-size: 16px !important; }
+          .dash-status-card { padding: 6px 8px !important; }
+          .dash-status-count { font-size: 16px !important; }
         }
       `}</style>
 
@@ -265,9 +279,9 @@ export default function AdminDashboard({ bookings, rooms }) {
 
       <div className="dash-metrics" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 20 }}>
         {metrics.map((m) => (
-          <div key={m.label} style={{ background: C.bg, borderRadius: 8, padding: "14px 14px 12px" }}>
-            <div style={{ fontSize: 12, color: C.mid, marginBottom: 2 }}>{m.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, marginBottom: 6 }}>{m.value}</div>
+          <div key={m.label} className="dash-metric-card" style={{ background: C.bg, borderRadius: 8, padding: "14px 14px 12px" }}>
+            <div className="dash-metric-label" style={{ fontSize: 12, color: C.mid, marginBottom: 2 }}>{m.label}</div>
+            <div className="dash-metric-value" style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, marginBottom: 6 }}>{m.value}</div>
             <div style={{ fontSize: 11, color: m.trend.includes("▲") ? C.emerald : m.trend.includes("▼") ? C.red : C.mid }}>{m.trend}</div>
           </div>
         ))}
@@ -275,16 +289,16 @@ export default function AdminDashboard({ bookings, rooms }) {
 
       <div className="dash-status" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 24 }}>
         {statusCards.map((c) => (
-          <div key={c.label} style={{ background: c.bg, borderRadius: 8, padding: "10px 14px" }}>
-            <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: c.color }}>{c.count}</div>
-            <div style={{ fontSize: 12, color: c.color, opacity: 0.8 }}>{c.label}</div>
+          <div key={c.label} className="dash-status-card" style={{ background: c.bg, borderRadius: 8, padding: "10px 14px" }}>
+            <div className="dash-status-count" style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: c.color }}>{c.count}</div>
+            <div className="dash-status-label" style={{ fontSize: 12, color: c.color, opacity: 0.8 }}>{c.label}</div>
           </div>
         ))}
       </div>
 
       <div className="dash-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
-          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Bookings by room</h3>
+        <div className="dash-chart" style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
+          <h3 className="dash-chart-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Bookings by room</h3>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
             {rLabels.map((l, i) => (
               <div key={l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.mid }}>
@@ -296,8 +310,8 @@ export default function AdminDashboard({ bookings, rooms }) {
           <div style={{ position: "relative", height: 190 }}><canvas ref={roomRef} style={{ width: "100%", height: "100%" }} /></div>
         </div>
 
-        <div style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
-          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 12px", color: C.bark }}>Occupancy by day</h3>
+        <div className="dash-chart" style={{ background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
+          <h3 className="dash-chart-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 12px", color: C.bark }}>Occupancy by day</h3>
           {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d, i) => {
             const pct = occDays[i];
             return (
@@ -312,8 +326,8 @@ export default function AdminDashboard({ bookings, rooms }) {
           })}
         </div>
 
-        <div className="dash-full" style={{ gridColumn: "1 / -1", background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
-          <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Revenue vs bookings</h3>
+        <div className="dash-chart dash-full" style={{ gridColumn: "1 / -1", background: C.warmWhite, border: "1px solid " + C.border, borderRadius: 10, padding: "16px 16px 8px" }}>
+          <h3 className="dash-chart-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 20, margin: "0 0 8px", color: C.bark }}>Revenue vs bookings</h3>
           <div style={{ position: "relative", height: 240 }}><canvas ref={revVsRef} style={{ width: "100%", height: "100%" }} /></div>
         </div>
       </div>

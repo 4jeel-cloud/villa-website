@@ -1350,7 +1350,7 @@ button {
   font-size: 0.72rem;
 }
 .calendarCard .fc .admin-booking-event {
-  background: rgba(6, 64, 43, 0.7) !important;
+  background: rgba(245, 158, 11, 0.85) !important;
   border-color: transparent !important;
   color: #fff !important;
   font-weight: 600;
@@ -2391,5 +2391,18 @@ button {
     min-height: 240px !important;
     aspect-ratio: auto !important;
     height: 40vw !important;
+  }
+}
+
+/* ===== Photos page mobile optimizations ===== */
+@media (max-width: 768px) {
+  .photosLbImg {
+    height: 60vw !important;
+    max-height: 400px !important;
+  }
+}
+@media (min-width: 769px) {
+  .photosLbImg {
+    height: 500px !important;
   }
 }

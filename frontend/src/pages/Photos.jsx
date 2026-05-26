@@ -61,24 +61,6 @@ function PhotoCard({ photo, onClick, style }) {
       }}>
         {photo.label}
       </div>
-      <div style={{
-        position:       'absolute',
-        top:            10,
-        right:          10,
-        width:          26,
-        height:         26,
-        background:     'rgba(255,255,255,0.15)',
-        borderRadius:   '50%',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        color:          '#fff',
-        fontSize:       12,
-        opacity:        hovered ? 1 : 0,
-        transition:     'opacity 0.25s',
-      }}>
-        <i className="ti ti-arrows-maximize" aria-hidden="true" />
-      </div>
     </div>
   );
 }
@@ -131,7 +113,7 @@ function Lightbox({ photos, current, onClose, onNav }) {
           <i className="ti ti-x" aria-hidden="true" />
         </div>
 
-        <div style={{ height: 500, borderRadius: 8, overflow: 'hidden', background: '#1C3A28' }}>
+        <div className="photosLbImg" style={{ borderRadius: 8, overflow: 'hidden', background: '#1C3A28' }}>
           <img
             src={photo.src}
             alt={photo.label}
@@ -192,22 +174,28 @@ function Lightbox({ photos, current, onClose, onNav }) {
 
 export default function Photos() {
   const [lbIndex, setLbIndex] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = e => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const openLB  = i  => setLbIndex(i);
   const closeLB = () => setLbIndex(null);
   const navLB   = d  => setLbIndex(i => (i + d + photos.length) % photos.length);
 
-  const ROW_HEIGHT = 64;
-
   return (
     <div style={{ background: '#F7F4EF', fontFamily: 'DM Sans, sans-serif', minHeight: '100vh' }}>
 
-      <div style={{ background: '#1C3A28', padding: '48px 40px 0' }}>
+      <div style={{ background: '#1C3A28', padding: isMobile ? '40px 20px 0' : '48px 40px 0' }}>
         <div style={{
           maxWidth:      1100,
           margin:        '0 auto',
           display:       'grid',
-          gridTemplateColumns: '1fr auto',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr auto',
           alignItems:    'flex-end',
           gap:           24,
           paddingBottom: 32,
@@ -224,8 +212,8 @@ export default function Photos() {
               Every corner of Creek View Villa is designed to connect you with nature. Browse our gallery and picture yourself here.
             </p>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 48, fontWeight: 300, color: 'rgba(255,255,255,0.15)', lineHeight: 1 }}>
+          <div style={{ textAlign: isMobile ? 'left' : 'right' }}>
+            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 36, fontWeight: 300, color: 'rgba(255,255,255,0.15)', lineHeight: 1 }}>
               {photos.length}
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', marginTop: 4 }}>
@@ -235,42 +223,52 @@ export default function Photos() {
         </div>
       </div>
 
-      <div style={{ padding: '32px 40px 56px', maxWidth: 1100, margin: '0 auto' }}>
+      <div style={{ padding: isMobile ? '24px 12px 40px' : '32px 40px 56px', maxWidth: 1100, margin: '0 auto' }}>
 
-        <div style={{
-          display:             'grid',
-          gridTemplateColumns: 'repeat(12, 1fr)',
-          gridAutoRows:        `${ROW_HEIGHT}px`,
-          gap:                 8,
-          marginBottom:        8,
-        }}>
-          <PhotoCard photo={photos[0]} onClick={() => openLB(0)}
-            style={{ gridColumn: '1/6', gridRow: '1/7' }} />
-          <PhotoCard photo={photos[1]} onClick={() => openLB(1)}
-            style={{ gridColumn: '6/10', gridRow: '1/4' }} />
-          <PhotoCard photo={photos[2]} onClick={() => openLB(2)}
-            style={{ gridColumn: '10/13', gridRow: '1/4' }} />
-          <PhotoCard photo={photos[3]} onClick={() => openLB(3)}
-            style={{ gridColumn: '6/10', gridRow: '4/7' }} />
-          <PhotoCard photo={photos[4]} onClick={() => openLB(4)}
-            style={{ gridColumn: '10/13', gridRow: '4/7' }} />
-        </div>
+        {isMobile ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+            {photos.map((p, i) => (
+              <PhotoCard key={p.id} photo={p} onClick={() => openLB(i)} style={{ aspectRatio: '4/3' }} />
+            ))}
+          </div>
+        ) : (
+          <>
+            <div style={{
+              display:             'grid',
+              gridTemplateColumns: 'repeat(12, 1fr)',
+              gridAutoRows:        '64px',
+              gap:                 8,
+              marginBottom:        8,
+            }}>
+              <PhotoCard photo={photos[0]} onClick={() => openLB(0)}
+                style={{ gridColumn: '1/6', gridRow: '1/7' }} />
+              <PhotoCard photo={photos[1]} onClick={() => openLB(1)}
+                style={{ gridColumn: '6/10', gridRow: '1/4' }} />
+              <PhotoCard photo={photos[2]} onClick={() => openLB(2)}
+                style={{ gridColumn: '10/13', gridRow: '1/4' }} />
+              <PhotoCard photo={photos[3]} onClick={() => openLB(3)}
+                style={{ gridColumn: '6/10', gridRow: '4/7' }} />
+              <PhotoCard photo={photos[4]} onClick={() => openLB(4)}
+                style={{ gridColumn: '10/13', gridRow: '4/7' }} />
+            </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 8 }}>
-          {photos.slice(5, 9).map((p, i) => (
-            <PhotoCard key={p.id} photo={p} onClick={() => openLB(i + 5)} style={{ height: 180 }} />
-          ))}
-        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 8 }}>
+              {photos.slice(5, 9).map((p, i) => (
+                <PhotoCard key={p.id} photo={p} onClick={() => openLB(i + 5)} style={{ height: 180 }} />
+              ))}
+            </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-          {photos.slice(9).map((p, i) => (
-            <PhotoCard key={p.id} photo={p} onClick={() => openLB(i + 9)} style={{ height: 140 }} />
-          ))}
-        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
+              {photos.slice(9).map((p, i) => (
+                <PhotoCard key={p.id} photo={p} onClick={() => openLB(i + 9)} style={{ height: 140 }} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      <div style={{ background: '#1C3A28', padding: '48px 40px', textAlign: 'center' }}>
-        <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 28, fontWeight: 300, fontStyle: 'italic', color: '#fff', marginBottom: 8 }}>
+      <div style={{ background: '#1C3A28', padding: isMobile ? '40px 20px' : '48px 40px', textAlign: 'center' }}>
+        <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: isMobile ? 24 : 28, fontWeight: 300, fontStyle: 'italic', color: '#fff', marginBottom: 8 }}>
           Ready to experience it?
         </h2>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 24, fontWeight: 300 }}>

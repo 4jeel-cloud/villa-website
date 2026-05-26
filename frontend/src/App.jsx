@@ -27,6 +27,7 @@ function App() {
   const [rooms, setRooms] = useState([]);
   const [availability, setAvailability] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -171,6 +172,7 @@ function App() {
     if (!authChecked) return;
     (async () => {
       if (!adminToken) return;
+      setBookingsLoading(true);
       try {
         const bookingsData = await getBookings(adminToken);
         setBookings(bookingsData);
@@ -179,6 +181,8 @@ function App() {
         }
       } catch (e) {
         console.warn("Admin token invalid or expired", e);
+      } finally {
+        setBookingsLoading(false);
       }
     })();
   }, [authChecked, adminToken, dataLoaded]);
@@ -598,6 +602,7 @@ function App() {
               <AdminPage
                 rooms={rooms}
                 bookings={bookings}
+                bookingsLoading={bookingsLoading}
                 adminForm={adminForm}
                 roomOptions={roomOptions}
                 roomSettings={roomSettings}

@@ -16,7 +16,7 @@ const SIDEBAR_ITEMS = [
 ];
 
 export default function AdminPage({
-  rooms, bookings, adminForm, roomOptions, roomSettings, availability, adminEmail, adminProfile,
+  rooms, bookings, bookingsLoading, adminForm, roomOptions, roomSettings, availability, adminEmail, adminProfile,
   onAdminDateClick, onAdminFormChange, onAdminBooking, onCancel,
   onRoomSettingsChange, onRoomUpdate, onAdminProfileChange, onLogout,
 }) {
@@ -154,6 +154,13 @@ export default function AdminPage({
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
+        if (bookingsLoading) {
+          return (
+            <section className="adminSection card" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300 }}>
+              <p style={{ color: "#94a3b8", fontSize: 14 }}>Loading dashboard data…</p>
+            </section>
+          );
+        }
         return <AdminDashboard bookings={bookings} rooms={rooms} />;
 
       case "bookings":
@@ -165,11 +172,18 @@ export default function AdminPage({
                 <div className="calendarCard">
                   <h2 className="calendarTitle">{displayMonthYear}</h2>
                   <p className="calendarSubtitle">
-                    {selectedAdminBooking
+                    {bookingsLoading
+                      ? "Loading bookings…"
+                      : selectedAdminBooking
                       ? "Booking found — review or cancel below."
                       : "Click a booked date to manage, or a free date to create a booking."}
                   </p>
                   <div className="calendarWrap">
+                    {bookingsLoading ? (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300 }}>
+                        <p style={{ color: "#94a3b8", fontSize: 14 }}>Loading bookings…</p>
+                      </div>
+                    ) : (
                     <FullCalendar
                       plugins={[dayGridPlugin, interactionPlugin]}
                       initialView="dayGridMonth"
@@ -191,6 +205,7 @@ export default function AdminPage({
                       handleWindowResize={true}
                       validRange={{ start: new Date() }}
                     />
+                    )}
                   </div>
                   <aside className="calendarSide">
                     <p className="calendarSideLabel">{selectedAdminBooking ? "Booking" : "Selected Date"}</p>
