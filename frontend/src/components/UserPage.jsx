@@ -43,7 +43,7 @@ export default function UserPage({
       const end = new Date(ek + "T00:00:00");
       while (cur < end) {
         const key = toDateKey(cur);
-        if (key !== ek) ck.set(key, "blocked-date");
+        if (key !== sk && key !== ek) ck.set(key, "blocked-date");
         cur.setDate(cur.getDate() + 1);
       }
     }
@@ -57,7 +57,7 @@ export default function UserPage({
       const end = new Date(ek + "T00:00:00");
       while (cur < end) {
         const key = toDateKey(cur);
-        if (key !== ek) ck.set(key, "blocked-date");
+        if (key !== sk && key !== ek) ck.set(key, "blocked-date");
         cur.setDate(cur.getDate() + 1);
       }
     }
@@ -88,6 +88,8 @@ export default function UserPage({
     const { checkIn, checkOut } = bookingForm;
     const classes = [];
     if (blockedClasses.has(dayKey)) classes.push("blocked-date");
+    else if (existingCheckin.has(dayKey) && existingCheckout.has(dayKey)) classes.push("blocked-date");
+    else if (existingCheckin.has(dayKey)) classes.push("existing-booking-checkin");
     else if (existingCheckout.has(dayKey)) classes.push("date-checkout-only");
     if (checkIn && dayKey === checkIn) classes.push("selected-checkin");
     if (checkIn && checkOut && dayKey === checkOut) classes.push("selected-checkout");

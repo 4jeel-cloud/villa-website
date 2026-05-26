@@ -1417,6 +1417,11 @@ button {
   background: rgba(5, 150, 105, 0.18) !important;
 }
 
+/* ── Existing booking check-in date: right half yellow ── */
+.fc .existing-booking-checkin .fc-daygrid-day-frame {
+  background: linear-gradient(to right, transparent 50%, rgba(234, 179, 8, 0.45) 50%) !important;
+}
+
 /* ── Existing booking checkout-only date: left yellow ── */
 .fc .date-checkout-only .fc-daygrid-day-frame {
   background: linear-gradient(to right, rgba(234, 179, 8, 0.45) 50%, transparent 50%) !important;

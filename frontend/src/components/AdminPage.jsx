@@ -101,7 +101,7 @@ export default function AdminPage({
       const end = new Date(ek + "T00:00:00");
       while (cur < end) {
         const key = toDateKey(cur);
-        if (key !== ek) bk.set(key, true);
+        if (key !== sk && key !== ek) bk.set(key, true);
         cur.setDate(cur.getDate() + 1);
       }
     }
@@ -112,7 +112,7 @@ export default function AdminPage({
       const end = new Date(ek + "T00:00:00");
       while (cur < end) {
         const key = toDateKey(cur);
-        if (key !== ek) bk.set(key, true);
+        if (key !== sk && key !== ek) bk.set(key, true);
         cur.setDate(cur.getDate() + 1);
       }
     }
@@ -140,6 +140,8 @@ export default function AdminPage({
     const dayKey = toDateKey(arg.date);
     const classes = [];
     if (blockedClasses.has(dayKey)) classes.push("blocked-date");
+    else if (existingCheckin.has(dayKey) && existingCheckout.has(dayKey)) classes.push("blocked-date");
+    else if (existingCheckin.has(dayKey)) classes.push("existing-booking-checkin");
     else if (existingCheckout.has(dayKey)) classes.push("date-checkout-only");
     if (adminForm.checkIn && dayKey === adminForm.checkIn) classes.push("selected-checkin");
     if (adminForm.checkOut && dayKey === adminForm.checkOut) classes.push("selected-checkout");
