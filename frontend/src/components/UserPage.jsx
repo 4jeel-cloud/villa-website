@@ -88,8 +88,6 @@ export default function UserPage({
     const { checkIn, checkOut } = bookingForm;
     const classes = [];
     if (blockedClasses.has(dayKey)) classes.push("blocked-date");
-    else if (existingCheckin.has(dayKey) && existingCheckout.has(dayKey)) classes.push("turnover-date");
-    else if (existingCheckin.has(dayKey)) classes.push("existing-booking-checkin");
     else if (existingCheckout.has(dayKey)) classes.push("date-checkout-only");
     if (checkIn && dayKey === checkIn) classes.push("selected-checkin");
     if (checkIn && checkOut && dayKey === checkOut) classes.push("selected-checkout");
