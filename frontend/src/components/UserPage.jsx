@@ -43,7 +43,7 @@ export default function UserPage({
       const end = new Date(ek + "T00:00:00");
       while (cur < end) {
         const key = toDateKey(cur);
-        if (key !== sk && key !== ek) ck.set(key, "blocked-date");
+        if (key !== ek) ck.set(key, "blocked-date");
         cur.setDate(cur.getDate() + 1);
       }
     }
@@ -57,7 +57,7 @@ export default function UserPage({
       const end = new Date(ek + "T00:00:00");
       while (cur < end) {
         const key = toDateKey(cur);
-        if (key !== sk && key !== ek && !ck.has(key)) ck.set(key, "blocked-date");
+        if (key !== ek) ck.set(key, "blocked-date");
         cur.setDate(cur.getDate() + 1);
       }
     }
@@ -80,7 +80,6 @@ export default function UserPage({
         if (rooms.size >= roomCount) ck.set(key, "blocked-date");
       }
     }
-    console.log("[UserPage] half-yellow debug:", { ci: [...ci], co: [...co], ck: [...ck.keys()], availCount: (availability || []).length });
     return { blockedClasses: ck, existingCheckin: ci, existingCheckout: co };
   }, [bookings, availability, bookingForm.roomId]);
 

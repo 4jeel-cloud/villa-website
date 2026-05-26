@@ -332,7 +332,6 @@ function App() {
     const clickedDate = clickInfo.dateStr;
 
     const fullyBusy = new Set();
-    const excludeDates = new Set();
     const selectedRoom = rooms.find(r => r.id === bookingForm.roomId);
     const selectedRoomName = selectedRoom?.name;
 
@@ -352,11 +351,7 @@ function App() {
         fullyBusy.add(toDateKey(cur));
         cur.setDate(cur.getDate() + 1);
       }
-      excludeDates.add(toDateKey(end));
-      excludeDates.add(toDateKey(new Date(evt.start + "T00:00:00")));
     }
-
-    excludeDates.forEach(d => fullyBusy.delete(d));
 
     const toDateKey2 = (d) => {
       const dt = typeof d === "string" ? new Date(d + "T00:00:00") : d;
@@ -413,7 +408,6 @@ function App() {
     }
 
     let cursor = new Date(bookingForm.checkIn + "T00:00:00");
-    cursor.setDate(cursor.getDate() + 1);
     const checkOutDate = new Date(clickedDate + "T00:00:00");
     const toKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     while (cursor < checkOutDate) {
