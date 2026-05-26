@@ -1377,19 +1377,15 @@ button {
 }
 
 .fc .blocked-date .fc-daygrid-day-frame {
-  background: rgba(239, 68, 68, 0.2) !important;
-}
-.fc .blocked-date .fc-daygrid-day-number {
-  color: rgba(185, 28, 28, 0.9) !important;
-  font-weight: 600;
+  background: rgba(239, 68, 68, 0.85) !important;
 }
 
 .fc .fc-day-disabled .fc-daygrid-day-frame {
-  background: rgba(148, 163, 184, 0.15) !important;
+  background: rgba(148, 163, 184, 0.08) !important;
   cursor: default !important;
 }
 .fc .fc-day-disabled .fc-daygrid-day-number {
-  color: #64748b !important;
+  color: #334155 !important;
 }
 
 .fc .fc-toolbar {
