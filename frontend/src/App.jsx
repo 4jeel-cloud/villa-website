@@ -320,6 +320,8 @@ function App() {
 
     const fullyBusy = new Set();
     const excludeDates = new Set();
+    const selectedRoom = rooms.find(r => r.id === bookingForm.roomId);
+    const selectedRoomName = selectedRoom?.name;
 
     for (const evt of availability) {
       if (!evt.start || !evt.end) continue;
