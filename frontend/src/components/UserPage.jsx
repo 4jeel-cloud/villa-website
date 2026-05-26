@@ -133,7 +133,7 @@ export default function UserPage({
                 <FullCalendar
                   plugins={[dayGridPlugin, interactionPlugin]}
                   initialView="dayGridMonth"
-                  events={availability}
+                  events={[]}
                   dateClick={onCalendarDateClick}
                   dayCellClassNames={dayCellClassNames}
                   height="auto"
