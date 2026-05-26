@@ -16,9 +16,9 @@ const SIDEBAR_ITEMS = [
 ];
 
 export default function AdminPage({
-  rooms, bookings, bookingsLoading, adminForm, roomOptions, roomSettings, availability, adminEmail, adminProfile,
+  rooms, bookings, bookingsLoading, bookingsFetchError, adminForm, roomOptions, roomSettings, availability, adminEmail, adminProfile,
   onAdminDateClick, onAdminFormChange, onAdminBooking, onCancel,
-  onRoomSettingsChange, onRoomUpdate, onAdminProfileChange, onLogout,
+  onRoomSettingsChange, onRoomUpdate, onAdminProfileChange, onLogout, onRetryFetchBookings,
 }) {
   const [selectedAdminBooking, setSelectedAdminBooking] = useState(null);
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -173,7 +173,19 @@ export default function AdminPage({
             </section>
           );
         }
-        return <AdminDashboard bookings={bookings} rooms={rooms} />;
+        return (
+          <>
+            {bookingsFetchError && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <p style={{ margin: 0, color: "#991b1b", fontSize: 13 }}>Could not load bookings from server.</p>
+                {onRetryFetchBookings && (
+                  <button type="button" onClick={onRetryFetchBookings} style={{ background: "#06402B", border: "none", color: "#fff", padding: "6px 16px", borderRadius: 6, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>Retry</button>
+                )}
+              </div>
+            )}
+            <AdminDashboard bookings={bookings} rooms={rooms} />
+          </>
+        );
 
       case "bookings":
         return (
@@ -194,6 +206,19 @@ export default function AdminPage({
                     {bookingsLoading ? (
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300 }}>
                         <p style={{ color: "#94a3b8", fontSize: 14 }}>Loading bookings…</p>
+                      </div>
+                    ) : bookingsFetchError ? (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 200, gap: 12 }}>
+                        <p style={{ color: "#ef4444", fontSize: 14 }}>Failed to load bookings.</p>
+                        {onRetryFetchBookings && (
+                          <button
+                            type="button"
+                            onClick={onRetryFetchBookings}
+                            style={{ background: "#06402B", border: "none", color: "#fff", padding: "8px 20px", borderRadius: 6, cursor: "pointer", fontSize: 13 }}
+                          >
+                            Retry
+                          </button>
+                        )}
                       </div>
                     ) : (
                     <FullCalendar

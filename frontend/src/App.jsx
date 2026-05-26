@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import {
   cancelBooking,
@@ -37,6 +37,8 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const bookingsFetched = useRef(false);
+  const [bookingsFetchTrigger, setBookingsFetchTrigger] = useState(0);
+  const [bookingsFetchError, setBookingsFetchError] = useState(false);
 
   const showNotification = (type, text) => {
     if (notifTimeout.current) clearTimeout(notifTimeout.current);
@@ -177,6 +179,13 @@ function App() {
     })();
   }, []);
 
+  // Retry bookings fetch (used when API call fails)
+  const retryFetchBookings = useCallback(() => {
+    bookingsFetched.current = false;
+    setBookingsFetchError(false);
+    setBookingsFetchTrigger(c => c + 1);
+  }, []);
+
   // Auth-aware: merge confirmed bookings into availability when admin token arrives
   useEffect(() => {
     if (!authChecked) return;
@@ -197,13 +206,16 @@ function App() {
         setBookings(bookingsData);
         saveBookingCache(bookingsData);
         bookingsFetched.current = true;
+        setBookingsFetchError(false);
       } catch (e) {
-        console.warn("Admin token invalid or expired", e);
+        console.warn("Failed to fetch bookings:", e);
+        setBookingsFetchError(true);
+        showNotification("error", "Could not load bookings. Check your connection and retry.");
       } finally {
         setBookingsLoading(false);
       }
     })();
-  }, [authChecked, adminToken]);
+  }, [authChecked, adminToken, bookingsFetchTrigger]);
 
   // Merge bookings into availability when both are ready
   useEffect(() => {
@@ -627,34 +639,36 @@ function App() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#64748b" }}>Checking auth…</div>
               ) : adminAuthed ? (
               <Suspense fallback={<div className="pageLoading" />}>
-              <AdminPage
-                rooms={rooms}
-                bookings={bookings}
-                bookingsLoading={bookingsLoading}
-                adminForm={adminForm}
-                roomOptions={roomOptions}
-                roomSettings={roomSettings}
-                availability={availability}
-                adminEmail={adminEmail}
-                adminProfile={adminProfile}
-                onAdminDateClick={handleAdminDateClick}
-                onAdminFormChange={(values) => setAdminForm((prev) => ({ ...prev, ...values }))}
-                onAdminBooking={handleAdminBooking}
-                onCancel={handleCancel}
-                onRoomSettingsChange={(roomId, values) =>
-                  setRoomSettings((prev) => ({
-                    ...prev,
-                    [roomId]: { ...prev[roomId], ...values }
-                  }))
-                }
-                onRoomUpdate={handleRoomUpdate}
-                onAdminProfileChange={(values) => setAdminProfile((prev) => ({ ...prev, ...values }))}
-                onLogout={async () => {
-                  const { signOut } = await import("firebase/auth");
-                  const { auth } = await import("./firebase");
-                  await signOut(auth);
-                }}
-              />
+                <AdminPage
+                  rooms={rooms}
+                  bookings={bookings}
+                  bookingsLoading={bookingsLoading}
+                  bookingsFetchError={bookingsFetchError}
+                  adminForm={adminForm}
+                  roomOptions={roomOptions}
+                  roomSettings={roomSettings}
+                  availability={availability}
+                  adminEmail={adminEmail}
+                  adminProfile={adminProfile}
+                  onAdminDateClick={handleAdminDateClick}
+                  onAdminFormChange={(values) => setAdminForm((prev) => ({ ...prev, ...values }))}
+                  onAdminBooking={handleAdminBooking}
+                  onCancel={handleCancel}
+                  onRoomSettingsChange={(roomId, values) =>
+                    setRoomSettings((prev) => ({
+                      ...prev,
+                      [roomId]: { ...prev[roomId], ...values }
+                    }))
+                  }
+                  onRoomUpdate={handleRoomUpdate}
+                  onAdminProfileChange={(values) => setAdminProfile((prev) => ({ ...prev, ...values }))}
+                  onLogout={async () => {
+                    const { signOut } = await import("firebase/auth");
+                    const { auth } = await import("./firebase");
+                    await signOut(auth);
+                  }}
+                  onRetryFetchBookings={retryFetchBookings}
+                />
               </Suspense>
               ) : (
                 <Suspense fallback={<div className="pageLoading" />}>
