@@ -10,6 +10,8 @@ import {
   updateRoomImages,
   updateRoomPrice
 } from "./api";
+import { saveBookingCache, loadBookingCache } from "./bookingCache";
+import { saveAvailabilityCache, loadAvailabilityCache } from "./availabilityCache";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingScreen from "./components/LoadingScreen";
 import Footer from "./components/Footer";
@@ -141,12 +143,19 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
+        // Load cached availability first so calendar renders instantly
+        const cachedAvail = await loadAvailabilityCache();
+        if (cachedAvail?.length) {
+          setAvailability(mergeBookingsIntoAvailability(cachedAvail, []));
+        }
+
         const [roomsData, availabilityData] = await Promise.all([
           getRooms(),
           getAvailability()
         ]);
         setRooms(roomsData);
         setAvailability(mergeBookingsIntoAvailability(availabilityData, []));
+        saveAvailabilityCache(availabilityData);
         setRoomSettings((prev) => {
           const next = { ...prev };
           roomsData.forEach((room) => {
@@ -173,9 +182,21 @@ function App() {
     (async () => {
       if (!adminToken) return;
       setBookingsLoading(true);
+
+      // Load cached bookings first so calendar renders instantly
+      const cached = await loadBookingCache();
+      if (cached?.length) {
+        setBookings(cached);
+        if (dataLoaded) {
+          setAvailability((prev) => mergeBookingsIntoAvailability(prev, cached));
+        }
+      }
+
+      // Then fetch fresh data from API
       try {
         const bookingsData = await getBookings(adminToken);
         setBookings(bookingsData);
+        saveBookingCache(bookingsData);
         if (dataLoaded) {
           setAvailability((prev) => mergeBookingsIntoAvailability(prev, bookingsData));
         }

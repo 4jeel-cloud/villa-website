@@ -42,9 +42,9 @@ export default function AdminPage({
     loaded.current = true;
     loadLaundryData().then((data) => {
       if (data) {
-        if (data.stock?.length) setLaundryStock(data.stock);
-        if (data.alerts?.length) setLaundryAlerts(data.alerts);
-        if (data.activity?.length) setLaundryActivity(data.activity);
+        setLaundryStock(data.stock || []);
+        setLaundryAlerts(data.alerts || []);
+        setLaundryActivity(data.activity || []);
       }
     });
   }, []);
@@ -56,6 +56,18 @@ export default function AdminPage({
     saveTimer.current = setTimeout(() => {
       saveLaundryData(laundryStock, laundryAlerts, laundryActivity);
     }, 500);
+  }, [laundryStock, laundryAlerts, laundryActivity]);
+
+  useEffect(() => {
+    const handler = () => {
+      clearTimeout(saveTimer.current);
+      saveLaundryData(laundryStock, laundryAlerts, laundryActivity);
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => {
+      window.removeEventListener("beforeunload", handler);
+      clearTimeout(saveTimer.current);
+    };
   }, [laundryStock, laundryAlerts, laundryActivity]);
 
   const adminCalendarEvents = bookings
@@ -409,10 +421,14 @@ export default function AdminPage({
                         if (!newProductName || !newProductUnits) return;
                         const id = Date.now();
                         const u = parseInt(newProductUnits);
-                        setLaundryStock((prev) => [...prev, { id, name: newProductName, total: u, clean: u, atLaundry: 0, inUse: 0 }]);
+                        const newStock = [...laundryStock, { id, name: newProductName, total: u, clean: u, atLaundry: 0, inUse: 0 }];
                         const now = new Date();
-                        setLaundryAlerts((prev) => [{ id, text: `New product: ${newProductName} (${u} units)`, time: "just now" }, ...prev].slice(0, 4));
-                        setLaundryActivity((prev) => [{ id: Date.now() + 1, date: now.toISOString().slice(0, 10), time: now.toTimeString().slice(0, 5), text: `Purchased new: ${u} ${newProductName}` }, ...prev]);
+                        const newAlerts = [{ id, text: `New product: ${newProductName} (${u} units)`, time: "just now" }, ...laundryAlerts].slice(0, 4);
+                        const newActivity = [{ id: Date.now() + 1, date: now.toISOString().slice(0, 10), time: now.toTimeString().slice(0, 5), text: `Purchased new: ${u} ${newProductName}` }, ...laundryActivity];
+                        setLaundryStock(newStock);
+                        setLaundryAlerts(newAlerts);
+                        setLaundryActivity(newActivity);
+                        saveLaundryData(newStock, newAlerts, newActivity);
                         setNewProductName(""); setNewProductUnits(""); setShowAddProduct(false);
                       }}>Add Product</button>
                     <button className="formSubmit" type="button" style={{ background: "#94a3b8" }} onClick={() => { setShowAddProduct(false); setNewProductName(""); setNewProductUnits(""); }}>Cancel</button>
@@ -556,19 +572,22 @@ export default function AdminPage({
                       }
                     }
                     if (alertItems.length) {
-                      setLaundryAlerts((prev) => [
+                      const newAlerts = [
                         { id: Date.now(), text: alertItems.join(", "), time: "just now" },
-                        ...prev
-                      ].slice(0, 4));
-                      setLaundryActivity((prev) => [
+                        ...laundryAlerts
+                      ].slice(0, 4);
+                      const newActivity = [
                         ...logEntries.map((entry) => ({
                           id: Date.now() + Math.random(), date: dateStr, time: timeStr, text: entry
                         })),
-                        ...prev
-                      ]);
+                        ...laundryActivity
+                      ];
+                      setLaundryAlerts(newAlerts);
+                      setLaundryActivity(newActivity);
                     }
                     setLaundryStock(newStock);
                     setLaundryQty({});
+                    saveLaundryData(newStock, laundryAlerts, laundryActivity);
                   }}>
                   {laundryMode === "send" ? "Send to Cleaner" : "Return to Stock"}
                 </button>
