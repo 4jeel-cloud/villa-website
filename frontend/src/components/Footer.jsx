@@ -1,37 +1,11 @@
-import { useMemo } from "react";
-
 export default function Footer() {
-  const bubbles = useMemo(() => Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: `${3 + Math.random() * 3}rem`,
-    distance: `${5 + Math.random() * 3}rem`,
-    position: `${Math.random() * 100}%`,
-    time: `${3 + Math.random() * 2}s`,
-    delay: `${-1 * (2 + Math.random() * 2)}s`
-  })), []);
-
   return (
     <div className="footer">
-      <div className="footerBubbles">
-        {bubbles.map((b) => (
-          <div
-            key={b.id}
-            className="footerBubble"
-            style={{
-              "--size": b.size,
-              "--distance": b.distance,
-              "--position": b.position,
-              "--time": b.time,
-              "--delay": b.delay
-            }}
-          />
-        ))}
-      </div>
       <div className="footerContent">
         <div className="footerLinks">
           <div className="footerGroup">
             <b>Explore</b>
-            <a href="/#photos">Gallery</a>
+            <a href="/photos">Gallery</a>
             <a href="/rooms">Rooms</a>
             <a href="/nearby">Nearby</a>
             <a href="/#location">Location</a>

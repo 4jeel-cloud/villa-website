@@ -13,52 +13,23 @@ const SLIDES = [
   { img: "/carousel/DSC01115.webp",  tag: "Views",     name: "Balcony view" },
 ];
 
-const DELAY = 3500;
 const TOTAL = SLIDES.length;
 
 export default function GalleryCarousel() {
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
   const trackRef = useRef(null);
-  const progressRef = useRef(null);
-  const autoTimer = useRef(null);
-  const dragStartX = useRef(null);
   const touchStartX = useRef(null);
+  const dragStartX = useRef(null);
   const indexRef = useRef(0);
 
-  const go = useCallback((idx, resetTimer) => {
+  const go = useCallback((idx) => {
     const next = ((idx % TOTAL) + TOTAL) % TOTAL;
     indexRef.current = next;
     setIndex(next);
     if (trackRef.current) {
       trackRef.current.style.transform = `translateX(-${next * 100}%)`;
     }
-    if (resetTimer) {
-      clearInterval(autoTimer.current);
-      autoTimer.current = setInterval(() => go(indexRef.current + 1, false), DELAY);
-    }
-    // else: auto-advance handled by the effect below
   }, []);
-
-  /* auto-advance timer — runs when not paused */
-  useEffect(() => {
-    if (paused) return;
-    const timer = setInterval(() => go(indexRef.current + 1, false), DELAY);
-    autoTimer.current = timer;
-    return () => clearInterval(timer);
-  }, [paused, go]);
-
-  /* progress bar */
-  useEffect(() => {
-    if (paused) return;
-    const bar = progressRef.current;
-    if (!bar) return;
-    bar.style.transition = "none";
-    bar.style.width = "0%";
-    bar.offsetWidth;
-    bar.style.transition = `width ${DELAY}ms linear`;
-    bar.style.width = "100%";
-  }, [index, paused]);
 
   /* Ken Burns — only toggle the active slide */
   useEffect(() => {
@@ -68,21 +39,8 @@ export default function GalleryCarousel() {
     });
   }, [index]);
 
-  const prev = useCallback(() => go(indexRef.current - 1, true), [go]);
-  const next = useCallback(() => go(indexRef.current + 1, true), [go]);
-
-  const handleMouseEnter = useCallback(() => {
-    setPaused(true);
-    clearInterval(autoTimer.current);
-    if (progressRef.current) {
-      progressRef.current.style.transition = "none";
-      progressRef.current.style.width = "0%";
-    }
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setPaused(false);
-  }, []);
+  const prev = useCallback(() => go(indexRef.current - 1), [go]);
+  const next = useCallback(() => go(indexRef.current + 1), [go]);
 
   const handleTouchStart = useCallback((e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -91,7 +49,7 @@ export default function GalleryCarousel() {
   const handleTouchEnd = useCallback((e) => {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 40) go(indexRef.current + (dx < 0 ? 1 : -1), true);
+    if (Math.abs(dx) > 40) go(indexRef.current + (dx < 0 ? 1 : -1));
     touchStartX.current = null;
   }, [go]);
 
@@ -102,7 +60,7 @@ export default function GalleryCarousel() {
   const handleMouseUp = useCallback((e) => {
     if (dragStartX.current === null) return;
     const dx = e.clientX - dragStartX.current;
-    if (Math.abs(dx) > 40) go(indexRef.current + (dx < 0 ? 1 : -1), true);
+    if (Math.abs(dx) > 40) go(indexRef.current + (dx < 0 ? 1 : -1));
     dragStartX.current = null;
   }, [go]);
 
@@ -111,8 +69,6 @@ export default function GalleryCarousel() {
       <div
         className="car-track-wrap"
         id="car-wrap"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onTouchStart={handleTouchStart}
@@ -124,7 +80,7 @@ export default function GalleryCarousel() {
               <div
                 className={`car-img${i === index ? " ken" : ""}`}
                 style={{
-                  backgroundImage: Math.abs(i - index) <= 1 || SLIDES.length <= 3 ? `url(${s.img})` : undefined,
+                  backgroundImage: Math.abs(i - index) <= 1 || TOTAL <= 3 ? `url(${s.img})` : undefined,
                   backgroundColor: "#8aab88",
                 }}
               />
@@ -140,8 +96,6 @@ export default function GalleryCarousel() {
           ))}
         </div>
 
-        <div className="car-progress" ref={progressRef} />
-
         <button className="car-btn car-btn--prev" id="car-prev" onClick={prev} aria-label="Previous">
           &#8592;
         </button>
@@ -156,7 +110,7 @@ export default function GalleryCarousel() {
             key={i}
             className={`car-dot${i === index ? " active" : ""}`}
             style={{ width: i === index ? "22px" : "6px" }}
-            onClick={() => go(i, true)}
+            onClick={() => go(i)}
           />
         ))}
       </div>
@@ -166,7 +120,7 @@ export default function GalleryCarousel() {
           <div
             key={i}
             className={`thumb${i === index ? " active" : ""}`}
-            onClick={() => go(i, true)}
+            onClick={() => go(i)}
           >
             <div
               className="thumb-img"

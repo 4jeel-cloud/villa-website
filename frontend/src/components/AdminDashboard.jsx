@@ -173,7 +173,7 @@ export default function AdminDashboard({ bookings, rooms }) {
   }, [filt, labels, rangeStart, range, daysInRange]);
 
   const rLabels = useMemo(() => (rooms || []).map((r) => r.name), [rooms]);
-  const rColors = [C.emerald, C.emeraldLight, C.blue, C.purple];
+  const rColors = [C.emerald, C.emeraldLight, C.blue, C.amber];
   const rPcts = useMemo(() => {
     const c = new Map((rooms || []).map((r) => [r.name, 0]));
     for (const b of filt) {

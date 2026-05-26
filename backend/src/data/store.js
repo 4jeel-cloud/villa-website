@@ -436,10 +436,8 @@ function mergeById(existing, incoming, idKey, normalizeFn) {
     if (!existingIds.has(normalized[idKey])) {
       existing.push(normalized);
       existingIds.add(normalized[idKey]);
-    } else {
-      const idx = existing.findIndex((item) => item[idKey] === normalized[idKey]);
-      if (idx !== -1) existing[idx] = normalized;
     }
+    // else: keep in-memory version (never overwrite with stale sheet data)
   }
 }
 

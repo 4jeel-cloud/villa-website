@@ -9,30 +9,6 @@ const nearby = [
   { icon: "paw",            name: "Wayanad Sanctuary",  dist: "10 km away" },
 ];
 
-function MapIllustration() {
-  return (
-    <svg
-      viewBox="0 0 400 280"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      style={{ width: "100%", height: "100%", position: "absolute", inset: 0 }}
-    >
-      <rect width="400" height="280" fill="#162818" />
-      <path d="M0 80 Q100 60 200 75 Q300 90 400 70 L400 100 Q300 118 200 103 Q100 88 0 108Z"  fill="#1E3828" opacity="0.8" />
-      <path d="M0 140 Q100 120 200 135 Q300 150 400 130 L400 160 Q300 178 200 163 Q100 148 0 168Z" fill="#1E3828" opacity="0.6" />
-      <path d="M0 200 Q100 180 200 195 Q300 210 400 190 L400 220 Q300 238 200 223 Q100 208 0 228Z" fill="#1E3828" opacity="0.4" />
-      <rect x="0"   y="138" width="400" height="2" rx="1" fill="#2A4A30" opacity="0.4" />
-      <rect x="198" y="0"   width="2"   height="280" rx="1" fill="#2A4A30" opacity="0.4" />
-      <rect x="60"  y="50"  width="80"  height="3"   rx="1" fill="#2A4A30" opacity="0.5" />
-      <rect x="260" y="120" width="80"  height="3"   rx="1" fill="#3A6040" opacity="0.4" />
-      <rect x="80"  y="200" width="60"  height="3"   rx="1" fill="#3A6040" opacity="0.35" />
-      <circle cx="200" cy="140" r="24" fill="#7AB890" opacity="0.08" />
-      <circle cx="200" cy="140" r="14" fill="#7AB890" opacity="0.2"  />
-      <circle cx="200" cy="140" r="6"  fill="#7AB890" />
-    </svg>
-  );
-}
-
 function NearbyItem({ icon, name, dist, last }) {
   return (
     <Link
@@ -163,10 +139,11 @@ export default function Location() {
             }}
           >
             <iframe
-              src="https://www.google.com/maps?q=11.6846,75.9540&output=embed&z=16&hl=en"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3907.226179532473!2d75.95563127481901!3d11.678376588530668!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba67701b3c7d127%3A0x33cad82b8edc52e8!2sCreek%20view%20villa!5e0!3m2!1sen!2sin!4v1779700149057!5m2!1sen!2sin"
               title="Creek View Villa Location"
               loading="lazy"
               allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
               style={{
                 width: "100%",
                 height: "100%",
@@ -178,7 +155,7 @@ export default function Location() {
             />
 
             <a
-              href="https://maps.google.com/maps?q=11.6846,75.9540"
+              href="https://maps.google.com/maps?q=11.684611,75.954"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -230,7 +207,7 @@ export default function Location() {
           </div>
 
           <a
-            href="https://maps.google.com/maps/dir//11.6846,75.9540"
+            href="https://maps.google.com/maps/dir//11.684611,75.954"
             target="_blank"
             rel="noreferrer"
             style={{

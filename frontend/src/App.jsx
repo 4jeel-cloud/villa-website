@@ -19,6 +19,7 @@ const UserPage = lazy(() => import("./components/UserPage"));
 const RoomsPage = lazy(() => import("./components/RoomsPage"));
 const NearbyPage = lazy(() => import("./components/NearbyPage"));
 const AmenitiesPage = lazy(() => import("./pages/Amenities"));
+const PhotosPage = lazy(() => import("./pages/Photos"));
 const AdminPage = lazy(() => import("./components/AdminPage"));
 const AdminLoginPage = lazy(() => import("./components/AdminLoginPage"));
 
@@ -27,6 +28,7 @@ function App() {
   const [availability, setAvailability] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [notification, setNotification] = useState(null);
   const notifTimeout = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -76,6 +78,8 @@ function App() {
   const [adminAuthed, setAdminAuthed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [adminToken, setAdminToken] = useState(null);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminProfile, setAdminProfile] = useState({ name: "", phone: "", email: "", address: "" });
   const location = useLocation();
 
   useEffect(() => {
@@ -87,8 +91,10 @@ function App() {
           if (user) {
             const token = await getIdToken(user);
             setAdminToken(token);
+            setAdminEmail(user.email || "");
           } else {
             setAdminToken(null);
+            setAdminEmail("");
           }
           setAuthChecked(true);
         });
@@ -116,49 +122,66 @@ function App() {
     ];
   }, [rooms]);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      let bookingsData = [];
-      if (adminToken) try { bookingsData = await getBookings(adminToken); } catch (e) { console.warn("Admin token invalid or expired", e); }
-      const [roomsData, availabilityData] = await Promise.all([
-        getRooms(),
-        getAvailability()
-      ]);
-      setRooms(roomsData);
-      const mergedAvailability = [...availabilityData];
-      const seen = new Set(mergedAvailability.map(e => `${e.start}|${e.end}|${e.title}`));
-      for (const b of bookingsData) {
-        if (b.status !== "confirmed") continue;
-        const key = `${b.checkIn}|${b.checkOut}|${b.roomName} (Booked)`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          mergedAvailability.push({ id: b.id, title: `${b.roomName} (Booked)`, start: b.checkIn, end: b.checkOut, color: "#ef4444" });
-        }
+  const mergeBookingsIntoAvailability = (availData, bookingsData) => {
+    const merged = [...availData];
+    const seen = new Set(merged.map(e => `${e.start}|${e.end}|${e.title}`));
+    for (const b of bookingsData) {
+      if (b.status !== "confirmed") continue;
+      const key = `${b.checkIn}|${b.checkOut}|${b.roomName} (Booked)`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push({ id: b.id, title: `${b.roomName} (Booked)`, start: b.checkIn, end: b.checkOut, color: "#ef4444" });
       }
-      setAvailability(mergedAvailability);
-      setBookings(bookingsData);
-      setRoomSettings((prev) => {
-        const next = { ...prev };
-        roomsData.forEach((room) => {
-          if (!next[room.id]) {
-            next[room.id] = { basePrice: room.basePrice, imagesInput: room.images.join(", ") };
-          }
-        });
-        return next;
-      });
-      setBookingForm((prev) => ({ ...prev, roomId: prev.roomId || roomsData[0]?.id || "" }));
-      setAdminForm((prev) => ({ ...prev, roomId: prev.roomId || roomsData[0]?.id || "" }));
-    } catch (error) {
-      showNotification("error", error?.response?.data?.message || "Failed to load data.");
-    } finally {
-      setLoading(false);
     }
+    return merged;
   };
 
+  // Fetch public data immediately — no auth needed
   useEffect(() => {
-    if (authChecked) loadData();
-  }, [authChecked, adminToken]);
+    (async () => {
+      try {
+        const [roomsData, availabilityData] = await Promise.all([
+          getRooms(),
+          getAvailability()
+        ]);
+        setRooms(roomsData);
+        setAvailability(mergeBookingsIntoAvailability(availabilityData, []));
+        setRoomSettings((prev) => {
+          const next = { ...prev };
+          roomsData.forEach((room) => {
+            if (!next[room.id]) {
+              next[room.id] = { basePrice: room.basePrice, imagesInput: room.images.join(", ") };
+            }
+          });
+          return next;
+        });
+        setBookingForm((prev) => ({ ...prev, roomId: prev.roomId || roomsData[0]?.id || "" }));
+        setAdminForm((prev) => ({ ...prev, roomId: prev.roomId || roomsData[0]?.id || "" }));
+      } catch (error) {
+        showNotification("error", error?.response?.data?.message || "Failed to load data.");
+      } finally {
+        setLoading(false);
+        setDataLoaded(true);
+      }
+    })();
+  }, []);
+
+  // Auth-aware: merge confirmed bookings into availability when admin token arrives
+  useEffect(() => {
+    if (!authChecked) return;
+    (async () => {
+      if (!adminToken) return;
+      try {
+        const bookingsData = await getBookings(adminToken);
+        setBookings(bookingsData);
+        if (dataLoaded) {
+          setAvailability((prev) => mergeBookingsIntoAvailability(prev, bookingsData));
+        }
+      } catch (e) {
+        console.warn("Admin token invalid or expired", e);
+      }
+    })();
+  }, [authChecked, adminToken, dataLoaded]);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 24);
@@ -443,7 +466,7 @@ function App() {
   return (
     <ErrorBoundary>
     <main className="wrapper">
-      <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/admin","/rooms","/nearby","/amenities"].includes(location.pathname) ? "topNav--light" : ""}`}>
+      <header className={`topNav ${isScrolled ? "scrolled" : ""} ${["/rooms","/nearby","/amenities"].includes(location.pathname) ? "topNav--light" : ""}`} style={{ display: location.pathname === "/admin" ? "none" : undefined }}>
         <div className="navLeft">
           {location.pathname !== "/" && <Link className="navBack" to="/#hero" aria-label="Back to home">&lt;</Link>}
           <button className={`hamburger${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
@@ -462,7 +485,7 @@ function App() {
           {location.pathname !== "/" && <Link className={`navLink${location.pathname === "/" ? " active" : ""}`} to="/#hero" onClick={() => setSidebarOpen(false)}>Home</Link>}
           <Link className={`navLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
           <Link className={`navLink${location.pathname === "/amenities" ? " active" : ""}`} to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
-          <Link className={`navLink${location.pathname === "/" && location.hash === "#photos" ? " active" : ""}`} to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
+          <Link className={`navLink${location.pathname === "/photos" ? " active" : ""}`} to="/photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
           <Link className={`navLink${location.pathname === "/" && location.hash === "#location" ? " active" : ""}`} to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
           <Link className={`navLink${location.pathname === "/nearby" ? " active" : ""}`} to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
         </nav>
@@ -515,7 +538,7 @@ function App() {
         <Link className="sidebarLink sidebarLink--book" to="/#booking" onClick={() => setSidebarOpen(false)}>Book Now</Link>
         <Link className="sidebarLink" to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
         <Link className="sidebarLink" to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
-        <Link className="sidebarLink" to="/#photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
+        <Link className="sidebarLink" to="/photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
         <Link className="sidebarLink" to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
         <Link className="sidebarLink" to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
       </aside>
@@ -539,7 +562,7 @@ function App() {
         </div>
       )}
 
-      <div className={location.pathname === "/admin" ? "pageContent adminContent" : "pageContent"}>
+      <div className={location.pathname === "/admin" ? "pageContent pageContent--admin" : "pageContent"}>
         <Routes>
           <Route
             path="/"
@@ -564,6 +587,7 @@ function App() {
           <Route path="/rooms" element={<Suspense fallback={<div className="pageLoading" />}><RoomsPage rooms={rooms} /></Suspense>} />
           <Route path="/amenities" element={<Suspense fallback={<div className="pageLoading" />}><AmenitiesPage /></Suspense>} />
           <Route path="/nearby" element={<Suspense fallback={<div className="pageLoading" />}><NearbyPage /></Suspense>} />
+          <Route path="/photos" element={<Suspense fallback={<div className="pageLoading" />}><PhotosPage /></Suspense>} />
           <Route
             path="/admin"
             element={
@@ -578,6 +602,8 @@ function App() {
                 roomOptions={roomOptions}
                 roomSettings={roomSettings}
                 availability={availability}
+                adminEmail={adminEmail}
+                adminProfile={adminProfile}
                 onAdminDateClick={handleAdminDateClick}
                 onAdminFormChange={(values) => setAdminForm((prev) => ({ ...prev, ...values }))}
                 onAdminBooking={handleAdminBooking}
@@ -589,6 +615,12 @@ function App() {
                   }))
                 }
                 onRoomUpdate={handleRoomUpdate}
+                onAdminProfileChange={(values) => setAdminProfile((prev) => ({ ...prev, ...values }))}
+                onLogout={async () => {
+                  const { signOut } = await import("firebase/auth");
+                  const { auth } = await import("./firebase");
+                  await signOut(auth);
+                }}
               />
               </Suspense>
               ) : (
@@ -602,8 +634,8 @@ function App() {
         </Routes>
       </div>
 
-      <Footer />
-      <FloatingContact />
+      {location.pathname !== "/admin" && <Footer />}
+      {location.pathname !== "/admin" && <FloatingContact />}
     </main>
     </ErrorBoundary>
   );
