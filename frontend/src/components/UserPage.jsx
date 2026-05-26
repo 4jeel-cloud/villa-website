@@ -51,6 +51,8 @@ export default function UserPage({
       if (!evt.start || !evt.end) continue;
       if (selectedRoomName && !evt.title?.startsWith(selectedRoomName)) continue;
       const sk = evt.start, ek = evt.end;
+      ci.add(sk);
+      co.add(ek);
       let cur = new Date(sk + "T00:00:00");
       const end = new Date(ek + "T00:00:00");
       while (cur < end) {
