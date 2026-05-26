@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const firestoreDb = require("./firestoreDb");
 
 // ===== In-memory cache =====
 let rooms = [];
@@ -263,6 +264,10 @@ async function createBooking(data) {
 
   bookings.push(booking);
 
+  // Persist to Firestore (fire-and-forget)
+  firestoreDb.insertBooking(booking).catch(err => console.error("[Firestore] insertBooking error:", err.message));
+
+  // Sync to Google Sheets (if configured)
   if (hasScript()) {
     try {
       // Calculate amount: nights × room price
@@ -333,6 +338,9 @@ async function cancelBooking(bookingId, data) {
   booking.cancellationReason = data.reason || "Cancelled by admin";
   booking.refundStatus = data.refundStatus || "pending";
 
+  // Persist to Firestore (fire-and-forget)
+  firestoreDb.cancelBookingDb(bookingId, data).catch(err => console.error("[Firestore] cancelBooking error:", err.message));
+
   if (hasScript()) {
     try {
       await scriptPost({
@@ -367,6 +375,9 @@ async function createBlockedDate(data) {
 
   blockedDates.push(block);
 
+  // Persist to Firestore (fire-and-forget)
+  firestoreDb.insertBlockedDate(block).catch(err => console.error("[Firestore] insertBlockedDate error:", err.message));
+
   if (hasScript()) {
     try {
       await scriptPost({
@@ -391,6 +402,8 @@ async function updateRoomPrice(roomId, basePrice) {
   if (!room) return null;
   room.basePrice = basePrice;
 
+  firestoreDb.updateRoomPriceDb(roomId, basePrice).catch(err => console.error("[Firestore] updateRoomPrice error:", err.message));
+
   if (hasScript()) {
     try {
       await scriptPost({
@@ -410,6 +423,8 @@ async function updateRoomImages(roomId, images) {
   const room = rooms.find((r) => r.id === roomId);
   if (!room) return null;
   room.images = images;
+
+  firestoreDb.updateRoomImagesDb(roomId, images).catch(err => console.error("[Firestore] updateRoomImages error:", err.message));
 
   if (hasScript()) {
     try {
@@ -475,23 +490,98 @@ function startPeriodicSync() {
         endDate: b.endDate || "",
         reason: b.reason || "",
       }));
+
+      // Sync the full current state to Firestore (idempotent upserts)
+      if (firestoreDb.isConnected()) {
+        syncMemoryToFirestore();
+      }
     } catch (err) {
       // Silently fail on re-sync
     }
   }, 8000);
 }
 
+// ===== Sync in-memory data to Firestore collections =====
+async function syncMemoryToFirestore() {
+  if (!firestoreDb.isConnected()) return;
+  for (const room of rooms) {
+    await firestoreDb.upsertRoom(room).catch(() => {});
+  }
+  for (const booking of bookings) {
+    await firestoreDb.insertBooking(booking).catch(() => {});
+  }
+  for (const block of blockedDates) {
+    await firestoreDb.insertBlockedDate(block).catch(() => {});
+  }
+  const events = getAvailabilityEventsSync();
+  await firestoreDb.syncCalendarEvents(events).catch(() => {});
+  console.log("[Store] Synced memory to Firestore");
+}
+
+function getAvailabilityEventsSync() {
+  const bookedEvents = bookings
+    .filter((b) => b.status === "confirmed")
+    .map((b) => ({
+      id: b.id,
+      title: `${b.roomName} (Booked)`,
+      start: b.checkIn,
+      end: b.checkOut,
+      color: "#ef4444",
+      guestName: b.guestName,
+      roomName: b.roomName,
+      status: b.status,
+    }));
+  const blockedEvents = blockedDates.map((b) => ({
+    id: b.id,
+    title: `${b.roomName} (Blocked)`,
+    start: b.startDate,
+    end: b.endDate,
+    color: "#f59e0b",
+    roomName: b.roomName,
+    status: "blocked",
+  }));
+  return [...bookedEvents, ...blockedEvents];
+}
+
 // ===== Initialize =====
 async function init() {
   rooms = DEFAULT_ROOMS.map((r) => ({ ...r }));
+
+  // 1. Try Firestore first (authoritative after initial seed)
+  await firestoreDb.connect();
+  const [fsRooms, fsBookings, fsBlocks] = await Promise.all([
+    firestoreDb.loadRooms(),
+    firestoreDb.loadBookings(),
+    firestoreDb.loadBlockedDates(),
+  ]);
+
+  const hasFirestoreData = fsRooms && fsRooms.length > 0;
+
+  if (hasFirestoreData) {
+    rooms = fsRooms;
+    bookings = fsBookings || [];
+    blockedDates = fsBlocks || [];
+    console.log(`[Store] Loaded from Firestore: ${rooms.length} rooms, ${bookings.length} bookings, ${blockedDates.length} blocks`);
+  }
+
+  // 2. If Sheets configured, seed Firestore on first run or merge new items
   if (hasScript()) {
-    console.log("[Store] Using Apps Script web app:", getScriptUrl());
-    await loadFromScript();
+    if (!hasFirestoreData) {
+      // First ever run — seed from Google Sheets
+      console.log("[Store] Firestore empty — seeding from Google Sheets");
+      await loadFromScript();
+      await syncMemoryToFirestore();
+      console.log("[Store] Firestore seeded from Sheets");
+    }
+    // Periodic sync: picks up manual sheet additions (merge only — never overwrites)
     startPeriodicSync();
-  } else {
-    console.log(
-      "[Store] APPS_SCRIPT_URL not set — using in-memory only (data lost on restart)"
-    );
+  }
+
+  // 3. Always ensure calendarEvents collection is up to date
+  if (firestoreDb.isConnected()) {
+    const events = getAvailabilityEventsSync();
+    firestoreDb.syncCalendarEvents(events);
+    console.log("[Store] calendarEvents synced to Firestore");
   }
 }
 
@@ -499,6 +589,7 @@ init();
 
 process.on("exit", () => {
   if (syncInterval) clearInterval(syncInterval);
+  firestoreDb.shutdown();
 });
 process.on("SIGINT", () => process.exit());
 process.on("SIGTERM", () => process.exit());

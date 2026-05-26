@@ -10,8 +10,8 @@ import {
   updateRoomImages,
   updateRoomPrice
 } from "./api";
+import { fetchCalendarEvents, syncCalendarEvents, addCalendarEvent, removeCalendarEvent } from "./calendarDb";
 import { saveBookingCache, loadBookingCache } from "./bookingCache";
-import { saveAvailabilityCache, loadAvailabilityCache } from "./availabilityCache";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingScreen from "./components/LoadingScreen";
 import Footer from "./components/Footer";
@@ -146,10 +146,10 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        // Load cached availability first so calendar renders instantly
-        const cachedAvail = await loadAvailabilityCache();
-        if (cachedAvail?.length) {
-          setAvailability(mergeBookingsIntoAvailability(cachedAvail, []));
+        // Load from Firestore first so calendar renders instantly
+        const firestoreEvents = await fetchCalendarEvents();
+        if (firestoreEvents?.length) {
+          setAvailability(firestoreEvents);
         }
 
         const [roomsData, availabilityData] = await Promise.all([
@@ -157,8 +157,9 @@ function App() {
           getAvailability()
         ]);
         setRooms(roomsData);
-        setAvailability(mergeBookingsIntoAvailability(availabilityData, []));
-        saveAvailabilityCache(availabilityData);
+        const merged = mergeBookingsIntoAvailability(availabilityData, []);
+        setAvailability(merged);
+        syncCalendarEvents(merged);
         setRoomSettings((prev) => {
           const next = { ...prev };
           roomsData.forEach((room) => {
@@ -220,7 +221,11 @@ function App() {
   // Merge bookings into availability when both are ready
   useEffect(() => {
     if (!dataLoaded || !bookingsFetched.current) return;
-    setAvailability((prev) => mergeBookingsIntoAvailability(prev, bookings));
+    setAvailability((prev) => {
+      const merged = mergeBookingsIntoAvailability(prev, bookings);
+      syncCalendarEvents(merged);
+      return merged;
+    });
   }, [dataLoaded, bookings]);
 
   useEffect(() => {
@@ -256,10 +261,9 @@ function App() {
   const onBookingSuccess = (booking) => {
     showNotification("success", "Booking confirmed successfully.");
     setBookings((prev) => [...prev, booking]);
-    setAvailability((prev) => [
-      ...prev,
-      { id: booking.id, title: `${booking.roomName} (Booked)`, start: booking.checkIn, end: booking.checkOut, color: "#ef4444" }
-    ]);
+    const newEvent = { id: booking.id, title: `${booking.roomName} (Booked)`, start: booking.checkIn, end: booking.checkOut, color: "#ef4444", guestName: booking.guestName, roomName: booking.roomName };
+    setAvailability((prev) => [...prev, newEvent]);
+    addCalendarEvent(newEvent);
     setBookingForm((prev) => ({ ...prev, checkIn: "", checkOut: "", guestName: "", guestEmail: "", guestPhone: "", guests: "", guestType: "Family" }));
   };
 
@@ -364,18 +368,20 @@ function App() {
     const roomCount = rooms.length;
     if (roomCount > 0) {
       const occMap = new Map();
-      for (const b of bookings || []) {
-        if (b.status !== "confirmed") continue;
-        let cur = new Date(b.checkIn + "T00:00:00");
-        const end = new Date(b.checkOut + "T00:00:00");
+      for (const evt of availability) {
+        if (!evt.title?.endsWith("(Booked)")) continue;
+        const rName = evt.title.replace(" (Booked)", "");
+        let cur = new Date(evt.start + "T00:00:00");
+        const end = new Date(evt.end + "T00:00:00");
         while (cur < end) {
           const key = toDateKey2(cur);
-          occMap.set(key, (occMap.get(key) || 0) + 1);
+          if (!occMap.has(key)) occMap.set(key, new Set());
+          occMap.get(key).add(rName);
           cur.setDate(cur.getDate() + 1);
         }
       }
-      for (const [date, count] of occMap) {
-        if (count >= roomCount) fullyBusy.add(date);
+      for (const [date, rooms] of occMap) {
+        if (rooms.size >= roomCount) fullyBusy.add(date);
       }
     }
 
@@ -447,10 +453,9 @@ function App() {
     try {
       const booking = await createBooking({ ...adminForm, createdBy: "admin" });
       setBookings((prev) => [...prev, booking]);
-      setAvailability((prev) => [
-        ...prev,
-        { id: booking.id, title: `${booking.roomName} (Booked)`, start: booking.checkIn, end: booking.checkOut, color: "#ef4444" }
-      ]);
+      const newEvent = { id: booking.id, title: `${booking.roomName} (Booked)`, start: booking.checkIn, end: booking.checkOut, color: "#ef4444", guestName: booking.guestName, roomName: booking.roomName };
+      setAvailability((prev) => [...prev, newEvent]);
+      addCalendarEvent(newEvent);
       showNotification("success", "Admin booking created.");
       setAdminForm((prev) => ({ ...prev, checkIn: "", checkOut: "", guestName: "", guestEmail: "", guestPhone: "", guests: "", guestType: "Family", amount: "" }));
     } catch (error) {
@@ -469,14 +474,18 @@ function App() {
       setBookings((prev) =>
         prev.map((b) => b.id === bookingId ? { ...b, status: "cancelled" } : b)
       );
-      setAvailability((prev) => prev.filter((e) => {
-        if (e.id === bookingId) return false;
-        if (cancelled &&
-            e.start === cancelled.checkIn &&
-            e.end === cancelled.checkOut &&
-            e.title && e.title.startsWith(cancelled.roomName)) return false;
-        return true;
-      }));
+      setAvailability((prev) => {
+        const filtered = prev.filter((e) => {
+          if (e.id === bookingId) return false;
+          if (cancelled &&
+              e.start === cancelled.checkIn &&
+              e.end === cancelled.checkOut &&
+              e.title && e.title.startsWith(cancelled.roomName)) return false;
+          return true;
+        });
+        removeCalendarEvent(bookingId);
+        return filtered;
+      });
       showNotification("success", "Booking cancelled.");
     } catch (error) {
       const status = error?.response?.status;

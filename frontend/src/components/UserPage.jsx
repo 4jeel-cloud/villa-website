@@ -62,18 +62,20 @@ export default function UserPage({
     const roomCount = (rooms || []).length;
     if (roomCount > 0) {
       const occMap = new Map();
-      for (const b of (bookings || [])) {
-        if (b.status !== "confirmed") continue;
-        let cur = new Date(b.checkIn + "T00:00:00");
-        const end = new Date(b.checkOut + "T00:00:00");
+      for (const evt of (availability || [])) {
+        if (!evt.title?.endsWith("(Booked)")) continue;
+        const rName = evt.title.replace(" (Booked)", "");
+        let cur = new Date(evt.start + "T00:00:00");
+        const end = new Date(evt.end + "T00:00:00");
         while (cur < end) {
           const key = toDateKey(cur);
-          occMap.set(key, (occMap.get(key) || 0) + 1);
+          if (!occMap.has(key)) occMap.set(key, new Set());
+          occMap.get(key).add(rName);
           cur.setDate(cur.getDate() + 1);
         }
       }
-      for (const [key, count] of occMap) {
-        if (count >= roomCount) ck.set(key, "blocked-date");
+      for (const [key, rooms] of occMap) {
+        if (rooms.size >= roomCount) ck.set(key, "blocked-date");
       }
     }
     return { blockedClasses: ck, existingCheckin: ci, existingCheckout: co };
@@ -129,7 +131,7 @@ export default function UserPage({
                 <FullCalendar
                   plugins={[dayGridPlugin, interactionPlugin]}
                   initialView="dayGridMonth"
-                  events={[]}
+                  events={availability}
                   dateClick={onCalendarDateClick}
                   dayCellClassNames={dayCellClassNames}
                   height="auto"

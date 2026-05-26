@@ -70,14 +70,26 @@ export default function AdminPage({
     };
   }, [laundryStock, laundryAlerts, laundryActivity]);
 
-  const adminCalendarEvents = bookings
-    .filter((b) => b.status === "confirmed")
-    .map((booking) => ({
-      title: booking.guestName,
-      start: booking.checkIn,
-      end: booking.checkOut,
-      classNames: ["admin-booking-event"]
-    }));
+  const adminCalendarEvents = useMemo(() => {
+    const bookingEvents = bookings
+      .filter((b) => b.status === "confirmed")
+      .map((booking) => ({
+        title: booking.guestName,
+        start: booking.checkIn,
+        end: booking.checkOut,
+        classNames: ["admin-booking-event"]
+      }));
+    const blockedEvents = (availability || [])
+      .filter(evt => evt.color === "#f59e0b")
+      .map(evt => ({
+        title: evt.title,
+        start: evt.start,
+        end: evt.end,
+        color: "#f59e0b",
+        classNames: ["admin-blocked-event"]
+      }));
+    return [...bookingEvents, ...blockedEvents];
+  }, [bookings, availability]);
 
   const { existingCheckin, existingCheckout, blockedClasses } = useMemo(() => {
     const ci = new Set(), co = new Set(), bk = new Map();
