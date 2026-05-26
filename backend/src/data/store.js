@@ -555,23 +555,20 @@ async function init() {
     firestoreDb.loadBlockedDates(),
   ]);
 
-  const hasFirestoreData = fsRooms && fsRooms.length > 0;
+  if (fsRooms?.length) rooms = fsRooms;
+  if (fsBookings?.length) bookings = fsBookings;
+  if (fsBlocks?.length) blockedDates = fsBlocks;
+  console.log(`[Store] Loaded from Firestore: ${rooms.length} rooms, ${bookings.length} bookings, ${blockedDates.length} blocks`);
 
-  if (hasFirestoreData) {
-    rooms = fsRooms;
-    bookings = fsBookings || [];
-    blockedDates = fsBlocks || [];
-    console.log(`[Store] Loaded from Firestore: ${rooms.length} rooms, ${bookings.length} bookings, ${blockedDates.length} blocks`);
-  }
-
-  // 2. If Sheets configured, seed Firestore on first run or merge new items
+  // 2. If Sheets configured, seed any missing data from Sheets
+  // Always merge from Sheets if data is missing in Firestore (first run scenario)
   if (hasScript()) {
-    if (!hasFirestoreData) {
-      // First ever run — seed from Google Sheets
-      console.log("[Store] Firestore empty — seeding from Google Sheets");
+    const needsSeed = !fsRooms?.length || !fsBookings?.length;
+    if (needsSeed) {
+      console.log("[Store] Some Firestore collections empty — merging from Google Sheets");
       await loadFromScript();
       await syncMemoryToFirestore();
-      console.log("[Store] Firestore seeded from Sheets");
+      console.log("[Store] Firestore synced from Sheets");
     }
     // Periodic sync: picks up manual sheet additions (merge only — never overwrites)
     startPeriodicSync();
