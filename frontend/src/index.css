@@ -1425,18 +1425,73 @@ button {
   background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
 }
 
+/* ── Mobile bottom navigation ── */
+.mobileNav {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .topNav {
-    padding: 10px 12px;
+    padding: 8px 12px;
+  }
+
+  .sidebar, .sidebarOverlay, .hamburger {
+    display: none !important;
+  }
+
+  .mobileNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    background: #ffffff;
+    border-top: 1px solid #D8E4D8;
+    padding: 4px 0 env(safe-area-inset-bottom, 4px);
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  }
+
+  .mobileNavLink {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 6px 8px;
+    text-decoration: none;
+    color: #64748b;
+    font-size: 0.6rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: color 0.15s;
+  }
+
+  .mobileNavLink i {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .mobileNavLink.active {
+    color: #06402B;
+  }
+
+  .pageContent {
+    padding-bottom: 64px;
   }
 
   .heroTextPrimary {
-    font-size: clamp(3.8rem, 13vw, 6rem);
+    font-size: clamp(2.8rem, 11vw, 4.5rem);
   }
 
   .heroTextSecondary {
-    font-size: clamp(2.8rem, 10vw, 4.5rem);
-    margin-top: 12px;
+    font-size: clamp(2rem, 8vw, 3.2rem);
+    margin-top: 10px;
+  }
+
+  .brand {
+    font-size: 1rem !important;
   }
 
   .fc {
@@ -1494,11 +1549,33 @@ button {
   }
 
   .heroTextPrimary {
-    font-size: clamp(3rem, 12vw, 3.8rem);
+    font-size: clamp(2.4rem, 11vw, 3.2rem);
   }
 
   .heroTextSecondary {
-    font-size: clamp(2.2rem, 9vw, 2.8rem);
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+    margin-top: 6px;
+  }
+
+  .homeSection {
+    padding: 24px 0;
+  }
+
+  .bookingLayout {
+    margin: 8px auto;
+    padding: 0 8px;
+  }
+
+  .calendarCard {
+    padding: 12px;
+  }
+
+  .calendarTitle {
+    font-size: 1rem;
+  }
+
+  .calendarSubtitle {
+    font-size: 0.75rem;
   }
 
   .grid {
@@ -1511,10 +1588,40 @@ button {
 
   .fc .fc-toolbar {
     flex-direction: column;
+    gap: 6px;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 0.85rem;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
     gap: 8px;
   }
 
+  .formInput, .formSelect {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
 
+  .btnPrimary {
+    font-size: 0.85rem;
+    padding: 10px 20px;
+  }
+
+  .topNav {
+    padding: 6px 10px;
+  }
+
+  .mobileNavLink {
+    padding: 4px 4px;
+    font-size: 0.55rem;
+  }
+
+  .mobileNavLink i {
+    font-size: 1.05rem;
+  }
 }
 
 /* ===== Carousel ===== */

@@ -694,6 +694,30 @@ function App() {
         </Routes>
       </div>
 
+      {location.pathname !== "/admin" && (
+      <nav className="mobileNav">
+        <Link className={`mobileNavLink${location.pathname === "/" ? " active" : ""}`} to="/#hero" onClick={() => setSidebarOpen(false)}>
+          <i className="ti ti-home" />
+          <span>Home</span>
+        </Link>
+        <Link className={`mobileNavLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms" onClick={() => setSidebarOpen(false)}>
+          <i className="ti ti-building" />
+          <span>Rooms</span>
+        </Link>
+        <Link className={`mobileNavLink${location.pathname === "/" && (location.hash === "#booking" || !location.hash) ? " active" : ""}`} to="/#booking" onClick={() => setSidebarOpen(false)}>
+          <i className="ti ti-calendar" />
+          <span>Book</span>
+        </Link>
+        <Link className={`mobileNavLink${location.pathname === "/photos" ? " active" : ""}`} to="/photos" onClick={() => setSidebarOpen(false)}>
+          <i className="ti ti-photo" />
+          <span>Photos</span>
+        </Link>
+        <Link className={`mobileNavLink${location.pathname === "/nearby" ? " active" : ""}`} to="/nearby" onClick={() => setSidebarOpen(false)}>
+          <i className="ti ti-map-pin" />
+          <span>Nearby</span>
+        </Link>
+      </nav>
+      )}
       {location.pathname !== "/admin" && <Footer />}
       {location.pathname !== "/admin" && <FloatingContact />}
     </main>
