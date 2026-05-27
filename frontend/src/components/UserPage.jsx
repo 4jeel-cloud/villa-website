@@ -110,12 +110,6 @@ export default function UserPage({
     <section className="homeContent">
       <div className="homeSection" id="home">
         <div className="hero">
-          <img
-            src="/DSC01019.webp"
-            alt="Creek View Villa"
-            className="heroImage"
-            fetchpriority="high"
-          />
           <div className="heroText">
             <span className="heroTextPrimary">Your home,</span>
             <span className="heroTextSecondary">at Wayanad</span>
