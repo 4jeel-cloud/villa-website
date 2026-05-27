@@ -408,7 +408,7 @@ body {
 }
 
 .heroTextPrimary {
-  font-family: "Cormorant Garamond", serif;
+  font-family: "Amarna", sans-serif;
   font-size: clamp(4.5rem, 11vw, 9rem);
   font-weight: 600;
   line-height: 1.05;
