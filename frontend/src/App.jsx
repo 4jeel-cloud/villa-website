@@ -145,13 +145,17 @@ function App() {
   // Fetch public data immediately — no auth needed
   useEffect(() => {
     (async () => {
+      // Show UI immediately from Firestore cache, then update from API
       try {
-        // Load from Firestore first so calendar renders instantly
         const firestoreEvents = await fetchCalendarEvents();
         if (firestoreEvents?.length) {
           setAvailability(firestoreEvents);
         }
+      } catch (_) { /* Firestore cache not available, will fall back to API */ }
+      setLoading(false);
+      setDataLoaded(true);
 
+      try {
         const [roomsData, availabilityData] = await Promise.all([
           getRooms(),
           getAvailability()
@@ -172,9 +176,6 @@ function App() {
         setAdminForm((prev) => ({ ...prev, roomId: prev.roomId || roomsData[0]?.id || "" }));
       } catch (error) {
         showNotification("error", error?.response?.data?.message || "Failed to load data.");
-      } finally {
-        setLoading(false);
-        setDataLoaded(true);
       }
     })();
   }, []);
