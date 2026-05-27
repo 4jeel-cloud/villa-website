@@ -592,13 +592,12 @@ function App() {
 
       <div className={`sidebarOverlay${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(false)} />
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
-        <div className="sidebarBrand" style={{ fontFamily: "\"Cormorant Garamond\", serif", fontStyle: "italic", fontWeight: 600 }}>Creek View Villa</div>
-        <Link className="sidebarLink sidebarLink--book" to="/#booking" onClick={() => setSidebarOpen(false)}>Book Now</Link>
-        <Link className="sidebarLink" to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
-        <Link className="sidebarLink" to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
-        <Link className="sidebarLink" to="/photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
-        <Link className="sidebarLink" to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
-        <Link className="sidebarLink" to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
+        <Link className={`sidebarLink sidebarLink--book${location.pathname === "/" ? " active" : ""}`} to="/#booking" onClick={() => setSidebarOpen(false)}>Book Now</Link>
+        <Link className={`sidebarLink${location.pathname === "/rooms" ? " active" : ""}`} to="/rooms" onClick={() => setSidebarOpen(false)}>Rooms</Link>
+        <Link className={`sidebarLink${location.pathname === "/amenities" ? " active" : ""}`} to="/amenities" onClick={() => setSidebarOpen(false)}>Amenities</Link>
+        <Link className={`sidebarLink${location.pathname === "/photos" ? " active" : ""}`} to="/photos" onClick={() => setSidebarOpen(false)}>Photos</Link>
+        <Link className={`sidebarLink${location.pathname === "/" && location.hash === "#location" ? " active" : ""}`} to="/#location" onClick={() => setSidebarOpen(false)}>Location</Link>
+        <Link className={`sidebarLink${location.pathname === "/nearby" ? " active" : ""}`} to="/nearby" onClick={() => setSidebarOpen(false)}>Nearby</Link>
       </aside>
 
       {notification && (

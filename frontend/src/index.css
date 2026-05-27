@@ -332,22 +332,18 @@ body {
 .sidebarLink:hover {
   background: #F0F7F0;
 }
+.sidebarLink.active {
+  background: #E8F2EA;
+  border-left: 3px solid #06402B;
+  font-weight: 700;
+  color: #06402B;
+}
 .sidebarLink--book {
   font-weight: 700;
   color: #06402B;
   background: #E8F2EA;
   border-bottom: 1px solid #D0E0D0;
 }
-.sidebarBrand {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.2rem;
-  font-style: italic;
-  color: #1C3A28;
-  padding: 0 24px 16px;
-  border-bottom: 1px solid #D8E4D8;
-  margin-bottom: 8px;
-}
-
 /* Desktop nav */
 @media (min-width: 769px) {
   .navLeft { gap: 0; }
