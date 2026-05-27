@@ -1425,60 +1425,62 @@ button {
   background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
 }
 
-/* ── Mobile bottom navigation ── */
-.mobileNav {
+/* ── Admin mobile bottom nav ── */
+.adminMobileNav {
   display: none;
 }
 
 @media (max-width: 768px) {
-  .topNav {
-    padding: 8px 12px;
-  }
-
-  .sidebar, .sidebarOverlay, .hamburger {
-    display: none !important;
-  }
-
-  .mobileNav {
+  .adminMobileNav {
     display: flex;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 900;
-    background: #ffffff;
-    border-top: 1px solid #D8E4D8;
+    background: #06402B;
     padding: 4px 0 env(safe-area-inset-bottom, 4px);
     justify-content: space-around;
     align-items: center;
-    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
   }
 
-  .mobileNavLink {
+  .adminMobileNavItem {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1px;
-    padding: 6px 8px;
-    text-decoration: none;
-    color: #64748b;
-    font-size: 0.6rem;
-    font-weight: 500;
-    border-radius: 8px;
-    transition: color 0.15s;
+    padding: 4px 6px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    font-size: 0.55rem;
+    cursor: pointer;
+    border-radius: 6px;
   }
 
-  .mobileNavLink i {
-    font-size: 1.2rem;
-    line-height: 1;
+  .adminMobileNavItem i {
+    font-size: 1.1rem;
   }
 
-  .mobileNavLink.active {
-    color: #06402B;
+  .adminMobileNavItem.active {
+    color: #fff;
   }
 
-  .pageContent {
-    padding-bottom: 64px;
+  .adminMobileNavLogout {
+    color: rgba(239,68,68,0.7);
+  }
+
+  .adminSidebar {
+    display: none !important;
+  }
+
+  .adminContent {
+    margin-left: 0 !important;
+    padding-bottom: 56px;
+  }
+
+  .topNav {
+    padding: 8px 12px;
   }
 
   .heroTextPrimary {

@@ -723,6 +723,22 @@ export default function AdminPage({
           {renderContent()}
         </div>
       </main>
+      <nav className="adminMobileNav">
+        {SIDEBAR_ITEMS.slice(0, 5).map(({ key, label, icon }) => (
+          <button
+            key={key}
+            className={`adminMobileNavItem${activeSection === key ? " active" : ""}`}
+            onClick={() => key === "home" ? window.location.href = "/#hero" : setActiveSection(key)}
+          >
+            <i className={`ti ti-${icon}`} />
+            <span>{label}</span>
+          </button>
+        ))}
+        <button className="adminMobileNavItem adminMobileNavLogout" onClick={onLogout}>
+          <i className="ti ti-logout" />
+          <span>Logout</span>
+        </button>
+      </nav>
     </div>
   );
 }
