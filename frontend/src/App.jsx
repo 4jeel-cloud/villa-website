@@ -36,6 +36,8 @@ function App() {
   const notifTimeout = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const isScrolledRef = useRef(false);
+  const scrollRaf = useRef(null);
   const bookingsFetched = useRef(false);
   const [bookingsFetchTrigger, setBookingsFetchTrigger] = useState(0);
   const [bookingsFetchError, setBookingsFetchError] = useState(false);
@@ -228,10 +230,23 @@ function App() {
   }, [dataLoaded, bookings]);
 
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      if (scrollRaf.current) return;
+      scrollRaf.current = requestAnimationFrame(() => {
+        scrollRaf.current = null;
+        const v = window.scrollY > 24;
+        if (v !== isScrolledRef.current) {
+          isScrolledRef.current = v;
+          setIsScrolled(v);
+        }
+      });
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current);
+    };
   }, []);
 
   const [searchParams] = useSearchParams();

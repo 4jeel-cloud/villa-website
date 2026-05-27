@@ -5,8 +5,6 @@
 html, body {
   margin: 0;
   padding: 0;
-  overscroll-behavior: none;
-  scroll-behavior: smooth;
 }
 
 html {
@@ -99,6 +97,8 @@ body {
   left: 0;
   right: 0;
   z-index: 1000;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
   display: flex;
   align-items: center;
   justify-content: space-between;
