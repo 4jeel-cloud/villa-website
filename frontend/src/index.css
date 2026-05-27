@@ -1447,18 +1447,7 @@ button {
   }
 
   .heroImage {
-    height: calc(100dvh - 56px);
-    min-height: unset;
-  }
-
-  .heroTextSecondary {
-    font-size: clamp(2rem, 7vw, 3.4rem);
-    margin-top: 8px;
-  }
-
-  .heroImage {
     height: 100vh;
-    height: 100dvh;
     min-height: unset;
   }
 
