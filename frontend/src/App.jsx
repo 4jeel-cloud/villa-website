@@ -406,8 +406,13 @@ function App() {
       return;
     }
     if (clickedDate === bookingForm.checkIn) {
-      setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
-      setWaitingForCheckout(false);
+      if (bookingForm.checkOut) {
+        setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
+        setWaitingForCheckout(false);
+      } else {
+        setBookingForm(prev => ({ ...prev, checkOut: clickedDate }));
+        setWaitingForCheckout(false);
+      }
       return;
     }
 
