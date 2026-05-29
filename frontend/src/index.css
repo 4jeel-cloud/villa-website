@@ -1405,9 +1405,14 @@ button {
   font-weight: 700;
 }
 
-/* Middle nights: light green */
+/* Middle nights: red & unclickable */
 .fc .selected-range .fc-daygrid-day-frame {
-  background: rgba(5, 150, 105, 0.18) !important;
+  background: rgba(239, 68, 68, 0.85) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+.fc .selected-range .fc-daygrid-day-number {
+  color: #fff !important;
 }
 
 /* ── Existing booking check-in date: right half yellow ── */

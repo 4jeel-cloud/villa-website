@@ -393,6 +393,8 @@ function App() {
       }
     }
 
+    const toKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
     if (fullyBusy.has(clickedDate)) {
       showNotification("error", "This date is already booked. Please select an available date.");
       return;
@@ -400,37 +402,47 @@ function App() {
 
     setFocusedDate(clickedDate);
 
-    if (clickedDate === bookingForm.checkOut) {
-      setBookingForm(prev => ({ ...prev, checkOut: "" }));
+    // Both checkIn and checkOut are set
+    if (bookingForm.checkIn && bookingForm.checkOut) {
+      // Clicking a date inside the range → block it
+      if (clickedDate > bookingForm.checkIn && clickedDate < bookingForm.checkOut) return;
+      // Clicking either endpoint → clear everything
+      if (clickedDate === bookingForm.checkIn || clickedDate === bookingForm.checkOut) {
+        setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
+        setWaitingForCheckout(false);
+        return;
+      }
+      // Clicking any other date → start fresh
+      setBookingForm(prev => ({ ...prev, checkIn: clickedDate, checkOut: "" }));
       setWaitingForCheckout(true);
       return;
     }
-    if (clickedDate === bookingForm.checkIn) {
-      if (bookingForm.checkOut) {
-        setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
-        setWaitingForCheckout(false);
-      } else {
-        setBookingForm(prev => ({ ...prev, checkOut: clickedDate }));
-        setWaitingForCheckout(false);
-      }
-      return;
-    }
 
+    // No checkIn set yet
     if (!bookingForm.checkIn) {
       setBookingForm(prev => ({ ...prev, checkIn: clickedDate, checkOut: "" }));
       setWaitingForCheckout(true);
       return;
     }
 
-    if (clickedDate <= bookingForm.checkIn) {
+    // checkIn is set, no checkOut yet
+    // Clicking the same date → same-day checkout
+    if (clickedDate === bookingForm.checkIn) {
+      setBookingForm(prev => ({ ...prev, checkOut: clickedDate }));
+      setWaitingForCheckout(false);
+      return;
+    }
+
+    // Clicking an earlier date → move check-in
+    if (clickedDate < bookingForm.checkIn) {
       setBookingForm(prev => ({ ...prev, checkIn: clickedDate, checkOut: "" }));
       setWaitingForCheckout(true);
       return;
     }
 
+    // Clicking a later date → validate range and set check-out
     let cursor = new Date(bookingForm.checkIn + "T00:00:00");
     const checkOutDate = new Date(clickedDate + "T00:00:00");
-    const toKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     while (cursor < checkOutDate) {
       if (fullyBusy.has(toKey(cursor))) {
         showNotification("error", "A date in this range is already booked. Please choose different dates.");
