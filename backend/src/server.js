@@ -14,8 +14,20 @@ const emailTemplates = require("./services/emailTemplates");
 const app = express();
 
 app.use(helmet({
-  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://checkout.razorpay.com"],
+      styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "'unsafe-inline'"],
+      fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https://identitytoolkit.googleapis.com", "https://firestore.googleapis.com"],
+      frameSrc: ["'self'", "https://checkout.razorpay.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
 }));
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
@@ -37,11 +49,20 @@ const adminLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const bookingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use("/api/", apiLimiter);
 app.use("/admin/", adminLimiter);
 
 const MANAGER_EMAILS = (process.env.MANAGER_EMAIL || "manager@homestay.local")
   .split(",").map((s) => s.trim()).filter(Boolean);
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
+  .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 const PORT = process.env.PORT || 4000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "";
@@ -54,9 +75,20 @@ const VALID_GUEST_TYPES = new Set(["Family", "Bachelor"]);
 
 function sanitize(str) {
   if (typeof str !== "string") return str;
-  return str.replace(/[<>&"']/g, (c) => ({
-    "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#x27;"
-  }[c]));
+  return str
+    .replace(/[<>&"']/g, (c) => ({
+      "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#x27;"
+    }[c]))
+    .replace(/\\/g, "&#x5c;")
+    .replace(/`/g, "&#x60;");
+}
+
+const MAX_STR_LEN = 500;
+const MAX_REASON_LEN = 1000;
+
+function truncate(str, max) {
+  if (typeof str !== "string") return str;
+  return str.slice(0, max);
 }
 
 async function verifyFirebaseToken(idToken) {
@@ -74,7 +106,19 @@ async function verifyFirebaseToken(idToken) {
       return null;
     }
     const data = await res.json();
-    return data.users?.[0] || null;
+    const user = data.users?.[0] || null;
+    if (!user) return null;
+
+    // If ADMIN_EMAILS is configured, verify the user's email is on the list
+    if (ADMIN_EMAILS.length > 0) {
+      const userEmail = (user.email || "").toLowerCase();
+      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+        console.log(`[verifyFirebaseToken] Email ${userEmail} not in ADMIN_EMAILS`);
+        return null;
+      }
+    }
+
+    return user;
   } catch (err) {
     console.log(`[verifyFirebaseToken] fetch error: ${err.message}`);
     return null;
@@ -134,14 +178,15 @@ app.get("/bookings", requireAdmin, async (_, res) => {
   res.json(data);
 });
 
-app.post("/bookings", async (req, res) => {
+app.post("/bookings", bookingLimiter, async (req, res) => {
   let { roomId, checkIn, checkOut, guestName, guestEmail, guestPhone, guests, guestType, createdBy = "guest" } = req.body;
 
-  guestName = sanitize(guestName);
-  guestEmail = sanitize(guestEmail);
-  guestPhone = sanitize(guestPhone);
+  guestName = truncate(sanitize(guestName), MAX_STR_LEN);
+  guestEmail = truncate(sanitize(guestEmail), MAX_STR_LEN);
+  guestPhone = truncate(sanitize(guestPhone), MAX_STR_LEN);
   guestType = sanitize(guestType);
   roomId = sanitize(roomId);
+  createdBy = sanitize(createdBy);
 
   if (!roomId || !checkIn || !checkOut || !guestName || !guestEmail || !guestPhone) {
     return res.status(400).json({ message: "Missing required booking fields." });
@@ -204,14 +249,24 @@ app.post("/bookings", async (req, res) => {
 
     return res.status(201).json(booking);
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    console.error("[POST /bookings]", err.message);
+    return res.status(500).json({ message: "Booking creation failed. Please try again." });
   }
 });
 
 app.post("/api/create-razorpay-order", async (req, res) => {
   if (!razorpay) return res.status(400).json({ message: "Razorpay not configured." });
 
-  const { roomId, checkIn, checkOut } = req.body;
+  let { roomId, checkIn, checkOut } = req.body;
+  roomId = sanitize(roomId);
+
+  if (!DATE_RE.test(checkIn) || !DATE_RE.test(checkOut)) {
+    return res.status(400).json({ message: "Dates must be in YYYY-MM-DD format." });
+  }
+  if (checkIn >= checkOut) {
+    return res.status(400).json({ message: "Check-out must be after check-in." });
+  }
+
   const room = await store.getRoom(roomId);
   if (!room) return res.status(404).json({ message: "Room not found." });
 
@@ -229,14 +284,17 @@ app.post("/api/create-razorpay-order", async (req, res) => {
     });
     res.json(order);
   } catch (err) {
-    res.status(500).json({ message: "Razorpay order creation failed.", error: err.message });
+    console.error("[RAZORPAY]", err.message);
+    res.status(500).json({ message: "Razorpay order creation failed. Please try again." });
   }
 });
 
 app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
+  const reason = truncate(sanitize(req.body.reason || "Cancelled from admin dashboard"), MAX_REASON_LEN);
+  const refundStatus = sanitize(req.body.refundStatus || "pending");
   const booking = await store.cancelBooking(req.params.id, {
-    reason: req.body.reason || "Cancelled from admin dashboard",
-    refundStatus: req.body.refundStatus || "pending",
+    reason,
+    refundStatus,
     cancelledBy: "admin",
   });
   if (!booking) return res.status(404).json({ message: "Booking not found." });
@@ -274,15 +332,33 @@ app.patch("/admin/rooms/:id/images", requireAdmin, async (req, res) => {
   if (!Array.isArray(req.body.images) || req.body.images.length === 0) {
     return res.status(400).json({ message: "Provide a non-empty images array." });
   }
-  const result = await store.updateRoomImages(req.params.id, req.body.images);
+  const images = req.body.images.map((url) => {
+    const s = sanitize(String(url));
+    // Only allow relative paths and common image extensions
+    if (!/^(\/[\w\-. /]+|\w[\w\-. :/]+)$/.test(s)) return "";
+    return s;
+  }).filter(Boolean);
+  if (images.length === 0) {
+    return res.status(400).json({ message: "All image paths were invalid." });
+  }
+  const result = await store.updateRoomImages(req.params.id, images);
   if (!result) return res.status(404).json({ message: "Room not found." });
   return res.json({ id: result.id, images: result.images });
 });
 
 app.post("/admin/blocks", requireAdmin, async (req, res) => {
-  const { roomId, startDate, endDate, reason } = req.body;
+  let { roomId, startDate, endDate, reason } = req.body;
+  roomId = sanitize(roomId);
+  reason = truncate(sanitize(reason || ""), MAX_REASON_LEN);
+
   if (!roomId || !startDate || !endDate) {
     return res.status(400).json({ message: "Missing roomId/startDate/endDate." });
+  }
+  if (!DATE_RE.test(startDate) || !DATE_RE.test(endDate)) {
+    return res.status(400).json({ message: "Dates must be in YYYY-MM-DD format." });
+  }
+  if (startDate >= endDate) {
+    return res.status(400).json({ message: "End date must be after start date." });
   }
   if (!(await store.roomExists(roomId))) {
     return res.status(404).json({ message: "Room not found." });
@@ -294,7 +370,8 @@ app.post("/admin/blocks", requireAdmin, async (req, res) => {
     const block = await store.createBlockedDate({ roomId, startDate, endDate, reason });
     return res.status(201).json(block);
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    console.error("[POST /admin/blocks]", err.message);
+    return res.status(500).json({ message: "Failed to create block. Please try again." });
   }
 });
 

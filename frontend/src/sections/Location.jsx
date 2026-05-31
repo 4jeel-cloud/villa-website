@@ -155,7 +155,7 @@ export default function Location() {
             />
 
             <a
-              href="https://maps.google.com/maps?q=11.684611,75.954"
+              href="https://maps.google.com/maps?q=Creek+View+Villa+Padinjarathara+Kerala"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -207,7 +207,7 @@ export default function Location() {
           </div>
 
           <a
-            href="https://maps.google.com/maps/dir//11.684611,75.954"
+            href="https://maps.google.com/maps/dir//Creek+View+Villa+Padinjarathara+Kerala"
             target="_blank"
             rel="noreferrer"
             style={{

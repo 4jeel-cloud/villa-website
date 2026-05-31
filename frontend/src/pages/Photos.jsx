@@ -46,21 +46,7 @@ function PhotoCard({ photo, onClick, style }) {
         background: hovered ? 'rgba(28,58,40,0.35)' : 'rgba(28,58,40,0)',
         transition: 'background 0.25s',
       }} />
-      <div style={{
-        position:      'absolute',
-        bottom:        10,
-        left:          12,
-        fontSize:      10,
-        color:         hovered ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0)',
-        letterSpacing: '0.1em',
-        textTransform: 'uppercase',
-        background:    'rgba(28,58,40,0.5)',
-        padding:       '3px 8px',
-        borderRadius:  20,
-        transition:    'color 0.25s',
-      }}>
-        {photo.label}
-      </div>
+
     </div>
   );
 }

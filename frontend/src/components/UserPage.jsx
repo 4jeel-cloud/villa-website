@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { toDateKey } from "../utils";
+import { toDateKey, formatDate } from "../utils";
 import GalleryCarousel from "./GalleryCarousel";
 import Location from "../sections/Location";
 import WhatsIncluded from "../sections/WhatsIncluded";
@@ -174,11 +174,11 @@ export default function UserPage({
                   <div className="formRow">
                     <div className="formField">
                       <label className="formLabel">Check-in</label>
-                      <input className="formInput" value={bookingForm.checkIn || "Not selected"} readOnly />
+                      <input className="formInput" value={formatDate(bookingForm.checkIn) || "Not selected"} readOnly />
                     </div>
                     <div className="formField">
                       <label className="formLabel">Check-out</label>
-                      <input className="formInput" value={bookingForm.checkOut || "Not selected"} readOnly />
+                      <input className="formInput" value={formatDate(bookingForm.checkOut) || "Not selected"} readOnly />
                     </div>
                   </div>
                   <p className="selectedDateInfo">{selectedRangeLabel || "Click dates on the calendar first."}</p>

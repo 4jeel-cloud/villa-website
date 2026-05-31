@@ -186,6 +186,7 @@ body {
   outline: none;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   font-family: "DM Sans", sans-serif;
+  position: relative;
 }
 
 .topNav.scrolled .brand,
@@ -362,8 +363,25 @@ body {
 
 
 
-.navLink.active {
-  font-weight: 800;
+.navLink::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navLink.active::after {
+  transform: scaleX(1);
+}
+
+.navCenter .navLink:hover::after {
+  transform: scaleX(1);
 }
 
 .hero {
@@ -1425,9 +1443,14 @@ button {
   background: linear-gradient(to right, rgba(234, 179, 8, 0.45) 50%, transparent 50%) !important;
 }
 
-/* If checkout-only date is selected as check-in, green wins */
+/* If checkout-only date is selected as check-in, show yellow left + green right */
 .fc .date-checkout-only.selected-checkin .fc-daygrid-day-frame {
-  background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.45) 50%, rgba(5, 150, 105, 0.7) 50%) !important;
+}
+
+/* If existing checkin date is selected as check-out, show green left + yellow right */
+.fc .existing-booking-checkin.selected-checkout .fc-daygrid-day-frame {
+  background: linear-gradient(to right, rgba(5, 150, 105, 0.7) 50%, rgba(234, 179, 8, 0.45) 50%) !important;
 }
 
 /* ── Admin mobile bottom nav ── */
@@ -2086,6 +2109,29 @@ button {
   justify-content: center;
 }
 
+.footerLegal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.footerLegal a {
+  font-size: 0.7rem;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s;
+}
+
+.footerLegal a:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footerLegalDot {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.6rem;
+}
+
 @media (max-width: 768px) {
   .footer {
     margin-top: 2rem;
@@ -2117,6 +2163,10 @@ button {
 
   .footerBrand p {
     font-size: 0.65rem;
+  }
+
+  .footerLegal a {
+    font-size: 0.6rem;
   }
 }
 
@@ -2480,5 +2530,63 @@ button {
 @media (min-width: 769px) {
   .photosLbImg {
     height: 500px !important;
+  }
+}
+
+/* ===== Cookie consent banner ===== */
+.cookieConsent {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #1C3A28;
+  padding: 12px 20px;
+  font-family: 'DM Sans', sans-serif;
+  animation: cookieFadeIn 0.4s ease;
+}
+
+@keyframes cookieFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cookieConsentInner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cookieConsentText {
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.cookieConsentBtn {
+  flex-shrink: 0;
+  background: #7AB890;
+  color: #1C3A28;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 12;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cookieConsentBtn:hover {
+  background: #8CCAA0;
+}
+
+@media (max-width: 600px) {
+  .cookieConsentInner {
+    flex-direction: column;
+    text-align: center;
   }
 }

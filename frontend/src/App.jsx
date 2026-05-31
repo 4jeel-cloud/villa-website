@@ -16,12 +16,15 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingScreen from "./components/LoadingScreen";
 import Footer from "./components/Footer";
 import FloatingContact from "./components/FloatingContact";
+import CookieConsent from "./components/CookieConsent";
 
 const UserPage = lazy(() => import("./components/UserPage"));
 const RoomsPage = lazy(() => import("./components/RoomsPage"));
 const NearbyPage = lazy(() => import("./components/NearbyPage"));
 const AmenitiesPage = lazy(() => import("./pages/Amenities"));
 const PhotosPage = lazy(() => import("./pages/Photos"));
+const PrivacyPage = lazy(() => import("./pages/Privacy"));
+const TermsPage = lazy(() => import("./pages/Terms"));
 const AdminPage = lazy(() => import("./components/AdminPage"));
 const AdminLoginPage = lazy(() => import("./components/AdminLoginPage"));
 
@@ -89,6 +92,8 @@ function App() {
   const [adminEmail, setAdminEmail] = useState("");
   const [adminProfile, setAdminProfile] = useState({ name: "", phone: "", email: "", address: "" });
   const location = useLocation();
+
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
 
   useEffect(() => {
     let unsubscribe;
@@ -347,32 +352,36 @@ function App() {
   const handleCalendarDateClick = (clickInfo) => {
     const clickedDate = clickInfo.dateStr;
 
-    const fullyBusy = new Set();
+    const fullyBusy = new Set();       // all overnight-occupied dates (for range validation)
+    const clickBlocked = new Set();    // only middle dates (edges allow same-day turnover)
     const selectedRoom = rooms.find(r => r.id === bookingForm.roomId);
     const selectedRoomName = selectedRoom?.name;
+
+    const toDateKey = (d) => {
+      const dt = typeof d === "string" ? new Date(d + "T00:00:00") : d;
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    };
 
     for (const evt of availability) {
       if (!evt.start || !evt.end) continue;
       if (selectedRoomName && !evt.title?.startsWith(selectedRoomName)) continue;
 
-      const cur = new Date(evt.start + "T00:00:00");
-      const end = new Date(evt.end   + "T00:00:00");
-
-      const toDateKey = (d) => {
-        const dt = typeof d === "string" ? new Date(d + "T00:00:00") : d;
-        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-      };
+      let cur = new Date(evt.start + "T00:00:00");
+      const end = new Date(evt.end + "T00:00:00");
 
       while (cur < end) {
         fullyBusy.add(toDateKey(cur));
         cur.setDate(cur.getDate() + 1);
       }
+
+      cur = new Date(evt.start + "T00:00:00");
+      cur.setDate(cur.getDate() + 1); // skip check-in (same-day turnover allowed)
+      while (cur < end) {
+        clickBlocked.add(toDateKey(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
     }
 
-    const toDateKey2 = (d) => {
-      const dt = typeof d === "string" ? new Date(d + "T00:00:00") : d;
-      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-    };
     const roomCount = rooms.length;
     if (roomCount > 0) {
       const occMap = new Map();
@@ -381,21 +390,20 @@ function App() {
         const rName = evt.title.replace(" (Booked)", "");
         let cur = new Date(evt.start + "T00:00:00");
         const end = new Date(evt.end + "T00:00:00");
+        cur.setDate(cur.getDate() + 1); // skip check-in edge for click-blocking
         while (cur < end) {
-          const key = toDateKey2(cur);
+          const key = toDateKey(cur);
           if (!occMap.has(key)) occMap.set(key, new Set());
           occMap.get(key).add(rName);
           cur.setDate(cur.getDate() + 1);
         }
       }
       for (const [date, rooms] of occMap) {
-        if (rooms.size >= roomCount) fullyBusy.add(date);
+        if (rooms.size >= roomCount) clickBlocked.add(date);
       }
     }
 
-    const toKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
-    if (fullyBusy.has(clickedDate)) {
+    if (clickBlocked.has(clickedDate)) {
       showNotification("error", "This date is already booked. Please select an available date.");
       return;
     }
@@ -404,15 +412,12 @@ function App() {
 
     // Both checkIn and checkOut are set
     if (bookingForm.checkIn && bookingForm.checkOut) {
-      // Clicking a date inside the range → block it
       if (clickedDate > bookingForm.checkIn && clickedDate < bookingForm.checkOut) return;
-      // Clicking either endpoint → clear everything
       if (clickedDate === bookingForm.checkIn || clickedDate === bookingForm.checkOut) {
         setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
         setWaitingForCheckout(false);
         return;
       }
-      // Clicking any other date → start fresh
       setBookingForm(prev => ({ ...prev, checkIn: clickedDate, checkOut: "" }));
       setWaitingForCheckout(true);
       return;
@@ -426,9 +431,9 @@ function App() {
     }
 
     // checkIn is set, no checkOut yet
-    // Clicking the same date → same-day checkout
+    // Clicking the same date → unselect
     if (clickedDate === bookingForm.checkIn) {
-      setBookingForm(prev => ({ ...prev, checkOut: clickedDate }));
+      setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
       setWaitingForCheckout(false);
       return;
     }
@@ -444,7 +449,7 @@ function App() {
     let cursor = new Date(bookingForm.checkIn + "T00:00:00");
     const checkOutDate = new Date(clickedDate + "T00:00:00");
     while (cursor < checkOutDate) {
-      if (fullyBusy.has(toKey(cursor))) {
+      if (fullyBusy.has(toDateKey(cursor))) {
         showNotification("error", "A date in this range is already booked. Please choose different dates.");
         setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
         setWaitingForCheckout(false);
@@ -662,6 +667,8 @@ function App() {
           <Route path="/amenities" element={<Suspense fallback={<div className="pageLoading" />}><AmenitiesPage /></Suspense>} />
           <Route path="/nearby" element={<Suspense fallback={<div className="pageLoading" />}><NearbyPage /></Suspense>} />
           <Route path="/photos" element={<Suspense fallback={<div className="pageLoading" />}><PhotosPage /></Suspense>} />
+          <Route path="/privacy" element={<Suspense fallback={<div className="pageLoading" />}><PrivacyPage /></Suspense>} />
+          <Route path="/terms" element={<Suspense fallback={<div className="pageLoading" />}><TermsPage /></Suspense>} />
           <Route
             path="/admin"
             element={
@@ -714,6 +721,7 @@ function App() {
       {location.pathname !== "/admin" && <Footer />}
       {location.pathname !== "/admin" && <FloatingContact />}
     </main>
+    <CookieConsent />
     </ErrorBoundary>
   );
 }

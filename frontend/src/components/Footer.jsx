@@ -37,6 +37,11 @@ export default function Footer() {
         <div className="footerBrand">
           <div className="footerLogo" />
           <p>&copy; 2026 Creek View Villa. All rights reserved.</p>
+          <div className="footerLegal">
+            <a href="/privacy">Privacy Policy</a>
+            <span className="footerLegalDot">·</span>
+            <a href="/terms">Terms & Conditions</a>
+          </div>
         </div>
       </div>
     </div>

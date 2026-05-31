@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { toDateKey } from "../utils";
+import { toDateKey, formatDate } from "../utils";
 import AdminDashboard from "./AdminDashboard";
 import { loadLaundryData, saveLaundryData } from "../laundryDb";
 
@@ -262,7 +262,7 @@ export default function AdminPage({
                     <p className="calendarSideText">
                       {selectedAdminBooking
                         ? `${selectedAdminBooking.guestName} · ${selectedAdminBooking.roomName}`
-                        : displayDate ? `Free on ${displayDate}` : "Click a date to begin."}
+                        : displayDate                         ? `Free on ${formatDate(displayDate)}` : "Click a date to begin."}
                     </p>
                   </aside>
                 </div>
@@ -310,11 +310,11 @@ export default function AdminPage({
                       <div className="formRow">
                         <div className="formField">
                           <label className="formLabel">Check-in</label>
-                          <input className="formInput" value={selectedAdminBooking.checkIn} readOnly />
+                          <input className="formInput" value={formatDate(selectedAdminBooking.checkIn)} readOnly />
                         </div>
                         <div className="formField">
                           <label className="formLabel">Check-out</label>
-                          <input className="formInput" value={selectedAdminBooking.checkOut} readOnly />
+                          <input className="formInput" value={formatDate(selectedAdminBooking.checkOut)} readOnly />
                         </div>
                       </div>
                       <div className="formField">
@@ -343,11 +343,11 @@ export default function AdminPage({
                       <div className="formRow">
                         <div className="formField">
                           <label className="formLabel">Check-in</label>
-                          <input className="formInput" value={adminForm.checkIn} placeholder="Click date on calendar" readOnly />
+                          <input className="formInput" value={formatDate(adminForm.checkIn) || adminForm.checkIn} placeholder="Click date on calendar" readOnly />
                         </div>
                         <div className="formField">
                           <label className="formLabel">Check-out</label>
-                          <input className="formInput" type="date" value={adminForm.checkOut} onChange={(e) => onAdminFormChange({ checkOut: e.target.value })} required />
+                          <input className="formInput" value={formatDate(adminForm.checkOut) || adminForm.checkOut} placeholder="Click date on calendar" readOnly />
                         </div>
                       </div>
                       <div className="formField">
