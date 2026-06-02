@@ -1,4 +1,4 @@
-function confirmationEmail({ name, room, checkin, checkout, nights, guests, phone }) {
+﻿function confirmationEmail({ name, room, checkin, checkout, nights, guests, phone }) {
   return `
   <div style="background:#F5F7F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #D8E4D8">
@@ -28,8 +28,8 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
         ${[
           ['Total stay', `${nights} night${nights > 1 ? 's' : ''}`],
           ['Room', room],
-          ['Check-in', `${checkin} — 2:00 PM`],
-          ['Check-out', `${checkout} — 11:00 AM`],
+          ['Check-in', `${checkin} â€” 2:00 PM`],
+          ['Check-out', `${checkout} â€” 11:00 AM`],
           ['Guests', `${guests} guest${guests > 1 ? 's' : ''}`],
         ].map(([label, val], i, arr) => `
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-bottom:${i < arr.length - 1 ? '1px solid #E8F0E8' : 'none'}">
@@ -52,7 +52,7 @@ function confirmationEmail({ name, room, checkin, checkout, nights, guests, phon
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#1C3A28;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#9AB09A;line-height:1.8;margin:0">
         Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
-        creekviewvilla@gmail.com · +91 73061 98968
+        creekviewvilla@gmail.com Â· +91 73061 98968
       </p>
     </div>
 
@@ -115,7 +115,7 @@ function cancellationEmail({ name, room, checkin, checkout }) {
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#3A1C1C;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#B09A9A;line-height:1.8;margin:0">
         Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
-        creekviewvilla@gmail.com · +91 73061 98968
+        creekviewvilla@gmail.com Â· +91 73061 98968
       </p>
     </div>
 
@@ -161,4 +161,57 @@ function managerAlert({ guestName, roomName, checkIn, checkOut }) {
   </div>`;
 }
 
-module.exports = { confirmationEmail, cancellationEmail, managerAlert };
+function resetPasswordEmail({ link }) {
+  return `
+  <div style="background:#F5F7F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #C8D8E4">
+
+    <div style="background:#1A2A3A;padding:32px;text-align:center">
+      <p style="font-size:11px;letter-spacing:0.24em;text-transform:uppercase;color:#7AB0C8;margin:0 0 10px">Creek View Villa</p>
+      <h1 style="font-size:26px;font-weight:300;color:#ffffff;margin:0 0 4px;line-height:1.2">
+        Reset your <em>password</em>
+      </h1>
+      <p style="font-size:12px;color:rgba(255,255,255,0.5);margin:0 0 14px">We received a password reset request</p>
+      <span style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.08em;color:#7AB0C8;border:1px solid rgba(122,176,200,0.3);background:rgba(122,176,200,0.15)">
+        Security notice
+      </span>
+    </div>
+
+    <div style="padding:28px 32px">
+      <p style="font-size:17px;font-weight:300;color:#1A2A3A;margin:0 0 6px">Hello,</p>
+      <p style="font-size:13px;color:#5A6A6A;line-height:1.7;margin:0 0 20px">
+        We received a request to reset the password for your Creek View Villa admin account. 
+        Click the button below to set a new password.
+      </p>
+
+      <a href="${link}" style="display:block;text-align:center;background:#1A2A3A;color:#ffffff;padding:14px 24px;border-radius:8px;font-size:13px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;margin-bottom:20px">
+        Reset Password
+      </a>
+
+      <p style="font-size:12px;color:#8A9A9A;text-align:center;margin:0 0 20px">
+        This link expires in 10 minutes. If you did not request this, you can safely ignore this email.
+      </p>
+
+      <hr style="border:none;border-top:1px solid #D8E4E8;margin:0 0 20px">
+      <p style="font-size:13px;color:#5A6A6A;margin:0;line-height:1.7">
+        Having trouble? Reply to this email for assistance.
+      </p>
+    </div>
+
+    <div style="padding:20px 32px;border-top:1px solid #D8E4E8;text-align:center">
+      <p style="font-size:14px;font-weight:300;font-style:italic;color:#1A2A3A;margin:0 0 4px">Creek View Villa</p>
+      <p style="font-size:11px;color:#9AB0B0;line-height:1.8;margin:0">
+        Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
+        creekviewvilla@gmail.com · +91 73061 98968
+      </p>
+    </div>
+
+  </div>
+  </div>`;
+}
+
+
+module.exports = { confirmationEmail, cancellationEmail, managerAlert, resetPasswordEmail };
+
+
+

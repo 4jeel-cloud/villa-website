@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import {
   cancelBooking,
@@ -27,6 +27,7 @@ const PrivacyPage = lazy(() => import("./pages/Privacy"));
 const TermsPage = lazy(() => import("./pages/Terms"));
 const AdminPage = lazy(() => import("./components/AdminPage"));
 const AdminLoginPage = lazy(() => import("./components/AdminLoginPage"));
+const ResetPassword = lazy(() => import("./components/ResetPassword"));
 
 function App() {
   const [rooms, setRooms] = useState([]);
@@ -149,7 +150,7 @@ function App() {
     return merged;
   };
 
-  // Fetch public data immediately — no auth needed
+  // Fetch public data immediately â€” no auth needed
   useEffect(() => {
     (async () => {
       // Show UI immediately from Firestore cache, then update from API
@@ -431,21 +432,21 @@ function App() {
     }
 
     // checkIn is set, no checkOut yet
-    // Clicking the same date → unselect
+    // Clicking the same date â†’ unselect
     if (clickedDate === bookingForm.checkIn) {
       setBookingForm(prev => ({ ...prev, checkIn: "", checkOut: "" }));
       setWaitingForCheckout(false);
       return;
     }
 
-    // Clicking an earlier date → move check-in
+    // Clicking an earlier date â†’ move check-in
     if (clickedDate < bookingForm.checkIn) {
       setBookingForm(prev => ({ ...prev, checkIn: clickedDate, checkOut: "" }));
       setWaitingForCheckout(true);
       return;
     }
 
-    // Clicking a later date → validate range and set check-out
+    // Clicking a later date â†’ validate range and set check-out
     let cursor = new Date(bookingForm.checkIn + "T00:00:00");
     const checkOutDate = new Date(clickedDate + "T00:00:00");
     while (cursor < checkOutDate) {
@@ -494,7 +495,7 @@ function App() {
   const handleCancel = async (bookingId) => {
     try {
       if (!adminToken) {
-        showNotification("error", "No admin token available — try refreshing the page.");
+        showNotification("error", "No admin token available â€” try refreshing the page.");
         return;
       }
       await cancelBooking(bookingId, { reason: "Cancelled from admin dashboard", refundStatus: "pending" }, adminToken);
@@ -669,11 +670,12 @@ function App() {
           <Route path="/photos" element={<Suspense fallback={<div className="pageLoading" />}><PhotosPage /></Suspense>} />
           <Route path="/privacy" element={<Suspense fallback={<div className="pageLoading" />}><PrivacyPage /></Suspense>} />
           <Route path="/terms" element={<Suspense fallback={<div className="pageLoading" />}><TermsPage /></Suspense>} />
+          <Route path="/auth/reset-password" element={<Suspense fallback={<div className="pageLoading" />}><ResetPassword /></Suspense>} />
           <Route
             path="/admin"
             element={
               !authChecked ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#64748b" }}>Checking auth…</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#64748b" }}>Checking authâ€¦</div>
               ) : adminAuthed ? (
               <Suspense fallback={<div className="pageLoading" />}>
                 <AdminPage
@@ -727,3 +729,4 @@ function App() {
 }
 
 export default App;
+

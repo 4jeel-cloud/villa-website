@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -8,6 +8,7 @@ dotenv.config();
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const store = require("./data/store");
+const admin = require("firebase-admin");
 const { sendBookingEmail } = require("./services/integrations");
 const emailTemplates = require("./services/emailTemplates");
 
@@ -68,7 +69,21 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "";
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+let firebaseAdminInitialized = false;
+try {
+  const saPath = __dirname + "/../service-account.json";
+  if (require("fs").existsSync(saPath)) {
+    admin.initializeApp({ credential: admin.credential.cert(saPath) });
+    firebaseAdminInitialized = true;
+    console.log("[Firebase Admin] Initialized with service account.");
+  } else {
+    console.log("[Firebase Admin] service-account.json not found, skipping.");
+  }
+} catch (e) {
+  console.log("[Firebase Admin] Init skipped:", e.message);
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 const PHONE_RE = /^[\d\s+\-()]{7,20}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_GUEST_TYPES = new Set(["Family", "Bachelor"]);
@@ -242,7 +257,7 @@ app.post("/bookings", bookingLimiter, async (req, res) => {
     for (const email of MANAGER_EMAILS) {
       sendBookingEmail({
         to: email,
-        subject: "New Booking Alert – Creek View Villa",
+        subject: "New Booking Alert â€“ Creek View Villa",
         html: emailTemplates.managerAlert({ guestName, roomName: booking.roomName, checkIn, checkOut }),
       });
     }
@@ -300,13 +315,13 @@ app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
   if (!booking) return res.status(404).json({ message: "Booking not found." });
   sendBookingEmail({
     to: booking.guestEmail,
-    subject: "Booking Cancelled – Creek View Villa",
+    subject: "Booking Cancelled â€“ Creek View Villa",
     html: emailTemplates.cancellationEmail({ name: booking.guestName, room: booking.roomName, checkin: booking.checkIn, checkout: booking.checkOut }),
   });
   for (const email of MANAGER_EMAILS) {
     sendBookingEmail({
       to: email,
-      subject: "Booking Cancelled – Creek View Villa",
+      subject: "Booking Cancelled â€“ Creek View Villa",
       html: emailTemplates.managerAlert({ guestName: booking.guestName, roomName: booking.roomName, checkIn: booking.checkIn, checkOut: booking.checkOut }),
     });
   }
@@ -375,6 +390,37 @@ app.post("/admin/blocks", requireAdmin, async (req, res) => {
   }
 });
 
+app.post("/api/send-reset-email", async (req, res) => {
+  const email = (req.body.email || "").trim().toLowerCase();
+  if (!email || !EMAIL_RE.test(email)) {
+    return res.status(400).json({ message: "Valid email required." });
+  }
+  if (!firebaseAdminInitialized) {
+    return res.status(503).json({ message: "Email service not available." });
+  }
+  try {
+    const actionUrl = (process.env.CORS_ORIGIN || "http://localhost:5173") + "/auth/reset-password";
+    const link = await admin.auth().generatePasswordResetLink(email, {
+      url: actionUrl,
+      handleCodeInApp: true,
+    });
+    await sendBookingEmail({
+      to: email,
+      subject: "Reset your password \u2013 Creek View Villa",
+      html: emailTemplates.resetPasswordEmail({ link }),
+    });
+    return res.json({ message: "Reset email sent." });
+  } catch (err) {
+    console.error("[POST /api/send-reset-email]", err.message);
+    if (err.code === "auth/user-not-found") {
+      return res.json({ message: "If an account exists, a reset email has been sent." });
+    }
+    return res.status(500).json({ message: "Failed to send reset email." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+

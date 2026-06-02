@@ -24,9 +24,11 @@ async function sendBookingEmail({ to, subject, html }) {
     } else {
       const errText = await res.text();
       console.error("[Email] Failed to", to, "—", res.status, errText.slice(0, 500));
+      throw new Error(`Brevo API error ${res.status}: ${errText.slice(0, 200)}`);
     }
   } catch (err) {
     console.error("[Email] Failed to", to, "—", err.message);
+    throw err;
   }
 }
 

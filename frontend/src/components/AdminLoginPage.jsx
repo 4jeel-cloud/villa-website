@@ -1,4 +1,38 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const sanitizeEmail = (raw) => raw.trim().toLowerCase();
+
+const KNOWN_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in",
+  "outlook.com", "hotmail.com", "live.com", "icloud.com", "protonmail.com",
+  "rediffmail.com", "zoho.com", "aol.com", "yandex.com", "mail.com",
+]);
+
+function suggestDomain(domain) {
+  const d = domain.toLowerCase();
+  let best = null, bestScore = Infinity;
+  for (const known of KNOWN_DOMAINS) {
+    if (d === known) return null;
+    let dist = 0;
+    if (d.startsWith(known.split(".")[0]) || known.startsWith(d.split(".")[0])) {
+      dist = Math.abs(d.length - known.length);
+    }
+    if (dist > 0 && dist < bestScore) {
+      const missing = known.includes(d.replace(/[^a-z0-9]/g, ""))
+        || d.includes(known.replace(/[^a-z0-9]/g, ""));
+      if (missing) { best = known; bestScore = dist; }
+    }
+    const parts = d.split(".");
+    const knownParts = known.split(".");
+    for (let i = 0; i < Math.min(parts.length, knownParts.length); i++) {
+      const ld = parts[i].length, lk = knownParts[i].length;
+      const edits = ld < lk ? lk - ld : ld - lk;
+      if (edits < bestScore && edits <= 2) { best = known; bestScore = edits; }
+    }
+  }
+  return best;
+}
 
 export default function AdminLoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -8,6 +42,7 @@ export default function AdminLoginPage({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [canResend, setCanResend] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +51,7 @@ export default function AdminLoginPage({ onLogin }) {
     try {
       const { signInWithEmailAndPassword } = await import("firebase/auth");
       const { auth } = await import("../firebase");
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, sanitizeEmail(email), password);
       onLogin();
     } catch (err) {
       console.error("Firebase login error:", err.code, err.message);
@@ -34,20 +69,65 @@ export default function AdminLoginPage({ onLogin }) {
     }
   };
 
+  const sendResetEmail = async (targetEmail) => {
+    const { sendPasswordResetEmail } = await import("firebase/auth");
+    const { auth } = await import("../firebase");
+    const actionUrl = window.location.origin + "/auth/reset-password";
+    await sendPasswordResetEmail(auth, targetEmail, { url: actionUrl, handleCodeInApp: true });
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+      await fetch(apiUrl + "/api/send-reset-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+    } catch { /* Branded email is best-effort */ }
+  };
+
   const handleForgotPassword = async () => {
-    if (!email) { setError("Enter your email first."); return; }
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail) { setError("Enter your email first."); return; }
+    if (!EMAIL_RE.test(cleanEmail)) { setError("Enter a valid email address."); return; }
+    const atIdx = cleanEmail.indexOf("@");
+    if (atIdx > 0) {
+      const domain = cleanEmail.slice(atIdx + 1);
+      const suggestion = suggestDomain(domain);
+      if (suggestion) {
+        setError(`Did you mean @${suggestion}? Check your email address.`);
+        return;
+      }
+    }
     setError("");
     setResetLoading(true);
+    setCanResend(false);
     try {
-      const { sendPasswordResetEmail } = await import("firebase/auth");
-      const { auth } = await import("../firebase");
-      await sendPasswordResetEmail(auth, email);
+      await sendResetEmail(cleanEmail);
       setResetSent(true);
+      setTimeout(() => setCanResend(true), 10000);
     } catch (err) {
       if (err.code === "auth/user-not-found") {
         setError("No account found with this email.");
       } else if (err.code === "auth/invalid-email") {
         setError("Invalid email format.");
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    const cleanEmail = sanitizeEmail(email);
+    setError("");
+    setResetLoading(true);
+    try {
+      await sendResetEmail(cleanEmail);
+      setCanResend(false);
+      setTimeout(() => setCanResend(true), 10000);
+    } catch (err) {
+      if (err.code === "auth/user-not-found") {
+        setError("No account found with this email.");
       } else {
         setError(err.message);
       }
@@ -68,7 +148,7 @@ export default function AdminLoginPage({ onLogin }) {
             type="email"
             placeholder="admin@email.com"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(""); }}
+            onChange={(e) => { setEmail(sanitizeEmail(e.target.value)); setError(""); }}
             autoFocus
             required
           />
@@ -79,7 +159,7 @@ export default function AdminLoginPage({ onLogin }) {
             <input
               className="formInput"
               type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
               required
@@ -110,9 +190,21 @@ export default function AdminLoginPage({ onLogin }) {
             </button>
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -8, marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -8, marginBottom: 8, flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
           {resetSent ? (
-            <span style={{ fontSize: "0.8rem", color: "#16a34a", fontWeight: 500 }}>Reset link sent. Check your email.</span>
+            <>
+              <span style={{ fontSize: "0.8rem", color: "#16a34a", fontWeight: 500 }}>Reset link sent to {email}</span>
+              <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Didn't receive it? Check spam folder</span>
+              {canResend && (
+                <button type="button" onClick={handleResend} disabled={resetLoading} style={{
+                  background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                  fontSize: "0.75rem", color: "#06402B", fontWeight: 600, padding: "2px 0",
+                  textDecoration: "underline", textUnderlineOffset: 2,
+                }}>
+                  {resetLoading ? "Sending…" : "Resend reset email"}
+                </button>
+              )}
+            </>
           ) : (
             <button type="button" onClick={handleForgotPassword} disabled={resetLoading} style={{
               background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
@@ -125,9 +217,10 @@ export default function AdminLoginPage({ onLogin }) {
         </div>
         {error && <p style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>}
         <button className="formSubmit" type="submit" disabled={loading}>
-          {loading ? "Signing in…" : "Sign In"}
+          {loading ? "Signing inâ€¦" : "Sign In"}
         </button>
       </form>
     </section>
   );
 }
+
