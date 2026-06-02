@@ -6,6 +6,8 @@ export default function AdminLoginPage({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +31,28 @@ export default function AdminLoginPage({ onLogin }) {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) { setError("Enter your email first."); return; }
+    setError("");
+    setResetLoading(true);
+    try {
+      const { sendPasswordResetEmail } = await import("firebase/auth");
+      const { auth } = await import("../firebase");
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+    } catch (err) {
+      if (err.code === "auth/user-not-found") {
+        setError("No account found with this email.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Invalid email format.");
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -85,6 +109,19 @@ export default function AdminLoginPage({ onLogin }) {
               )}
             </button>
           </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -8, marginBottom: 8 }}>
+          {resetSent ? (
+            <span style={{ fontSize: "0.8rem", color: "#16a34a", fontWeight: 500 }}>Reset link sent. Check your email.</span>
+          ) : (
+            <button type="button" onClick={handleForgotPassword} disabled={resetLoading} style={{
+              background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+              fontSize: "0.8rem", color: "#06402B", fontWeight: 600, padding: "4px 0",
+              textDecoration: "underline", textUnderlineOffset: 2,
+            }}>
+              {resetLoading ? "Sending…" : "Forgot Password?"}
+            </button>
+          )}
         </div>
         {error && <p style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>}
         <button className="formSubmit" type="submit" disabled={loading}>
