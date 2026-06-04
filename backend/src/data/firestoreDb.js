@@ -7,32 +7,39 @@ function isConnected() {
 }
 
 async function connect() {
+  // Reuse an already-initialised app (server.js may have initialised first)
   if (admin.apps.length > 0) {
     firestore = admin.firestore();
+    try {
+      await firestore.collection("rooms").limit(1).get();
+      console.log("[Firestore] Connected (reused existing Firebase Admin app)");
+    } catch (err) {
+      console.error("[Firestore] Connection test failed:", err.message);
+      firestore = null;
+    }
     return;
   }
 
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
   const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  const saPath = require("path").join(__dirname, "../../service-account.json");
+  const fs = require("fs");
 
-  if (!serviceAccountJson && !keyFile) {
-    console.log("[Firestore] Neither FIREBASE_SERVICE_ACCOUNT nor GOOGLE_APPLICATION_CREDENTIALS set — Firestore disabled");
+  if (!serviceAccountJson && !keyFile && !fs.existsSync(saPath)) {
+    console.log("[Firestore] No credentials found — Firestore disabled");
     return;
   }
 
   try {
-    if (serviceAccountJson) {
+    if (fs.existsSync(saPath)) {
+      admin.initializeApp({ credential: admin.credential.cert(require(saPath)) });
+    } else if (serviceAccountJson) {
       const serviceAccount = JSON.parse(serviceAccountJson);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: serviceAccount.project_id,
-      });
+      admin.initializeApp({ credential: admin.credential.cert(serviceAccount), projectId: serviceAccount.project_id });
     } else {
-      // Uses GOOGLE_APPLICATION_CREDENTIALS env var (Render Secret Files)
       admin.initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID });
     }
     firestore = admin.firestore();
-    // Test connection
     await firestore.collection("rooms").limit(1).get();
     console.log("[Firestore] Connected");
   } catch (err) {

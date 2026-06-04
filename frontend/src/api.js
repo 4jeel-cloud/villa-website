@@ -4,6 +4,15 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000"
 });
 
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const message = err?.response?.data?.message || err.message || "Request failed";
+    const status = err?.response?.status || 0;
+    return Promise.reject({ message, status });
+  }
+);
+
 export const getRooms = async () => (await api.get("/rooms")).data;
 export const getAvailability = async () => (await api.get("/availability")).data;
 export const getBookings = async (token) =>

@@ -1,4 +1,6 @@
-export default function Footer() {
+import { memo } from "react";
+
+export default memo(function Footer() {
   return (
     <div className="footer">
       <div className="footerContent">
@@ -46,4 +48,4 @@ export default function Footer() {
       </div>
     </div>
   );
-}
+});

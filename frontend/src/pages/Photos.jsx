@@ -61,7 +61,7 @@ function Lightbox({ photos, current, onClose, onNav }) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [current]);
+  }, [current, onClose, onNav]);
 
   return (
     <div

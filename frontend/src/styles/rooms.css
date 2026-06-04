@@ -1,0 +1,105 @@
+.roomsPage {
+  margin-top: 72px;
+  padding: 16px;
+}
+
+.roomsPage h2 {
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  color: #06402B;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  letter-spacing: 1px;
+  margin: 0 0 16px;
+}
+
+.room {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+  max-width: 320px;
+  justify-self: center;
+  width: 100%;
+}
+
+.roomImgWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/2;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.roomImgWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 300ms ease;
+}
+
+.roomImgWrap:hover img {
+  transform: scale(1.03);
+}
+
+.roomImgDots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+}
+
+.roomImgDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: background 200ms ease;
+}
+
+.roomImgDot--active {
+  background: #ffffff;
+}
+
+.roomInfo {
+  padding: 12px 14px;
+}
+
+.roomInfo h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.roomInfo p {
+  margin: 0 0 10px;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.roomMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #06402B;
+}
+
+.roomImgPreview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}

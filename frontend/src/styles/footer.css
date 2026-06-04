@@ -1,0 +1,100 @@
+.footer {
+  z-index: 1;
+  --footer-bg: #1C3A28;
+  display: grid;
+  position: relative;
+  min-height: 12rem;
+}
+
+.footerContent {
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4rem;
+  padding: 2rem;
+  background: var(--footer-bg);
+}
+
+.footerContent a,
+.footerContent p {
+  color: #f5f7fa;
+  text-decoration: none;
+}
+
+.footerContent b {
+  color: #ffffff;
+}
+
+.footerContent p {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.footerGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footerGroup b {
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.footerGroup a {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  transition: opacity 200ms ease;
+}
+
+.footerGroup a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.footerBrand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.footerLogo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footerLegal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.footerLegal a {
+  font-size: 0.7rem;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s;
+}
+
+.footerLegal a:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footerLegalDot {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.6rem;
+}

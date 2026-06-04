@@ -1,0 +1,408 @@
+@media (max-width: 768px) {
+  .topNav {
+    padding: 8px 12px;
+  }
+
+  .heroTextPrimary {
+    font-size: clamp(2.8rem, 11vw, 4.5rem);
+  }
+
+  .heroTextSecondary {
+    font-size: clamp(2rem, 8vw, 3.2rem);
+    margin-top: 10px;
+  }
+
+  .brand {
+    font-size: 1rem !important;
+  }
+
+  .fc {
+    min-width: 0;
+    font-size: 0.85rem;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+
+  .calendarSide {
+    border-left: none;
+    border-top: 1px dotted #9bc8b0;
+    padding-left: 0;
+    padding-top: 12px;
+  }
+
+  .calendarCard {
+    grid-template-columns: 1fr;
+  }
+
+  .bookingLayout {
+    grid-template-columns: 1fr;
+    margin: 16px auto;
+    padding: 0 12px;
+  }
+
+  .bookingDivider {
+    flex-direction: row;
+    padding: 16px 0;
+  }
+
+  .bookingDividerLine {
+    width: auto;
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(to right, transparent, #d1d5db, transparent);
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .adminContent {
+    margin-left: 56px;
+  }
+  .adminContent .modalContent {
+    min-width: unset;
+    width: 92%;
+    max-width: 92%;
+    padding: 16px;
+  }
+  .adminContent .laundryToggle {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .adminContent .laundryToggleBtn {
+    font-size: 0.78rem;
+    padding: 8px;
+  }
+  .adminContent .laundryModeTable {
+    font-size: 0.75rem;
+  }
+  .adminContent .laundryModeHeader,
+  .adminContent .laundryModeRow {
+    grid-template-columns: 1fr 60px 1fr 60px;
+  }
+  .adminContent .laundryModeHeader span,
+  .adminContent .laundryModeRow span,
+  .adminContent .laundryModeRow > div {
+    padding: 6px 4px;
+  }
+  .adminContent .laundryTable {
+    font-size: 0.75rem;
+    overflow-x: auto;
+  }
+  .adminContent .laundryTableHeader,
+  .adminContent .laundryTableRow {
+    min-width: 400px;
+  }
+  .adminContent .laundryTableHeader span,
+  .adminContent .laundryTableRow span {
+    padding: 6px 6px;
+  }
+  .adminContent form .formRow {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .adminContent .stockArrow {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  .adminContent button.formSubmit {
+    font-size: 0.78rem;
+    padding: 8px 12px;
+  }
+  .adminContent .laundryAlerts {
+    gap: 3px;
+    padding: 4px 0;
+  }
+  .adminContent .laundryAlertItem {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    border-radius: 14px;
+  }
+  .adminContent .laundryBottomGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .car-root { max-width: 100%; padding: 0 12px; }
+  .car-slide { border-radius: 14px; }
+  .car-track-wrap { border-radius: 14px; }
+  .car-name { font-size: 18px; }
+  .car-info { padding: 18px 16px 14px; }
+  .car-btn { width: 36px; height: 36px; font-size: 15px; }
+  #car-prev { left: 8px; }
+  #car-next { right: 8px; }
+  .thumb-strip { gap: 4px; margin-top: 8px; }
+  .thumb { flex: 0 0 calc(14% - 3.4px); max-width: 60px; }
+  .car-img.ken { transition: transform 6s ease-out; transform: scale(1.02); }
+  .car-btn { backdrop-filter: none; }
+
+  .nearbyMapPlaceholder {
+    min-height: 220px;
+  }
+
+  .nearbyRow {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+
+  .nearbyRow--reverse .nearbyMapWrap {
+    order: 0;
+  }
+
+  .nearbyRow--reverse .nearbyCard {
+    order: -1;
+  }
+
+  .nearbyMapIframe {
+    min-height: 220px;
+  }
+
+  .nearbyCard {
+    padding: 24px 20px;
+  }
+
+  .roomCard {
+    grid-template-columns: 1fr !important;
+  }
+
+  .locationGrid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .mapSection {
+    padding: 0 12px 32px;
+  }
+
+  .mapLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .mapContainer {
+    min-height: 260px;
+  }
+
+  .footer {
+    margin-top: 2rem;
+    min-height: unset;
+  }
+
+  .footerContent {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .footerLinks {
+    gap: 1.25rem;
+  }
+
+  .footerGroup b {
+    font-size: 0.75rem;
+  }
+
+  .footerGroup a {
+    font-size: 0.65rem;
+  }
+
+  .footerLogo {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .footerBrand p {
+    font-size: 0.65rem;
+  }
+
+  .footerLegal a {
+    font-size: 0.6rem;
+  }
+
+  .brand {
+    font-size: 1.15rem;
+  }
+  .topNav.scrolled .brand,
+  .topNav--light .brand {
+    font-size: 1rem;
+  }
+  .navLink--book {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .navActions {
+    gap: 2px;
+  }
+
+  .whySection {
+    padding: 48px 24px !important;
+    min-height: auto !important;
+  }
+  .whyGrid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  #location {
+    padding: 48px 24px !important;
+  }
+  .locationHeading {
+    font-size: 24px !important;
+  }
+  .locationMap {
+    min-height: 240px !important;
+    aspect-ratio: auto !important;
+    height: 40vw !important;
+  }
+
+  .photosLbImg {
+    height: 60vw !important;
+    max-height: 400px !important;
+  }
+}
+
+@media (max-width: 500px) {
+  .card {
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+
+  .heroTextPrimary {
+    font-size: clamp(2.4rem, 11vw, 3.2rem);
+  }
+
+  .heroTextSecondary {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+    margin-top: 6px;
+  }
+
+  .homeSection {
+    padding: 24px 0;
+  }
+
+  .bookingLayout {
+    margin: 8px auto;
+    padding: 0 8px;
+  }
+
+  .calendarCard {
+    padding: 12px;
+  }
+
+  .calendarTitle {
+    font-size: 1rem;
+  }
+
+  .calendarSubtitle {
+    font-size: 0.75rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .room {
+    max-width: 100%;
+  }
+
+  .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 0.85rem;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .formInput, .formSelect {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+
+  .btnPrimary {
+    font-size: 0.85rem;
+    padding: 10px 20px;
+  }
+
+  .topNav {
+    padding: 6px 10px;
+  }
+
+  .mobileNavLink {
+    padding: 4px 4px;
+    font-size: 0.55rem;
+  }
+
+  .mobileNavLink i {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    margin-top: 1.5rem;
+  }
+
+  .footerContent {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .footerGroup b {
+    font-size: 0.7rem;
+  }
+
+  .footerGroup a {
+    font-size: 0.6rem;
+  }
+
+  .footerBrand p {
+    font-size: 0.6rem;
+  }
+
+  .thumb { flex: 0 0 calc(18% - 3.2px); max-width: 50px; }
+  .thumb-strip { gap: 3px; }
+  .car-btn { display: none; }
+
+  .whyGrid {
+    gap: 20px !important;
+  }
+
+  #location {
+    padding: 48px 20px !important;
+  }
+
+  .amenitiesCountStrip {
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .amenitiesCountStrip {
+    gap: 16px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .photosLbImg {
+    height: 500px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .cookieConsentInner {
+    flex-direction: column;
+    text-align: center;
+  }
+}

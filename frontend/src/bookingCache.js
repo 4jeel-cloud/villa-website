@@ -1,18 +1,18 @@
-import { doc, setDoc, getDoc } from "firebase/firestore";
+/**
+ * bookingCache — READ ONLY via client SDK.
+ *
+ * The bookingCache Firestore document is written exclusively by the backend
+ * (server.js → store.js → firestoreDb.js) using the Firebase Admin SDK with
+ * service-account credentials. Writing from the client would bypass backend
+ * authentication entirely, so saveBookingCache has been removed.
+ *
+ * The cache is used to render the admin booking list instantly on page load
+ * before the authenticated API response arrives.
+ */
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 const CACHE_DOC = "bookingCache";
-
-export async function saveBookingCache(bookings) {
-  try {
-    await setDoc(doc(db, CACHE_DOC, "data"), {
-      bookings,
-      updatedAt: new Date().toISOString(),
-    });
-  } catch (e) {
-    console.error("[bookingCache] save error:", e);
-  }
-}
 
 export async function loadBookingCache() {
   try {

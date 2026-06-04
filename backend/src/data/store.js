@@ -1,77 +1,132 @@
 const crypto = require("crypto");
 const firestoreDb = require("./firestoreDb");
 
-// ===== In-memory cache =====
-let rooms = [];
-let bookings = [];
-let blockedDates = [];
+const BOOKED_SUFFIX = " (Booked)";
+const BLOCKED_SUFFIX = " (Blocked)";
 
-// ===== Default rooms (used when sheets aren't configured) =====
+// ===== Default rooms (fallback when Firestore + Sheets are unavailable) =====
 const DEFAULT_ROOMS = [
+
+
   {
     id: "r1",
     name: "4 Rooms",
     description: "Spacious 4-room villa perfect for large families and groups.",
-    basePrice: 5000,
-    capacity: 8,
-    images: [
-      "/carousel/DSC01117.webp",
-      "/carousel/DSC01115.webp",
-    ],
+    basePrice: 12000,
+    capacity: 16,
+    images: ["/carousel/DSC01117.webp", "/carousel/DSC01115.webp"],
   },
   {
     id: "r2",
     name: "2 Rooms",
     description: "Cozy 2-room stay ideal for couples and small families.",
-    basePrice: 3500,
-    capacity: 4,
-    images: [
-      "/carousel/DSC01077.webp",
-      "/carousel/IMG_0969.webp",
-    ],
+    basePrice: 6000,
+    capacity: 8,
+    images: ["/carousel/DSC01077.webp", "/carousel/IMG_0969.webp"],
   },
 ];
 
-// ===== Apps Script web app client =====
+let rooms = DEFAULT_ROOMS.map((r) => ({ ...r }));
+let bookings = [];
+let blockedDates = [];
+
+// ===== Apps Script client (token-authenticated) =====
 function getScriptUrl() {
   return process.env.APPS_SCRIPT_URL;
 }
-
+function getScriptToken() {
+  return process.env.APPS_SCRIPT_TOKEN || "";
+}
 function hasScript() {
-  return !!getScriptUrl();
+  return !!(getScriptUrl() && getScriptToken());
 }
 
 async function scriptGet(action) {
-  const url = `${getScriptUrl()}?action=${encodeURIComponent(action)}`;
+  const token = getScriptToken();
+  const url = `${getScriptUrl()}?action=${encodeURIComponent(action)}&token=${encodeURIComponent(token)}`;
   const res = await fetch(url);
-  return res.json();
+  const json = await res.json();
+  if (json && json.error === "Unauthorized") throw new Error("[Sheets] Unauthorized — check APPS_SCRIPT_TOKEN");
+  return json;
 }
 
 async function scriptPost(payload) {
   const url = getScriptUrl();
+  const body = { ...payload, token: getScriptToken() };
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
   const text = await res.text();
-  console.log("[Sheets] POST", payload.action, "→", res.status, text.slice(0, 400));
-  if (!res.ok) {
-    throw new Error(`Sheets API returned ${res.status}: ${text.slice(0, 200)}`);
-  }
+  console.log("[Sheets] POST", payload.action, "\u2192", res.status, text.slice(0, 400));
+  if (!res.ok) throw new Error(`Sheets API returned ${res.status}: ${text.slice(0, 200)}`);
+  let json;
   try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`Non-JSON response from sheets: ${text.slice(0, 200)}`);
+    json = JSON.parse(text);
+  } catch (parseErr) {
+    throw new Error(`Non-JSON response from sheets: ${text.slice(0, 200)} (parse error: ${parseErr.message})`, { cause: parseErr });
   }
+  if (json && json.error === "Unauthorized") throw new Error("[Sheets] Unauthorized — check APPS_SCRIPT_TOKEN");
+  return json;
+}
+
+// ===== Normalizers =====
+function normalizeRoomFromScript(r) {
+  return {
+    id: r.id || "",
+    name: r.name || "",
+    description: r.description || "",
+    basePrice: Number(r.basePrice) > 0 ? Number(r.basePrice) : 12000,
+    capacity: Number(r.capacity) > 0 ? Number(r.capacity) : 1,
+    images: r.images
+      ? String(r.images).split(",").map((s) => s.trim()).filter(Boolean)
+      : [],
+  };
+}
+
+function toDateString(val) {
+  if (!val) return "";
+  const s = String(val);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function normalizeBookingFromScript(r) {
+  const g = (...keys) => {
+    for (const k of keys) {
+      if (r[k] !== undefined && r[k] !== "") return r[k];
+    }
+    return "";
+  };
+  return {
+    id: g("bookingId", "Timestamp"),
+    roomId: g("roomId"),
+    roomName: g("Room type", "roomName"),
+    checkIn: toDateString(g("Check-in date", "checkIn")),
+    checkOut: toDateString(g("Check-out date", "checkOut")),
+    guestName: g("Full name", "guestName"),
+    guestEmail: g("Email", "guestEmail"),
+    guestPhone: g("Phone number", "guestPhone"),
+    guests: g("Number of guests", "guests"),
+    guestType: g("Guest type", "guestType"),
+    status: g("status") || "confirmed",
+    createdBy: g("createdBy") || "guest",
+    paymentStatus: g("Amount received", "paymentStatus") || "pending",
+    createdAt: g("Timestamp", "createdAt"),
+    cancelledAt: null,
+    cancelledBy: null,
+    cancellationReason: null,
+    refundStatus: null,
+  };
 }
 
 // ===== Load all data from Apps Script into memory =====
 async function loadFromScript() {
   try {
-    // Initialize sheets (creates tabs + seeds rooms if needed)
     await scriptGet("initSheets");
-
     const [roomsData, bookingsData, blocksData] = await Promise.all([
       scriptGet("getRooms"),
       scriptGet("getBookings"),
@@ -80,7 +135,6 @@ async function loadFromScript() {
 
     if (Array.isArray(roomsData) && roomsData.length > 0) {
       const sheetRooms = roomsData.map(normalizeRoomFromScript).filter((r) => r.id && r.name);
-      // Merge: use sheet data for known IDs, fill in any missing defaults
       const sheetIds = new Set(sheetRooms.map((r) => r.id));
       const missing = DEFAULT_ROOMS.filter((r) => !sheetIds.has(r.id)).map((r) => ({ ...r }));
       rooms = [...sheetRooms, ...missing];
@@ -103,147 +157,101 @@ async function loadFromScript() {
         }))
       : [];
 
-    console.log(
-      `[Sheets] Loaded ${rooms.length} rooms, ${bookings.length} bookings, ${blockedDates.length} blocks`
-    );
+    console.log(`[Sheets] Loaded ${rooms.length} rooms, ${bookings.length} bookings, ${blockedDates.length} blocks`);
   } catch (err) {
-    console.error("[Sheets] Failed to load from Apps Script:", err.message);
-    console.log("[Sheets] Falling back to in-memory defaults");
+    console.error("[Sheets] Failed to load:", err.message);
     rooms = DEFAULT_ROOMS.map((r) => ({ ...r }));
     bookings = [];
     blockedDates = [];
   }
 }
 
-function normalizeRoomFromScript(r) {
-  return {
-    id: r.id || "",
-    name: r.name || "",
-    description: r.description || "",
-    basePrice: Number(r.basePrice) || 3500,
-    capacity: Number(r.capacity) || 1,
-    images: r.images
-      ? String(r.images)
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [],
-  };
-}
-
-function toDateString(val) {
-  if (!val) return "";
-  const s = String(val);
-  // Already YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // ISO timestamp or any parseable date — extract date part in local time
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return s;
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function normalizeBookingFromScript(r) {
-  const g = function (keys) {
-    for (const k of keys) {
-      if (r[k] !== undefined && r[k] !== "") return r[k];
+// ===== Sync memory → Firestore + calendar events (called on every change) =====
+async function syncToFirestore() {
+  if (!firestoreDb.isConnected()) return;
+  try {
+    for (const room of rooms) {
+      try {
+        await firestoreDb.upsertRoom(room);
+      } catch (err) {
+        console.error("[Firestore] upsertRoom failed for", room.id, "—", err.message);
+      }
     }
-    return "";
-  };
-  return {
-    id: g(["bookingId", "Timestamp"]),
-    roomId: g(["roomId"]),
-    roomName: g(["Room type", "roomName"]),
-    checkIn: toDateString(g(["Check-in date", "checkIn"])),
-    checkOut: toDateString(g(["Check-out date", "checkOut"])),
-    guestName: g(["Full name", "guestName"]),
-    guestEmail: g(["Email", "guestEmail"]),
-    guestPhone: g(["Phone number", "guestPhone"]),
-    guests: g(["Number of guests", "guests"]),
-    guestType: g(["Guest type", "guestType"]),
-    status: g(["status"]) || "confirmed",
-    createdBy: g(["createdBy"]) || "guest",
-    paymentStatus: g(["Amount received", "paymentStatus"]) || "pending",
-    createdAt: g(["Timestamp", "createdAt"]),
-    cancelledAt: null,
-    cancelledBy: null,
-    cancellationReason: null,
-    refundStatus: null,
-  };
+    const events = getAvailabilityEventsSync();
+    try {
+      await firestoreDb.syncCalendarEvents(events);
+    } catch (err) {
+      console.error("[Firestore] syncCalendarEvents failed —", err.message);
+    }
+  } catch (err) {
+    console.error("[Store] syncToFirestore error:", err.message);
+  }
 }
 
 // ===== Public API =====
 
-async function getRooms() {
-  return rooms;
-}
-
-async function getRoom(roomId) {
-  return rooms.find((r) => r.id === roomId) || null;
-}
-
-async function getBookings() {
-  return bookings;
-}
-
-async function roomExists(roomId) {
-  return rooms.some((r) => r.id === roomId);
-}
+async function getRooms() { return rooms; }
+async function getRoom(roomId) { return rooms.find((r) => r.id === roomId) || null; }
+async function getBookings() { return bookings; }
+async function roomExists(roomId) { return rooms.some((r) => r.id === roomId); }
 
 function datesOverlap(startA, endA, startB, endB) {
-  // Dates are already YYYY-MM-DD — lexicographic comparison works correctly
   return startA < endB && startB < endA;
 }
 
 async function isRoomAvailable(roomId, checkIn, checkOut, ignoreBookingId = null) {
-  // Check in-memory bookings (primary)
-  const clashWithBooking = bookings.some((b) => {
+  const clashBooking = bookings.some((b) => {
     if (b.id === ignoreBookingId || b.status !== "confirmed") return false;
     return b.roomId === roomId && datesOverlap(checkIn, checkOut, b.checkIn, b.checkOut);
   });
-  if (clashWithBooking) return false;
+  if (clashBooking) return false;
 
-  // Check in-memory blocked dates
-  const clashWithBlocks = blockedDates.some((b) => {
-    return b.roomId === roomId && datesOverlap(checkIn, checkOut, b.startDate, b.endDate);
-  });
-  if (clashWithBlocks) return false;
+  const clashBlocks = blockedDates.some((b) =>
+    b.roomId === roomId && datesOverlap(checkIn, checkOut, b.startDate, b.endDate)
+  );
+  if (clashBlocks) return false;
 
-  // Check Firestore as fallback (catches cross-instance / cold-start gaps)
+  // Firestore cross-instance check
   try {
     const fsOverlap = await firestoreDb.hasOverlappingBooking(roomId, checkIn, checkOut, ignoreBookingId);
     if (fsOverlap) return false;
-  } catch (_) { /* Firestore not available — trust in-memory check */ }
+  } catch { /* trust in-memory if Firestore unavailable */ }
 
   return true;
 }
 
-async function getAvailabilityEvents() {
-  const bookedEvents = bookings
+function getAvailabilityEventsSync() {
+  const booked = bookings
     .filter((b) => b.status === "confirmed")
     .map((b) => ({
       id: b.id,
-      title: `${b.roomName} (Booked)`,
+      title: `${b.roomName}${BOOKED_SUFFIX}`,
       start: b.checkIn,
       end: b.checkOut,
       color: "#ef4444",
+      guestName: b.guestName,
+      roomName: b.roomName,
+      status: b.status,
     }));
-  const blockedEvents = blockedDates.map((b) => ({
+  const blocked = blockedDates.map((b) => ({
     id: b.id,
-    title: `${b.roomName} (Blocked)`,
+    title: `${b.roomName}${BLOCKED_SUFFIX}`,
     start: b.startDate,
     end: b.endDate,
     color: "#f59e0b",
+    roomName: b.roomName,
+    status: "blocked",
   }));
-  return [...bookedEvents, ...blockedEvents];
+  return [...booked, ...blocked];
+}
+
+async function getAvailabilityEvents() {
+  return getAvailabilityEventsSync();
 }
 
 async function createBooking(data) {
   const room = rooms.find((r) => r.id === data.roomId);
   if (!room) throw new Error("Room not found");
-
   if (!(await isRoomAvailable(data.roomId, data.checkIn, data.checkOut))) {
     throw new Error("Room is already booked or blocked in selected dates.");
   }
@@ -261,12 +269,7 @@ async function createBooking(data) {
     guestType: data.guestType || "",
     status: "confirmed",
     createdBy: data.createdBy || "guest",
-    paymentStatus:
-      data.createdBy === "admin"
-        ? "manual"
-        : data.razorpayPaymentId
-          ? "paid"
-          : "unpaid",
+    paymentStatus: data.createdBy === "admin" ? "manual" : data.razorpayPaymentId ? "paid" : "unpaid",
     createdAt: new Date().toISOString(),
     cancelledAt: null,
     cancelledBy: null,
@@ -276,23 +279,25 @@ async function createBooking(data) {
 
   bookings.push(booking);
 
-  // Persist to Firestore (fire-and-forget)
-  firestoreDb.insertBooking(booking).catch(err => console.error("[Firestore] insertBooking error:", err.message));
+  // Persist to Firestore — awaited so failures are caught and logged, not silently lost
+  try {
+    await firestoreDb.insertBooking(booking);
+    await syncToFirestore();
+  } catch (err) {
+    console.error("[Firestore] insertBooking:", err.message);
+  }
 
-  // Sync to Google Sheets (if configured)
+  // Sync to Google Sheets
   if (hasScript()) {
     try {
-      // Calculate amount: nights × room price
-      const checkInDate = new Date(booking.checkIn + "T00:00:00");
-      const checkOutDate = new Date(booking.checkOut + "T00:00:00");
-      const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
+      const ci = new Date(booking.checkIn + "T00:00:00");
+      const co = new Date(booking.checkOut + "T00:00:00");
+      const nights = Math.max(1, Math.ceil((co - ci) / 86400000));
       const amount = data.razorpayPaymentId
         ? nights * room.basePrice
-        : data.amount
-          ? Number(data.amount)
-          : "Pending";
+        : data.amount ? Number(data.amount) : "Pending";
 
-      const payload = {
+      await scriptPost({
         action: "appendBooking",
         bookingId: booking.id,
         guestName: booking.guestName,
@@ -311,10 +316,7 @@ async function createBooking(data) {
         razorpayPaymentId: data.razorpayPaymentId || "",
         createdAt: booking.createdAt,
         amount,
-      };
-
-      console.log("[Sheets] appendBooking payload:", JSON.stringify(payload));
-      await scriptPost(payload);
+      });
     } catch (err) {
       console.error("[Sheets] Failed to sync booking:", err.message);
     }
@@ -350,8 +352,13 @@ async function cancelBooking(bookingId, data) {
   booking.cancellationReason = data.reason || "Cancelled by admin";
   booking.refundStatus = data.refundStatus || "pending";
 
-  // Persist to Firestore (fire-and-forget)
-  firestoreDb.cancelBookingDb(bookingId, data).catch(err => console.error("[Firestore] cancelBooking error:", err.message));
+  // Persist to Firestore — awaited so failures are caught and logged, not silently lost
+  try {
+    await firestoreDb.cancelBookingDb(bookingId, data);
+    await syncToFirestore();
+  } catch (err) {
+    console.error("[Firestore] cancelBookingDb:", err.message);
+  }
 
   if (hasScript()) {
     try {
@@ -387,8 +394,13 @@ async function createBlockedDate(data) {
 
   blockedDates.push(block);
 
-  // Persist to Firestore (fire-and-forget)
-  firestoreDb.insertBlockedDate(block).catch(err => console.error("[Firestore] insertBlockedDate error:", err.message));
+  // Persist to Firestore — awaited
+  try {
+    await firestoreDb.insertBlockedDate(block);
+    await syncToFirestore();
+  } catch (err) {
+    console.error("[Firestore] insertBlockedDate:", err.message);
+  }
 
   if (hasScript()) {
     try {
@@ -414,15 +426,17 @@ async function updateRoomPrice(roomId, basePrice) {
   if (!room) return null;
   room.basePrice = basePrice;
 
-  firestoreDb.updateRoomPriceDb(roomId, basePrice).catch(err => console.error("[Firestore] updateRoomPrice error:", err.message));
+  // Persist to Firestore — awaited
+  try {
+    await firestoreDb.updateRoomPriceDb(roomId, basePrice);
+    await syncToFirestore();
+  } catch (err) {
+    console.error("[Firestore] updateRoomPriceDb:", err.message);
+  }
 
   if (hasScript()) {
     try {
-      await scriptPost({
-        action: "updateRoom",
-        id: roomId,
-        basePrice: basePrice,
-      });
+      await scriptPost({ action: "updateRoom", id: roomId, basePrice });
     } catch (err) {
       console.error("[Sheets] Failed to sync room price:", err.message);
     }
@@ -436,15 +450,17 @@ async function updateRoomImages(roomId, images) {
   if (!room) return null;
   room.images = images;
 
-  firestoreDb.updateRoomImagesDb(roomId, images).catch(err => console.error("[Firestore] updateRoomImages error:", err.message));
+  // Persist to Firestore — awaited
+  try {
+    await firestoreDb.updateRoomImagesDb(roomId, images);
+    await syncToFirestore();
+  } catch (err) {
+    console.error("[Firestore] updateRoomImagesDb:", err.message);
+  }
 
   if (hasScript()) {
     try {
-      await scriptPost({
-        action: "updateRoom",
-        id: roomId,
-        images: images.join(", "),
-      });
+      await scriptPost({ action: "updateRoom", id: roomId, images: images.join(", ") });
     } catch (err) {
       console.error("[Sheets] Failed to sync room images:", err.message);
     }
@@ -453,113 +469,11 @@ async function updateRoomImages(roomId, images) {
   return room;
 }
 
-// ===== Merge helper: keeps in-memory items + picks up sheet additions =====
-function mergeById(existing, incoming, idKey, normalizeFn) {
-  if (!Array.isArray(incoming) || incoming.length === 0) return;
-  const existingIds = new Set(existing.map((item) => item[idKey]));
-  for (const raw of incoming) {
-    const normalized = normalizeFn(raw);
-    if (!normalized || !normalized[idKey]) continue;
-    if (!existingIds.has(normalized[idKey])) {
-      existing.push(normalized);
-      existingIds.add(normalized[idKey]);
-    }
-    // else: keep in-memory version (never overwrite with stale sheet data)
-  }
-}
-
-// ===== Periodic re-sync from sheets (catches manual edits) =====
-// Uses merge so in-memory items that failed to sync to sheets are NOT lost
-let syncInterval = null;
-function startPeriodicSync() {
-  if (!hasScript()) return;
-  syncInterval = setInterval(async () => {
-    try {
-      const [roomsData, bookingsData, blocksData] = await Promise.all([
-        scriptGet("getRooms"),
-        scriptGet("getBookings"),
-        scriptGet("getBlocks"),
-      ]);
-
-      if (Array.isArray(roomsData) && roomsData.length > 0) {
-        const sheetRooms = roomsData.map(normalizeRoomFromScript).filter((r) => r.id && r.name);
-        const sheetIds = new Set(sheetRooms.map((r) => r.id));
-        const missing = DEFAULT_ROOMS.filter((r) => !sheetIds.has(r.id)).map((r) => ({ ...r }));
-        rooms = [...sheetRooms, ...missing];
-      }
-
-      const newBookings = Array.isArray(bookingsData)
-        ? bookingsData.filter((b) => b.bookingId || b.Timestamp || b["Full name"])
-        : [];
-      mergeById(bookings, newBookings, "id", normalizeBookingFromScript);
-
-      const newBlocks = Array.isArray(blocksData) ? blocksData.filter((b) => b.id) : [];
-      mergeById(blockedDates, newBlocks, "id", (b) => ({
-        id: b.id,
-        roomId: b.roomId || "",
-        roomName: b.roomName || "",
-        startDate: b.startDate || "",
-        endDate: b.endDate || "",
-        reason: b.reason || "",
-      }));
-
-      // Sync the full current state to Firestore (idempotent upserts)
-      if (firestoreDb.isConnected()) {
-        syncMemoryToFirestore();
-      }
-    } catch (err) {
-      // Silently fail on re-sync
-    }
-  }, 8000);
-}
-
-// ===== Sync in-memory data to Firestore collections =====
-async function syncMemoryToFirestore() {
-  if (!firestoreDb.isConnected()) return;
-  for (const room of rooms) {
-    await firestoreDb.upsertRoom(room).catch(() => {});
-  }
-  for (const booking of bookings) {
-    await firestoreDb.insertBooking(booking).catch(() => {});
-  }
-  for (const block of blockedDates) {
-    await firestoreDb.insertBlockedDate(block).catch(() => {});
-  }
-  const events = getAvailabilityEventsSync();
-  await firestoreDb.syncCalendarEvents(events).catch(() => {});
-  console.log("[Store] Synced memory to Firestore");
-}
-
-function getAvailabilityEventsSync() {
-  const bookedEvents = bookings
-    .filter((b) => b.status === "confirmed")
-    .map((b) => ({
-      id: b.id,
-      title: `${b.roomName} (Booked)`,
-      start: b.checkIn,
-      end: b.checkOut,
-      color: "#ef4444",
-      guestName: b.guestName,
-      roomName: b.roomName,
-      status: b.status,
-    }));
-  const blockedEvents = blockedDates.map((b) => ({
-    id: b.id,
-    title: `${b.roomName} (Blocked)`,
-    start: b.startDate,
-    end: b.endDate,
-    color: "#f59e0b",
-    roomName: b.roomName,
-    status: "blocked",
-  }));
-  return [...bookedEvents, ...blockedEvents];
-}
-
 // ===== Initialize =====
 async function init() {
   rooms = DEFAULT_ROOMS.map((r) => ({ ...r }));
 
-  // 1. Try Firestore first (authoritative after initial seed)
+  // 1. Load from Firestore (primary source of truth after first deploy)
   await firestoreDb.connect();
   const [fsRooms, fsBookings, fsBlocks] = await Promise.all([
     firestoreDb.loadRooms(),
@@ -572,47 +486,45 @@ async function init() {
   if (fsBlocks?.length) blockedDates = fsBlocks;
   console.log(`[Store] Loaded from Firestore: ${rooms.length} rooms, ${bookings.length} bookings, ${blockedDates.length} blocks`);
 
-  // 2. If Sheets configured, seed any missing data from Sheets
-  // Always merge from Sheets if data is missing in Firestore (first run scenario)
+  // 2. If Sheets configured and Firestore is empty (first run), seed from Sheets
   if (hasScript()) {
     const needsSeed = !fsRooms?.length || !fsBookings?.length;
     if (needsSeed) {
-      console.log("[Store] Some Firestore collections empty — merging from Google Sheets");
+      console.log("[Store] Firestore collections empty — seeding from Google Sheets");
       await loadFromScript();
-      await syncMemoryToFirestore();
-      console.log("[Store] Firestore synced from Sheets");
+      await syncToFirestore();
+      console.log("[Store] Firestore seeded from Sheets");
     }
-    // Periodic sync: picks up manual sheet additions (merge only — never overwrites)
-    startPeriodicSync();
   }
 
-  // 3. Always ensure calendarEvents collection is up to date
+  // 3. Always sync calendar events so the frontend cache is fresh
   if (firestoreDb.isConnected()) {
-    const events = getAvailabilityEventsSync();
-    firestoreDb.syncCalendarEvents(events);
-    console.log("[Store] calendarEvents synced to Firestore");
+    await syncToFirestore();
+    console.log("[Store] Calendar events synced to Firestore");
   }
 }
 
-init();
+function reset() {
+  rooms = DEFAULT_ROOMS.map((r) => ({ ...r }));
+  bookings = [];
+  blockedDates = [];
+}
 
-process.on("exit", () => {
-  if (syncInterval) clearInterval(syncInterval);
-  firestoreDb.shutdown();
-});
-process.on("SIGINT", () => process.exit());
-process.on("SIGTERM", () => process.exit());
-
-module.exports = {
-  getRooms,
-  getRoom,
-  getBookings,
-  roomExists,
-  isRoomAvailable,
-  getAvailabilityEvents,
-  createBooking,
-  cancelBooking,
-  createBlockedDate,
-  updateRoomPrice,
-  updateRoomImages,
+const defaultStore = {
+  init, getRooms, getRoom, getBookings, roomExists,
+  isRoomAvailable, getAvailabilityEvents,
+  createBooking, cancelBooking, createBlockedDate,
+  updateRoomPrice, updateRoomImages,
+  reset,
 };
+
+async function gracefulShutdown(signal) {
+  console.log(`[Store] Received ${signal}, shutting down gracefully...`);
+  await firestoreDb.shutdown();
+  process.exit(0);
+}
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+
+module.exports = defaultStore;

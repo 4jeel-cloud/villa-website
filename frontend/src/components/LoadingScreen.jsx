@@ -1,4 +1,6 @@
-export default function LoadingScreen() {
+import { memo } from "react";
+
+export default memo(function LoadingScreen() {
   return (
     <div style={{
       width: '100vw', height: '100vh',
@@ -59,4 +61,4 @@ export default function LoadingScreen() {
       `}</style>
     </div>
   );
-}
+});

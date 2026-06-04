@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const SLIDES = [
   { img: "/carousel/1.webp",        tag: "Exteriors", name: "Front view" },
@@ -30,14 +30,6 @@ export default function GalleryCarousel() {
       trackRef.current.style.transform = `translateX(-${next * 100}%)`;
     }
   }, []);
-
-  /* Ken Burns — only toggle the active slide */
-  useEffect(() => {
-    const imgs = document.querySelectorAll(".car-img");
-    imgs.forEach((img, i) => {
-      img.classList.toggle("ken", i === index);
-    });
-  }, [index]);
 
   const prev = useCallback(() => go(indexRef.current - 1), [go]);
   const next = useCallback(() => go(indexRef.current + 1), [go]);

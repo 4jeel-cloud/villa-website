@@ -3,28 +3,26 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { toDateKey, formatDate } from "../utils";
+import { BOOKED_SUFFIX, CONFIRMED_STATUS } from "../constants";
+import { useAppContext } from "../hooks/useAppContext";
 import GalleryCarousel from "./GalleryCarousel";
 import Location from "../sections/Location";
 import WhatsIncluded from "../sections/WhatsIncluded";
 import WhyCreekView from "../sections/WhyCreekView";
 
-export default function UserPage({
-  availability,
-  bookings,
-  rooms,
-  bookingForm,
-  roomOptions,
-  selectedRangeLabel,
-  focusedDate,
-  onCalendarDateClick,
-  onBookingFormChange,
-  onGuestBooking,
-  onNotify
-}) {
-  const [formStep, setFormStep] = useState(1);
+export default function UserPage() {
+  const {
+    availability, bookings, rooms, bookingForm, roomOptions,
+    selectedRangeLabel, focusedDate,
+    handleCalendarDateClick, setBookingFormField,
+    handleGuestBooking, showNotification,
+  } = useAppContext();
+  const [showGuestForm, setShowGuestForm] = useState(false);
+  const formStep = showGuestForm && bookingForm.checkIn ? 2 : 1;
 
+  // Reset showGuestForm when dates are cleared (e.g. after successful booking)
   useEffect(() => {
-    if (!bookingForm.checkIn) setFormStep(1);
+    if (!bookingForm.checkIn) setShowGuestForm(false);
   }, [bookingForm.checkIn]);
 
   const { blockedClasses, existingCheckin, existingCheckout } = useMemo(() => {
@@ -34,7 +32,7 @@ export default function UserPage({
     const selectedRoom = rooms.find(r => r.id === bookingForm.roomId);
     const selectedRoomName = selectedRoom?.name;
     for (const b of (bookings || [])) {
-      if (b.status !== "confirmed") continue;
+      if (b.status !== CONFIRMED_STATUS) continue;
       if (selectedRoomName && b.roomName !== selectedRoomName) continue;
       const sk = b.checkIn, ek = b.checkOut;
       ci.add(sk);
@@ -65,8 +63,8 @@ export default function UserPage({
     if (roomCount > 0) {
       const occMap = new Map();
       for (const evt of (availability || [])) {
-        if (!evt.title?.endsWith("(Booked)")) continue;
-        const rName = evt.title.replace(" (Booked)", "");
+        if (!evt.title?.endsWith(BOOKED_SUFFIX)) continue;
+        const rName = evt.title.slice(0, -BOOKED_SUFFIX.length);
         let cur = new Date(evt.start + "T00:00:00");
         const end = new Date(evt.end + "T00:00:00");
         while (cur < end) {
@@ -81,7 +79,7 @@ export default function UserPage({
       }
     }
     return { blockedClasses: ck, existingCheckin: ci, existingCheckout: co };
-  }, [bookings, availability, bookingForm.roomId]);
+  }, [bookings, availability, bookingForm.roomId, rooms]);
 
   const dayCellClassNames = (arg) => {
     const dayKey = toDateKey(arg.date);
@@ -128,7 +126,7 @@ export default function UserPage({
                   plugins={[dayGridPlugin, interactionPlugin]}
                   initialView="dayGridMonth"
                   events={[]}
-                  dateClick={onCalendarDateClick}
+                  dateClick={handleCalendarDateClick}
                   dayCellClassNames={dayCellClassNames}
                   height="auto"
                   contentHeight="auto"
@@ -167,8 +165,9 @@ export default function UserPage({
                 <div className="form">
                   <div className="formField">
                     <label className="formLabel">Room Type</label>
-                    <select className="formInput" value={bookingForm.roomId} onChange={(e) => onBookingFormChange({ roomId: e.target.value })}>
-                      {roomOptions}
+                    <select className="formInput" value={bookingForm.roomId} onChange={(e) => setBookingFormField({ roomId: e.target.value })}>
+                      <option value="" disabled>Select a room</option>
+                      {roomOptions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
                   </div>
                   <div className="formRow">
@@ -182,7 +181,7 @@ export default function UserPage({
                     </div>
                   </div>
                   <p className="selectedDateInfo">{selectedRangeLabel || "Click dates on the calendar first."}</p>
-                  <button className="formSubmit" type="button" onClick={() => { if (bookingForm.checkIn && bookingForm.checkOut) setFormStep(2); else onNotify("error", "Please select both check-in and check-out dates."); }}>
+                  <button className="formSubmit" type="button" onClick={() => { if (bookingForm.checkIn && bookingForm.checkOut) setShowGuestForm(true); else showNotification("error", "Please select both check-in and check-out dates."); }}>
                     Next →
                   </button>
                 </div>
@@ -192,34 +191,34 @@ export default function UserPage({
               <>
                 <h2 className="bookingFormTitle">Guest Details</h2>
                 <p className="bookingFormSubtitle">Fill in your information to confirm</p>
-                <form className="form" onSubmit={onGuestBooking}>
+                <form className="form" onSubmit={handleGuestBooking}>
                   <div className="formField">
                     <label className="formLabel">Full Name</label>
-                    <input className="formInput" placeholder="e.g. John Doe" value={bookingForm.guestName} onChange={(e) => onBookingFormChange({ guestName: e.target.value })} required />
+                    <input className="formInput" placeholder="e.g. John Doe" value={bookingForm.guestName} onChange={(e) => setBookingFormField({ guestName: e.target.value })} required />
                   </div>
                   <div className="formField">
                     <label className="formLabel">Phone Number</label>
-                    <input className="formInput" placeholder="e.g. +91 98765 43210" value={bookingForm.guestPhone} onChange={(e) => onBookingFormChange({ guestPhone: e.target.value })} required />
+                    <input className="formInput" placeholder="e.g. +91 98765 43210" value={bookingForm.guestPhone} onChange={(e) => setBookingFormField({ guestPhone: e.target.value })} required />
                   </div>
                   <div className="formField">
                     <label className="formLabel">Email</label>
-                    <input className="formInput" type="email" placeholder="e.g. john@email.com" value={bookingForm.guestEmail} onChange={(e) => onBookingFormChange({ guestEmail: e.target.value })} required />
+                    <input className="formInput" type="email" placeholder="e.g. john@email.com" value={bookingForm.guestEmail} onChange={(e) => setBookingFormField({ guestEmail: e.target.value })} required />
                   </div>
                   <div className="formRow">
                     <div className="formField">
                       <label className="formLabel">Number of Guests</label>
-                      <input className="formInput" type="number" min="1" placeholder="e.g. 2" value={bookingForm.guests} onChange={(e) => onBookingFormChange({ guests: e.target.value })} required />
+                      <input className="formInput" type="number" min="1" placeholder="e.g. 2" value={bookingForm.guests} onChange={(e) => setBookingFormField({ guests: e.target.value })} required />
                     </div>
                     <div className="formField">
                       <label className="formLabel">Guest Type</label>
-                      <select className="formInput" value={bookingForm.guestType} onChange={(e) => onBookingFormChange({ guestType: e.target.value })}>
+                      <select className="formInput" value={bookingForm.guestType} onChange={(e) => setBookingFormField({ guestType: e.target.value })}>
                         <option value="Family">Family</option>
                         <option value="Bachelor">Bachelor</option>
                       </select>
                     </div>
                   </div>
                   <div className="formRow">
-                    <button className="formSubmit" type="button" style={{ background: "#94a3b8" }} onClick={() => setFormStep(1)}>
+                    <button className="formSubmit" type="button" style={{ background: "#94a3b8" }} onClick={() => setShowGuestForm(false)}>
                       ← Back
                     </button>
                     <button className="formSubmit" type="submit">

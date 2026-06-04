@@ -70,18 +70,19 @@ export default function AdminLoginPage({ onLogin }) {
   };
 
   const sendResetEmail = async (targetEmail) => {
-    const { sendPasswordResetEmail } = await import("firebase/auth");
-    const { auth } = await import("../firebase");
-    const actionUrl = window.location.origin + "/auth/reset-password";
-    await sendPasswordResetEmail(auth, targetEmail, { url: actionUrl, handleCodeInApp: true });
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
-      await fetch(apiUrl + "/api/send-reset-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail }),
-      });
-    } catch { /* Branded email is best-effort */ }
+    // Only call the backend — it generates the Firebase reset link via Admin SDK
+    // and sends the branded email. Calling Firebase client SDK here too would
+    // send a second (unbranded) reset email to the user.
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+    const res = await fetch(apiUrl + "/api/send-reset-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: targetEmail }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to send reset email.");
+    }
   };
 
   const handleForgotPassword = async () => {
@@ -105,13 +106,7 @@ export default function AdminLoginPage({ onLogin }) {
       setResetSent(true);
       setTimeout(() => setCanResend(true), 10000);
     } catch (err) {
-      if (err.code === "auth/user-not-found") {
-        setError("No account found with this email.");
-      } else if (err.code === "auth/invalid-email") {
-        setError("Invalid email format.");
-      } else {
-        setError(err.message);
-      }
+      setError(err.message || "Failed to send reset email.");
     } finally {
       setResetLoading(false);
     }
@@ -126,11 +121,7 @@ export default function AdminLoginPage({ onLogin }) {
       setCanResend(false);
       setTimeout(() => setCanResend(true), 10000);
     } catch (err) {
-      if (err.code === "auth/user-not-found") {
-        setError("No account found with this email.");
-      } else {
-        setError(err.message);
-      }
+      setError(err.message || "Failed to send reset email.");
     } finally {
       setResetLoading(false);
     }
@@ -148,7 +139,7 @@ export default function AdminLoginPage({ onLogin }) {
             type="email"
             placeholder="admin@email.com"
             value={email}
-            onChange={(e) => { setEmail(sanitizeEmail(e.target.value)); setError(""); }}
+            onChange={(e) => { setEmail(e.target.value); setError(""); }}
             autoFocus
             required
           />
@@ -159,7 +150,7 @@ export default function AdminLoginPage({ onLogin }) {
             <input
               className="formInput"
               type={showPassword ? "text" : "password"}
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
               required
@@ -217,7 +208,7 @@ export default function AdminLoginPage({ onLogin }) {
         </div>
         {error && <p style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>}
         <button className="formSubmit" type="submit" disabled={loading}>
-          {loading ? "Signing inâ€¦" : "Sign In"}
+          {loading ? "Signing in…" : "Sign In"}
         </button>
       </form>
     </section>

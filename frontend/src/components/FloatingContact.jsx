@@ -1,4 +1,6 @@
-export default function FloatingContact() {
+import { memo } from "react";
+
+export default memo(function FloatingContact() {
   return (
     <div className="floatingContact">
       <a
@@ -24,4 +26,4 @@ export default function FloatingContact() {
       </a>
     </div>
   );
-}
+});

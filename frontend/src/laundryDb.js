@@ -10,7 +10,7 @@ export async function saveLaundryData(stock, alerts, activity) {
       alerts,
       activity,
       updatedAt: new Date().toISOString(),
-    });
+    }, { merge: true });
   } catch (e) {
     console.error("[laundryDb] save error:", e);
   }
@@ -20,11 +20,11 @@ export async function loadLaundryData() {
   try {
     const snap = await getDoc(doc(db, LAUNDRY_DOC, "data"));
     if (snap.exists()) {
-      return snap.data();
+      return { data: snap.data(), error: null };
     }
-    return null;
+    return { data: null, empty: true };
   } catch (e) {
     console.error("[laundryDb] load error:", e);
-    return null;
+    return { data: null, error: e };
   }
 }

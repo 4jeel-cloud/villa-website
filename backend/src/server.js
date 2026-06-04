@@ -11,8 +11,15 @@ const store = require("./data/store");
 const admin = require("firebase-admin");
 const { sendBookingEmail } = require("./services/integrations");
 const emailTemplates = require("./services/emailTemplates");
+const { handleValidation, bookingRules, dateRangeRules, blockRules, emailRule, cancelRules, priceRules, imageRules } = require("./validators");
 
 const app = express();
+
+// Correlation ID — every request gets a unique traceable ID
+app.use((req, _, next) => {
+  req.requestId = crypto.randomUUID();
+  next();
+});
 
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
@@ -23,7 +30,7 @@ app.use(helmet({
       styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "'unsafe-inline'"],
       fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", "https://identitytoolkit.googleapis.com", "https://firestore.googleapis.com"],
+      connectSrc: ["'self'", "https://firestore.googleapis.com"],
       frameSrc: ["'self'", "https://checkout.razorpay.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
@@ -57,8 +64,19 @@ const bookingLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const resetEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use("/api/", apiLimiter);
 app.use("/admin/", adminLimiter);
+// Public data endpoints also get the API rate limiter
+app.use("/rooms", apiLimiter);
+app.use("/availability", apiLimiter);
+app.use("/bookings", apiLimiter);
 
 const MANAGER_EMAILS = (process.env.MANAGER_EMAIL || "manager@homestay.local")
   .split(",").map((s) => s.trim()).filter(Boolean);
@@ -66,27 +84,46 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 const PORT = process.env.PORT || 4000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
-const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "";
-const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "";
 
-let firebaseAdminInitialized = false;
-try {
-  const saPath = __dirname + "/../service-account.json";
-  if (require("fs").existsSync(saPath)) {
-    admin.initializeApp({ credential: admin.credential.cert(saPath) });
-    firebaseAdminInitialized = true;
-    console.log("[Firebase Admin] Initialized with service account.");
-  } else {
-    console.log("[Firebase Admin] service-account.json not found, skipping.");
+// Firebase Admin is initialized by firestoreDb.js during store.init() which runs
+// synchronously via require('./data/store') above. By the time this code executes,
+// admin.apps[0] is already set. We just check and flag it for the reset-email route.
+let firebaseAdminInitialized = admin.apps.length > 0;
+if (!firebaseAdminInitialized) {
+  // Fallback: store may not have connected yet (e.g. Firestore disabled) — try ourselves
+  try {
+    const saPath = __dirname + "/../service-account.json";
+    if (require("fs").existsSync(saPath)) {
+      admin.initializeApp({ credential: admin.credential.cert(require(saPath)) });
+      firebaseAdminInitialized = true;
+      console.log("[Firebase Admin] Initialized with service account (fallback).");
+    } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      admin.initializeApp({
+        credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
+      });
+      firebaseAdminInitialized = true;
+      console.log("[Firebase Admin] Initialized with env var (fallback).");
+    } else {
+      console.log("[Firebase Admin] No credentials found — password reset disabled.");
+    }
+  } catch (e) {
+    console.log("[Firebase Admin] Init failed:", e.message);
   }
-} catch (e) {
-  console.log("[Firebase Admin] Init skipped:", e.message);
+} else {
+  console.log("[Firebase Admin] Already initialized by store — reusing.");
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
-const PHONE_RE = /^[\d\s+\-()]{7,20}$/;
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const VALID_GUEST_TYPES = new Set(["Family", "Bachelor"]);
+// Async route handler wrapper — eliminates try/catch boilerplate
+function asyncHandler(fn) {
+  return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+}
+
+// Centralized error handler middleware
+function errorHandler(err, req, res, _next) {
+  const status = err.status || 500;
+  console.error(`[${req.requestId}] ${err.message}`);
+  res.status(status).json({ message: err.message || "Internal server error." });
+}
 
 function sanitize(str) {
   if (typeof str !== "string") return str;
@@ -107,35 +144,20 @@ function truncate(str, max) {
 }
 
 async function verifyFirebaseToken(idToken) {
-  if (!FIREBASE_API_KEY || !idToken) return null;
+  if (!idToken) return null;
+  // Use Firebase Admin SDK — much more reliable than the deprecated REST endpoint
+  if (!firebaseAdminInitialized || admin.apps.length === 0) return null;
   try {
-    const url = `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${FIREBASE_API_KEY}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      console.log(`[verifyFirebaseToken] Google API returned ${res.status}: ${text.slice(0, 200)}`);
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    if (!decoded) return null;
+    const userEmail = (decoded.email || "").toLowerCase();
+    if (ADMIN_EMAILS.length > 0 && (!userEmail || !ADMIN_EMAILS.includes(userEmail))) {
+      console.log(`[verifyFirebaseToken] Email ${userEmail} not in ADMIN_EMAILS`);
       return null;
     }
-    const data = await res.json();
-    const user = data.users?.[0] || null;
-    if (!user) return null;
-
-    // If ADMIN_EMAILS is configured, verify the user's email is on the list
-    if (ADMIN_EMAILS.length > 0) {
-      const userEmail = (user.email || "").toLowerCase();
-      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-        console.log(`[verifyFirebaseToken] Email ${userEmail} not in ADMIN_EMAILS`);
-        return null;
-      }
-    }
-
-    return user;
+    return decoded;
   } catch (err) {
-    console.log(`[verifyFirebaseToken] fetch error: ${err.message}`);
+    console.log(`[verifyFirebaseToken] error: ${err.message}`);
     return null;
   }
 }
@@ -155,7 +177,7 @@ async function requireAdmin(req, res, next) {
     return next();
   }
 
-  console.log(`[requireAdmin] Token prefix: ${token.slice(0, 20)}... (does not match ADMIN_TOKEN)`);
+  console.log("[requireAdmin] Token does not match ADMIN_TOKEN, trying Firebase...");
   const firebaseUser = await verifyFirebaseToken(token);
   if (firebaseUser) {
     console.log(`[requireAdmin] Firebase verified: ${firebaseUser.email || firebaseUser.localId}`);
@@ -174,27 +196,35 @@ if (process.env.RAZORPAY_KEY_ID) {
   });
 }
 
+// Fire-and-forget email helper — logs errors but never blocks the response
+function sendEmailSafe(opts) {
+  sendBookingEmail(opts).catch((err) => console.error("[Email] Send failed:", err.message));
+}
+
 app.get("/health", (_, res) => {
   res.json({ ok: true });
 });
 
-app.get("/rooms", async (_, res) => {
+app.get("/rooms", asyncHandler(async (req, res) => {
   const rooms = await store.getRooms();
   res.json(rooms);
-});
+}));
 
-app.get("/availability", async (_, res) => {
+app.get("/availability", asyncHandler(async (req, res) => {
   const events = await store.getAvailabilityEvents();
   res.json(events);
-});
+}));
 
-app.get("/bookings", requireAdmin, async (_, res) => {
+app.get("/bookings", requireAdmin, asyncHandler(async (req, res) => {
   const data = await store.getBookings();
   res.json(data);
-});
+}));
 
-app.post("/bookings", bookingLimiter, async (req, res) => {
-  let { roomId, checkIn, checkOut, guestName, guestEmail, guestPhone, guests, guestType, createdBy = "guest" } = req.body;
+app.post("/bookings", bookingLimiter, bookingRules, handleValidation, asyncHandler(async (req, res) => {
+  let { roomId, guestName, guestEmail, guestPhone, guestType, createdBy = "guest" } = req.body;
+  const { checkIn, checkOut } = req.body;
+  let { guests } = req.body;
+  if (guests !== undefined && guests !== "") guests = Number(guests);
 
   guestName = truncate(sanitize(guestName), MAX_STR_LEN);
   guestEmail = truncate(sanitize(guestEmail), MAX_STR_LEN);
@@ -203,26 +233,8 @@ app.post("/bookings", bookingLimiter, async (req, res) => {
   roomId = sanitize(roomId);
   createdBy = sanitize(createdBy);
 
-  if (!roomId || !checkIn || !checkOut || !guestName || !guestEmail || !guestPhone) {
-    return res.status(400).json({ message: "Missing required booking fields." });
-  }
-  if (!EMAIL_RE.test(guestEmail)) {
-    return res.status(400).json({ message: "Invalid email format." });
-  }
-  if (!PHONE_RE.test(guestPhone)) {
-    return res.status(400).json({ message: "Invalid phone number format." });
-  }
-  if (!DATE_RE.test(checkIn) || !DATE_RE.test(checkOut)) {
-    return res.status(400).json({ message: "Dates must be in YYYY-MM-DD format." });
-  }
   if (checkIn >= checkOut) {
     return res.status(400).json({ message: "Check-out must be after check-in." });
-  }
-  if (guestType && !VALID_GUEST_TYPES.has(guestType)) {
-    return res.status(400).json({ message: "Guest type must be Family or Bachelor." });
-  }
-  if (guests && (isNaN(guests) || Number(guests) < 1)) {
-    return res.status(400).json({ message: "Number of guests must be at least 1." });
   }
   if (!(await store.roomExists(roomId))) {
     return res.status(404).json({ message: "Room not found." });
@@ -238,46 +250,39 @@ app.post("/bookings", bookingLimiter, async (req, res) => {
     }
   }
 
-  try {
-    const booking = await store.createBooking({
-      roomId, checkIn, checkOut, guestName, guestEmail, guestPhone, guests, guestType, createdBy,
-      razorpayOrderId: req.body.razorpayOrderId,
-      razorpayPaymentId: req.body.razorpayPaymentId,
-    });
+  const booking = await store.createBooking({
+    roomId, checkIn, checkOut, guestName, guestEmail, guestPhone, guests, guestType, createdBy,
+    razorpayOrderId: req.body.razorpayOrderId,
+    razorpayPaymentId: req.body.razorpayPaymentId,
+  });
 
-    sendBookingEmail({
-      to: guestEmail,
-      subject: "Your stay at Creek View Villa is confirmed",
-      html: emailTemplates.confirmationEmail({
-        name: guestName, room: booking.roomName, checkin: checkIn, checkout: checkOut,
-        nights: Math.max(1, Math.ceil((new Date(checkOut + "T00:00:00") - new Date(checkIn + "T00:00:00")) / 86400000)),
-        guests, phone: guestPhone,
-      }),
+  sendEmailSafe({
+    to: guestEmail,
+    subject: "Your stay at Creek View Villa is confirmed",
+    html: emailTemplates.confirmationEmail({
+      name: guestName, room: booking.roomName, checkin: checkIn, checkout: checkOut,
+      nights: Math.max(1, Math.ceil((new Date(checkOut + "T00:00:00") - new Date(checkIn + "T00:00:00")) / 86400000)),
+      guests, phone: guestPhone,
+    }),
+  });
+  for (const email of MANAGER_EMAILS) {
+    sendEmailSafe({
+      to: email,
+      subject: "New Booking Alert \u2013 Creek View Villa",
+      html: emailTemplates.managerAlert({ guestName, roomName: booking.roomName, checkIn, checkOut }),
     });
-    for (const email of MANAGER_EMAILS) {
-      sendBookingEmail({
-        to: email,
-        subject: "New Booking Alert â€“ Creek View Villa",
-        html: emailTemplates.managerAlert({ guestName, roomName: booking.roomName, checkIn, checkOut }),
-      });
-    }
-
-    return res.status(201).json(booking);
-  } catch (err) {
-    console.error("[POST /bookings]", err.message);
-    return res.status(500).json({ message: "Booking creation failed. Please try again." });
   }
-});
 
-app.post("/api/create-razorpay-order", async (req, res) => {
+  return res.status(201).json(booking);
+}));
+
+app.post("/api/create-razorpay-order", dateRangeRules, handleValidation, asyncHandler(async (req, res) => {
   if (!razorpay) return res.status(400).json({ message: "Razorpay not configured." });
 
-  let { roomId, checkIn, checkOut } = req.body;
+  let { roomId } = req.body;
+  const { checkIn, checkOut } = req.body;
   roomId = sanitize(roomId);
 
-  if (!DATE_RE.test(checkIn) || !DATE_RE.test(checkOut)) {
-    return res.status(400).json({ message: "Dates must be in YYYY-MM-DD format." });
-  }
   if (checkIn >= checkOut) {
     return res.status(400).json({ message: "Check-out must be after check-in." });
   }
@@ -290,21 +295,16 @@ app.post("/api/create-razorpay-order", async (req, res) => {
   ));
   const amount = nights * room.basePrice * 100;
 
-  try {
-    const order = await razorpay.orders.create({
-      amount,
-      currency: "INR",
-      receipt: `booking_${Date.now()}`,
-      notes: { roomId, checkIn, checkOut },
-    });
-    res.json(order);
-  } catch (err) {
-    console.error("[RAZORPAY]", err.message);
-    res.status(500).json({ message: "Razorpay order creation failed. Please try again." });
-  }
-});
+  const order = await razorpay.orders.create({
+    amount,
+    currency: "INR",
+    receipt: `booking_${Date.now()}`,
+    notes: { roomId, checkIn, checkOut },
+  });
+  res.json(order);
+}));
 
-app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
+app.patch("/admin/bookings/:id/cancel", requireAdmin, cancelRules, handleValidation, asyncHandler(async (req, res) => {
   const reason = truncate(sanitize(req.body.reason || "Cancelled from admin dashboard"), MAX_REASON_LEN);
   const refundStatus = sanitize(req.body.refundStatus || "pending");
   const booking = await store.cancelBooking(req.params.id, {
@@ -313,44 +313,36 @@ app.patch("/admin/bookings/:id/cancel", requireAdmin, async (req, res) => {
     cancelledBy: "admin",
   });
   if (!booking) return res.status(404).json({ message: "Booking not found." });
-  sendBookingEmail({
+  sendEmailSafe({
     to: booking.guestEmail,
-    subject: "Booking Cancelled â€“ Creek View Villa",
+    subject: "Booking Cancelled \u2013 Creek View Villa",
     html: emailTemplates.cancellationEmail({ name: booking.guestName, room: booking.roomName, checkin: booking.checkIn, checkout: booking.checkOut }),
   });
   for (const email of MANAGER_EMAILS) {
-    sendBookingEmail({
+    sendEmailSafe({
       to: email,
-      subject: "Booking Cancelled â€“ Creek View Villa",
+      subject: "Booking Cancelled \u2013 Creek View Villa",
       html: emailTemplates.managerAlert({ guestName: booking.guestName, roomName: booking.roomName, checkIn: booking.checkIn, checkOut: booking.checkOut }),
     });
   }
-
   return res.json({
     id: booking.id,
     status: booking.status,
     cancelledAt: booking.cancelledAt,
     cancellationReason: booking.cancellationReason,
   });
-});
+}));
 
-app.patch("/admin/rooms/:id/price", requireAdmin, async (req, res) => {
-  if (!req.body.basePrice || Number(req.body.basePrice) <= 0) {
-    return res.status(400).json({ message: "basePrice must be greater than 0." });
-  }
+app.patch("/admin/rooms/:id/price", requireAdmin, priceRules, handleValidation, asyncHandler(async (req, res) => {
   const result = await store.updateRoomPrice(req.params.id, Number(req.body.basePrice));
   if (!result) return res.status(404).json({ message: "Room not found." });
   return res.json({ id: result.id, basePrice: result.basePrice });
-});
+}));
 
-app.patch("/admin/rooms/:id/images", requireAdmin, async (req, res) => {
-  if (!Array.isArray(req.body.images) || req.body.images.length === 0) {
-    return res.status(400).json({ message: "Provide a non-empty images array." });
-  }
+app.patch("/admin/rooms/:id/images", requireAdmin, imageRules, handleValidation, asyncHandler(async (req, res) => {
   const images = req.body.images.map((url) => {
     const s = sanitize(String(url));
-    // Only allow relative paths and common image extensions
-    if (!/^(\/[\w\-. /]+|\w[\w\-. :/]+)$/.test(s)) return "";
+    if (!/^[a-z0-9\-._~:/?#[\]@!$&'()*+,;=%]+$/i.test(s)) return "";
     return s;
   }).filter(Boolean);
   if (images.length === 0) {
@@ -359,19 +351,14 @@ app.patch("/admin/rooms/:id/images", requireAdmin, async (req, res) => {
   const result = await store.updateRoomImages(req.params.id, images);
   if (!result) return res.status(404).json({ message: "Room not found." });
   return res.json({ id: result.id, images: result.images });
-});
+}));
 
-app.post("/admin/blocks", requireAdmin, async (req, res) => {
-  let { roomId, startDate, endDate, reason } = req.body;
+app.post("/admin/blocks", requireAdmin, blockRules, handleValidation, asyncHandler(async (req, res) => {
+  let { roomId, reason } = req.body;
+  const { startDate, endDate } = req.body;
   roomId = sanitize(roomId);
   reason = truncate(sanitize(reason || ""), MAX_REASON_LEN);
 
-  if (!roomId || !startDate || !endDate) {
-    return res.status(400).json({ message: "Missing roomId/startDate/endDate." });
-  }
-  if (!DATE_RE.test(startDate) || !DATE_RE.test(endDate)) {
-    return res.status(400).json({ message: "Dates must be in YYYY-MM-DD format." });
-  }
   if (startDate >= endDate) {
     return res.status(400).json({ message: "End date must be after start date." });
   }
@@ -381,25 +368,17 @@ app.post("/admin/blocks", requireAdmin, async (req, res) => {
   if (!(await store.isRoomAvailable(roomId, startDate, endDate))) {
     return res.status(409).json({ message: "Room already unavailable in selected dates." });
   }
-  try {
-    const block = await store.createBlockedDate({ roomId, startDate, endDate, reason });
-    return res.status(201).json(block);
-  } catch (err) {
-    console.error("[POST /admin/blocks]", err.message);
-    return res.status(500).json({ message: "Failed to create block. Please try again." });
-  }
-});
+  const block = await store.createBlockedDate({ roomId, startDate, endDate, reason });
+  return res.status(201).json(block);
+}));
 
-app.post("/api/send-reset-email", async (req, res) => {
+app.post("/api/send-reset-email", resetEmailLimiter, emailRule, handleValidation, asyncHandler(async (req, res) => {
   const email = (req.body.email || "").trim().toLowerCase();
-  if (!email || !EMAIL_RE.test(email)) {
-    return res.status(400).json({ message: "Valid email required." });
-  }
   if (!firebaseAdminInitialized) {
     return res.status(503).json({ message: "Email service not available." });
   }
+  const actionUrl = (process.env.CORS_ORIGIN || "http://localhost:5173") + "/auth/reset-password";
   try {
-    const actionUrl = (process.env.CORS_ORIGIN || "http://localhost:5173") + "/auth/reset-password";
     const link = await admin.auth().generatePasswordResetLink(email, {
       url: actionUrl,
       handleCodeInApp: true,
@@ -409,18 +388,37 @@ app.post("/api/send-reset-email", async (req, res) => {
       subject: "Reset your password \u2013 Creek View Villa",
       html: emailTemplates.resetPasswordEmail({ link }),
     });
-    return res.json({ message: "Reset email sent." });
   } catch (err) {
-    console.error("[POST /api/send-reset-email]", err.message);
     if (err.code === "auth/user-not-found") {
       return res.json({ message: "If an account exists, a reset email has been sent." });
     }
-    return res.status(500).json({ message: "Failed to send reset email." });
+    throw err;
   }
+  return res.json({ message: "Reset email sent." });
+}));
+
+// Centralized error handler — must be registered after all routes
+app.use(errorHandler);
+
+// Validate required environment variables at startup
+const REQUIRED_ENV_VARS = ["ADMIN_TOKEN"];
+for (const v of REQUIRED_ENV_VARS) {
+  if (!process.env[v]) {
+    console.error(`[Server] Missing required env var: ${v}`);
+    process.exit(1);
+  }
+}
+
+async function start() {
+  await store.init();
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+start().catch((err) => {
+  console.error("[Server] Failed to start:", err.message);
+  process.exit(1);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
 
 

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAppContext } from "../hooks/useAppContext";
 
 const ROOM_DISPLAY = [
   {
@@ -6,7 +8,6 @@ const ROOM_DISPLAY = [
     desc:     "Spacious villa perfect for large families and groups — spread across four beautifully appointed rooms with full access to all outdoor areas.",
     guests:   16,
     roomCount: 4,
-    price:    12000,
     badge:    "Most popular",
     features: ["Free WiFi", "Free parking", "Swimming pool", "Kitchen", "Bonfire area", "BBQ area", "Creek view", "Breakfast"],
   },
@@ -15,13 +16,12 @@ const ROOM_DISPLAY = [
     desc:     "Cozy and intimate stay ideal for couples and small families — two warm rooms with everything you need for a peaceful retreat.",
     guests:   8,
     roomCount: 2,
-    price:    6000,
     badge:    null,
     features: ["Free WiFi", "Free parking", "Hot water", "Garden", "Balcony", "Creek view", "Breakfast"],
   },
 ];
 
-function RoomCard({ display, images, index, roomId }) {
+function RoomCard({ display, images, index, roomId, price }) {
   const [imgIdx, setImgIdx] = useState(0);
   const hasImages = images && images.length > 0;
   const currentImg = hasImages ? images[imgIdx % images.length] : null;
@@ -45,6 +45,7 @@ function RoomCard({ display, images, index, roomId }) {
       }}>
         {currentImg ? (
           <img
+            key={currentImg}
             src={currentImg}
             alt={display.name}
             loading={index === 0 ? "eager" : "lazy"}
@@ -170,13 +171,13 @@ function RoomCard({ display, images, index, roomId }) {
         <div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
             <span style={{ fontFamily: "Cormorant Garamond, serif", fontSize: 28, fontWeight: 300, color: "#1C3A28" }}>
-              ₹{display.price.toLocaleString("en-IN")}
+              ₹{(price || 0).toLocaleString("en-IN")}
             </span>
             <span style={{ fontSize: 12, color: "#7A9A7A" }}>/ night</span>
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
-            <a href={`/?room=${roomId}`} style={{
+            <Link to={`/?room=${roomId}`} style={{
               flex:          1,
               background:    "#1C3A28",
               color:         "#ffffff",
@@ -190,8 +191,8 @@ function RoomCard({ display, images, index, roomId }) {
               textAlign:     "center",
             }}>
               Book now
-            </a>
-            <a href="/nearby" style={{
+            </Link>
+            <Link to="/nearby" style={{
               flex:          1,
               background:    "transparent",
               color:         "#1C3A28",
@@ -206,7 +207,7 @@ function RoomCard({ display, images, index, roomId }) {
               border:        "0.5px solid #C8DCC8",
             }}>
               Explore
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -214,7 +215,8 @@ function RoomCard({ display, images, index, roomId }) {
   );
 }
 
-export default function RoomsPage({ rooms }) {
+export default function RoomsPage() {
+  const { rooms } = useAppContext();
   return (
     <div style={{
       background: "#F5F9F5",
@@ -257,6 +259,7 @@ export default function RoomsPage({ rooms }) {
               images={rooms[i]?.images || []}
               index={i}
               roomId={rooms[i]?.id || ""}
+              price={rooms[i]?.basePrice ?? (i === 0 ? 12000 : 6000)}
             />
           ))}
         </div>
@@ -296,7 +299,7 @@ export default function RoomsPage({ rooms }) {
 
         {/* cta */}
         <div style={{ textAlign: "center" }}>
-          <a href="/#booking" style={{
+          <Link to="/#booking" style={{
             display: "inline-block",
             background: "#1C3A28",
             color: "#ffffff",
@@ -309,7 +312,7 @@ export default function RoomsPage({ rooms }) {
             textDecoration: "none",
           }}>
             Check availability
-          </a>
+          </Link>
         </div>
 
       </div>

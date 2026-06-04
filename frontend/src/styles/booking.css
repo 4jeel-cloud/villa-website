@@ -1,0 +1,401 @@
+.calendarCard {
+  background: #ffffff;
+  color: #0f172a;
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 16px;
+}
+
+.calendarLayout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 22px;
+}
+
+.calendarMain {
+  min-width: 0;
+}
+
+.calendarTitle {
+  color: #06402B;
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  margin: 0;
+}
+
+.calendarSubtitle {
+  margin-top: 2px;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.calendarSide {
+  border-left: 1px dotted #9bc8b0;
+  padding-left: 14px;
+  align-self: center;
+  min-width: 0;
+}
+
+.calendarSideLabel {
+  color: #06402B;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+
+.calendarSideDay {
+  margin: 2px 0;
+  color: #06402B;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 0.95;
+  opacity: 0.25;
+  transition: all 220ms ease;
+}
+
+.calendarSideText {
+  color: #334155;
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+}
+
+.bookingLayout {
+  display: grid;
+  grid-template-columns: 2fr auto 1.2fr;
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+  height: 100%;
+}
+.bookingLayout > .bookingCalendar,
+.bookingLayout > .bookingForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.bookingCalendar {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  min-width: 0;
+}
+
+.bookingCalendar .calendarWrap {
+  overflow: hidden;
+}
+
+.bookingCalendar .fc {
+  width: 100%;
+}
+
+.bookingCalendar .fc .fc-scrollgrid {
+  width: 100% !important;
+}
+
+.bookingCalendar .fc .fc-daygrid-body,
+.bookingCalendar .fc .fc-scrollgrid-sync-table {
+  width: 100% !important;
+}
+
+.bookingDivider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  align-self: stretch;
+  justify-content: center;
+}
+
+.bookingDividerLine {
+  width: 1px;
+  flex: 1;
+  background: linear-gradient(to bottom, transparent, #d1d5db, transparent);
+}
+
+.bookingDividerIcon {
+  color: #06402B;
+  background: #e8f2ea;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bookingForm {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  min-width: 0;
+}
+
+.bookingFormTitle {
+  font-family: "Oswald", sans-serif;
+  color: #06402B;
+  text-transform: uppercase;
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  margin: 0;
+}
+
+.bookingFormSubtitle {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 4px 0 16px;
+}
+
+.formField {
+  margin-bottom: 14px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.formInput:focus {
+  border-color: #06402B;
+  box-shadow: 0 0 0 3px rgba(6, 64, 43, 0.15);
+  background: #ffffff;
+}
+
+.formInput::placeholder {
+  color: #94a3b8;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.formSubmit {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #06402B, #085238);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  margin-top: 4px;
+}
+
+.formSubmit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.formSubmit:active {
+  transform: translateY(0);
+}
+
+.bookingDetailCard {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.bookingDetailCard h3 {
+  margin: 0 0 8px;
+  color: #1e3a8a;
+}
+
+.bookingDetailCard p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.bookingDetailCard button {
+  margin-top: 8px;
+}
+
+.calendarWrap {
+  overflow-x: auto;
+}
+
+.calendarCard .fc {
+  font-family: Inter, Segoe UI, Arial, sans-serif;
+}
+
+.calendarCard .fc .fc-toolbar-title {
+  font-family: "Oswald", sans-serif;
+  color: #06402B;
+  font-size: 1rem;
+}
+
+.calendarCard .fc .fc-button {
+  background: #e8f2ea;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.calendarCard .fc .fc-button:hover {
+  background: #d1fae5;
+}
+
+.calendarCard .fc-theme-standard td,
+.calendarCard .fc-theme-standard th,
+.calendarCard .fc-theme-standard .fc-scrollgrid {
+  border-color: #dcfce7;
+}
+
+.calendarCard .fc .fc-col-header-cell-cushion {
+  color: #0a6a42;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  padding: 4px 0;
+}
+
+.calendarCard .fc .fc-daygrid-day-number {
+  color: #0f172a;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  padding: 2px;
+}
+
+.calendarCard .fc .fc-daygrid-day-frame {
+  min-height: 44px;
+  transition: background-color 160ms ease;
+}
+
+.calendarCard .fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
+  background: rgba(5, 150, 105, 0.05);
+}
+
+.calendarCard .fc .fc-day-today {
+  background: transparent !important;
+}
+
+.calendarCard .fc .fc-day-today .fc-daygrid-day-number {
+  background: #06402B;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin: 2px auto 0;
+}
+
+.calendarCard .fc .fc-event {
+  border: none;
+  border-radius: 8px;
+  font-size: 0.72rem;
+}
+.calendarCard .fc .admin-booking-event {
+  background: rgba(245, 158, 11, 0.85) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: 4px !important;
+  margin: 1px 1px !important;
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.calendarCard .fc .admin-booking-event .fc-event-title {
+  font-weight: 600;
+  padding: 0;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.65rem;
+}
+.calendarCard .fc .admin-booking-event:hover {
+  background: rgba(6, 64, 43, 0.9) !important;
+  cursor: pointer;
+}
+
+.fc .blocked-date .fc-daygrid-day-frame {
+  background: rgba(239, 68, 68, 0.85) !important;
+}
+
+.fc .fc-day-disabled .fc-daygrid-day-frame {
+  background: rgba(148, 163, 184, 0.08) !important;
+  cursor: default !important;
+}
+.fc .fc-day-disabled .fc-daygrid-day-number {
+  color: #334155 !important;
+}
+
+.fc .fc-toolbar {
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.fc .selected-checkin .fc-daygrid-day-frame {
+  background: linear-gradient(to right, transparent 50%, rgba(5, 150, 105, 0.7) 50%) !important;
+}
+.fc .selected-checkin .fc-daygrid-day-number {
+  font-weight: 700;
+}
+
+.fc .selected-checkout .fc-daygrid-day-frame {
+  background: linear-gradient(to right, rgba(5, 150, 105, 0.7) 50%, transparent 50%) !important;
+}
+.fc .selected-checkout .fc-daygrid-day-number {
+  font-weight: 700;
+}
+
+.fc .selected-range .fc-daygrid-day-frame {
+  background: rgba(239, 68, 68, 0.85) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+.fc .selected-range .fc-daygrid-day-number {
+  color: #fff !important;
+}
+
+.fc .existing-booking-checkin .fc-daygrid-day-frame {
+  background: linear-gradient(to right, transparent 50%, rgba(234, 179, 8, 0.45) 50%) !important;
+}
+
+.fc .date-checkout-only .fc-daygrid-day-frame {
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.45) 50%, transparent 50%) !important;
+}
+
+.fc .date-checkout-only.selected-checkin .fc-daygrid-day-frame {
+  background: linear-gradient(to right, rgba(234, 179, 8, 0.45) 50%, rgba(5, 150, 105, 0.7) 50%) !important;
+}
+
+.fc .existing-booking-checkin.selected-checkout .fc-daygrid-day-frame {
+  background: linear-gradient(to right, rgba(5, 150, 105, 0.7) 50%, rgba(234, 179, 8, 0.45) 50%) !important;
+}

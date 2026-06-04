@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
@@ -45,9 +45,38 @@ function toDateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function formatCurrency(n) {
-  return "₹" + Math.round(n).toLocaleString("en-IN");
-}
+  function formatCurrency(n) {
+    return "₹" + Math.round(n).toLocaleString("en-IN");
+  }
+
+  function distributePaidRevenue(bookings, start, end, rooms) {
+    let rev = 0;
+    for (const b of bookings) {
+      if (b.paymentStatus !== "paid" && b.paymentStatus !== "manual") continue;
+      const ci = new Date(b.checkIn + "T00:00:00").getTime();
+      const co = new Date(b.checkOut + "T00:00:00").getTime();
+      const os = Math.max(ci, start);
+      const oe = Math.min(co, end);
+      if (os >= oe) continue;
+      const nights = Math.ceil((oe - os) / 86400000);
+      const room = rooms.find((r) => r.id === b.roomId);
+      rev += nights * (room?.basePrice || 0);
+    }
+    return rev;
+  }
+
+  function countNights(bookings, start, end) {
+    let total = 0;
+    for (const b of bookings) {
+      const ci = new Date(b.checkIn + "T00:00:00").getTime();
+      const co = new Date(b.checkOut + "T00:00:00").getTime();
+      const os = Math.max(ci, start);
+      const oe = Math.min(co, end);
+      if (os >= oe) continue;
+      total += Math.ceil((oe - os) / 86400000);
+    }
+    return total;
+  }
 
 export default function AdminDashboard({ bookings, rooms }) {
   const [range, setRange] = useState("month");
@@ -56,23 +85,24 @@ export default function AdminDashboard({ bookings, rooms }) {
   const roomChart = useRef(null);
   const revVsChart = useRef(null);
 
-  const today = now();
-  const rangeStart = range === "week" ? startOfWeek(today) : range === "month" ? startOfMonth(today) : startOfYear(today);
-  const daysInRange = range === "week" ? 7 : range === "month" ? new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0).getDate() : 365;
-  let rangeEnd;
-  if (range === "week") {
-    rangeEnd = new Date(rangeStart);
-    rangeEnd.setDate(rangeEnd.getDate() + 6);
-  } else if (range === "month") {
-    rangeEnd = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0);
-  } else {
-    rangeEnd = new Date(rangeStart.getFullYear(), 11, 31);
-  }
+  const today = useMemo(() => now(), []);
+  const rangeStart = useMemo(() => range === "week" ? startOfWeek(today) : range === "month" ? startOfMonth(today) : startOfYear(today), [range, today]);
+  const daysInRange = useMemo(() => range === "week" ? 7 : range === "month" ? new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0).getDate() : 365, [range, rangeStart]);
+  const rangeEnd = useMemo(() => {
+    if (range === "week") {
+      const e = new Date(rangeStart);
+      e.setDate(e.getDate() + 6);
+      return e;
+    } else if (range === "month") {
+      return new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0);
+    }
+    return new Date(rangeStart.getFullYear(), 11, 31);
+  }, [range, rangeStart]);
 
-  const prevStart = new Date(rangeStart.getTime() - (rangeEnd.getTime() - rangeStart.getTime()) - 86400000);
-  const prevEnd = new Date(rangeStart.getTime() - 86400000);
+  const prevStart = useMemo(() => new Date(rangeStart.getTime() - (rangeEnd.getTime() - rangeStart.getTime()) - 86400000), [rangeStart, rangeEnd]);
+  const prevEnd = useMemo(() => new Date(rangeStart.getTime() - 86400000), [rangeStart]);
 
-  const roomCount = rooms?.length || 2;
+  const roomCount = 1; // entire property is locked when ANY booking exists
 
   const filt = useMemo(() => {
     const sk = toDateKey(rangeStart), ek = toDateKey(rangeEnd);
@@ -84,19 +114,27 @@ export default function AdminDashboard({ bookings, rooms }) {
     return (bookings || []).filter((b) => b.status === "confirmed" && b.checkIn <= ek && b.checkOut >= sk);
   }, [bookings, prevStart, prevEnd]);
 
-  function calc(list) {
+  const bookingRevenue = useCallback((b) => {
+    const ci = new Date(b.checkIn + "T00:00:00"), co = new Date(b.checkOut + "T00:00:00");
+    const nights = Math.max(1, Math.ceil((co - ci) / 86400000));
+    const room = rooms.find((r) => r.id === b.roomId);
+    return (room?.basePrice || 0) * nights;
+  }, [rooms]);
+
+  function calc(revFn, list) {
     let rev = 0, cnt = 0, nights = 0, guests = 0;
     for (const b of list) {
       cnt++;
       const ci = new Date(b.checkIn + "T00:00:00"), co = new Date(b.checkOut + "T00:00:00");
       nights += Math.max(1, Math.ceil((co - ci) / 86400000));
       guests += parseInt(b.guests) || 0;
-      if (b.paymentStatus === "paid" || b.paymentStatus === "manual") rev += parseFloat(b.amount) || 0;
+      if (b.paymentStatus === "paid" || b.paymentStatus === "manual") rev += revFn(b);
     }
     return { rev, cnt, nights, guests };
   }
 
-  const s = calc(filt), ps = calc(prev);
+  const s = useMemo(() => calc(bookingRevenue, filt), [bookingRevenue, filt]);
+  const ps = useMemo(() => calc(bookingRevenue, prev), [bookingRevenue, prev]);
   const avg = s.cnt ? s.nights / s.cnt : 0;
   const pAvg = ps.cnt ? ps.nights / ps.cnt : 0;
   const maxNights = roomCount * daysInRange;
@@ -128,72 +166,77 @@ export default function AdminDashboard({ bookings, rooms }) {
     { label: "Checkout today", count: (bookings || []).filter((b) => b.status === "confirmed" && b.checkOut === toDateKey(today)).length, bg: "#faf5ff", color: "#6b21a8" },
   ];
 
-  const labels = range === "week" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : range === "month" ? ["Wk1","Wk2","Wk3","Wk4","Wk5"] : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const labels = useMemo(() => range === "week" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : range === "month" ? ["Wk1","Wk2","Wk3","Wk4","Wk5"] : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], [range]);
 
   const revData = useMemo(() => {
-    if (range === "week") return labels.map((_, i) => {
-      const d = toDateKey(new Date(rangeStart.getTime() + i * 86400000));
-      return filt.filter((b) => b.checkIn === d).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
-    });
-    if (range === "month") return labels.map((_, i) => {
-      const ws = i * 7, we = ws + 6;
-      const ds = toDateKey(new Date(rangeStart.getTime() + ws * 86400000));
-      const de = toDateKey(new Date(rangeStart.getTime() + Math.min(we, daysInRange - 1) * 86400000));
-      return filt.filter((b) => b.checkIn >= ds && b.checkIn <= de).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
-    });
-    return labels.map((_, i) => {
+    const buckets = labels.map((_, i) => {
+      if (range === "week") {
+        const s = rangeStart.getTime() + i * 86400000;
+        return { s, e: s + 86400000 };
+      }
+      if (range === "month") {
+        const ws = i * 7, we = Math.min(ws + 6, daysInRange - 1);
+        const s = rangeStart.getTime() + ws * 86400000;
+        const e = rangeStart.getTime() + (we + 1) * 86400000;
+        return { s, e };
+      }
       const ms = new Date(rangeStart.getFullYear(), i, 1);
       const me = new Date(rangeStart.getFullYear(), i + 1, 0);
-      return filt.filter((b) => {
-        const ci = new Date(b.checkIn + "T00:00:00");
-        return ci >= ms && ci <= me;
-      }).reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0);
+      return { s: ms.getTime(), e: me.getTime() + 86400000 };
     });
-  }, [filt, labels, rangeStart, range, daysInRange]);
+    return buckets.map((b) => distributePaidRevenue(filt, b.s, b.e, rooms));
+  }, [filt, labels, rangeStart, range, daysInRange, rooms]);
 
   const bkgData = useMemo(() => {
-    if (range === "week") return labels.map((_, i) => {
-      const d = toDateKey(new Date(rangeStart.getTime() + i * 86400000));
-      return filt.filter((b) => b.checkIn === d).length;
-    });
-    if (range === "month") return labels.map((_, i) => {
-      const ws = i * 7, we = ws + 6;
-      const ds = toDateKey(new Date(rangeStart.getTime() + ws * 86400000));
-      const de = toDateKey(new Date(rangeStart.getTime() + Math.min(we, daysInRange - 1) * 86400000));
-      return filt.filter((b) => b.checkIn >= ds && b.checkIn <= de).length;
-    });
-    return labels.map((_, i) => {
+    const buckets = labels.map((_, i) => {
+      if (range === "week") {
+        const s = rangeStart.getTime() + i * 86400000;
+        return { s, e: s + 86400000 };
+      }
+      if (range === "month") {
+        const ws = i * 7, we = Math.min(ws + 6, daysInRange - 1);
+        const s = rangeStart.getTime() + ws * 86400000;
+        const e = rangeStart.getTime() + (we + 1) * 86400000;
+        return { s, e };
+      }
       const ms = new Date(rangeStart.getFullYear(), i, 1);
       const me = new Date(rangeStart.getFullYear(), i + 1, 0);
-      return filt.filter((b) => {
-        const ci = new Date(b.checkIn + "T00:00:00");
-        return ci >= ms && ci <= me;
-      }).length;
+      return { s: ms.getTime(), e: me.getTime() + 86400000 };
     });
+    return buckets.map((b) => countNights(filt, b.s, b.e));
   }, [filt, labels, rangeStart, range, daysInRange]);
 
   const rLabels = useMemo(() => (rooms || []).map((r) => r.name), [rooms]);
-  const rColors = [C.emerald, C.emeraldLight, C.blue, C.amber];
+  const rColors = useMemo(() => [C.emerald, C.emeraldLight, C.blue, C.amber], []);
   const rPcts = useMemo(() => {
-    const c = new Map((rooms || []).map((r) => [r.name, 0]));
+    const nightsPerRoom = new Map((rooms || []).map((r) => [r.name, 0]));
     for (const b of filt) {
       const name = b.roomName || "";
-      if (c.has(name)) c.set(name, c.get(name) + 1);
-      else if (c.size > 0) c.set([...c.keys()][0], c.get([...c.keys()][0]) + 1);
+      if (!nightsPerRoom.has(name)) continue;
+      const ci = new Date(b.checkIn + "T00:00:00"), co = new Date(b.checkOut + "T00:00:00");
+      const n = Math.max(1, Math.ceil((co - ci) / 86400000));
+      nightsPerRoom.set(name, nightsPerRoom.get(name) + n);
     }
-    const t = [...c.values()].reduce((a, b) => a + b, 0);
-    return t ? [...c.values()].map((v) => Math.round(v / t * 100)) : (rooms || []).map(() => Math.round(100 / (rooms.length || 1)));
+    const t = [...nightsPerRoom.values()].reduce((a, b) => a + b, 0);
+    return t ? [...nightsPerRoom.values()].map((v) => Math.round(v / t * 100)) : (rooms || []).map(() => Math.round(100 / (rooms.length || 1)));
   }, [filt, rooms]);
 
   const occDays = useMemo(() => {
-    const weekStart = startOfWeek(today);
-    const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-    return days.map((_, di) => {
-      const d = toDateKey(new Date(weekStart.getTime() + di * 86400000));
-      const occupied = filt.filter((b) => b.checkIn <= d && b.checkOut > d).length;
-      return Math.min(100, Math.round(occupied / roomCount * 100));
-    });
-  }, [filt, roomCount]);
+    const dayIdx = [0, 0, 0, 0, 0, 0, 0]; // Mon=0 … Sun=6 — total dates per weekday
+    const occIdx = [0, 0, 0, 0, 0, 0, 0];
+    const activeBookings = (bookings || []).filter((b) => b.status === "confirmed");
+    for (let i = 0; i < daysInRange; i++) {
+      const d = new Date(rangeStart.getTime() + i * 86400000);
+      const key = toDateKey(d);
+      const dow = d.getDay(); // 0=Sun … 6=Sat
+      const idx = dow === 0 ? 6 : dow - 1; // map to Mon=0 … Sun=6
+      dayIdx[idx]++;
+      for (const b of activeBookings) {
+        if (b.checkIn <= key && b.checkOut > key) { occIdx[idx]++; break; }
+      }
+    }
+    return dayIdx.map((total, i) => total ? Math.round(occIdx[i] / total * 100) : 0);
+  }, [bookings, daysInRange, rangeStart]);
 
   useEffect(() => {
     if (!roomRef.current) return;
@@ -209,7 +252,7 @@ export default function AdminDashboard({ bookings, rooms }) {
       },
     });
     return () => roomChart.current?.destroy();
-  }, [rPcts]);
+  }, [rPcts, rLabels, rColors]);
 
   useEffect(() => {
     if (!revVsRef.current) return;
@@ -239,34 +282,6 @@ export default function AdminDashboard({ bookings, rooms }) {
 
   return (
     <div className="dash-wrap" style={{ fontFamily: "'DM Sans', Inter, Arial, sans-serif", color: C.bark, width: "100%", padding: "24px 20px" }}>
-      <style>{`
-        @media (max-width: 700px) {
-          .dash-wrap { padding: 12px 8px !important; }
-          .dash-grid { grid-template-columns: 1fr !important; }
-          .dash-full { grid-column: 1 !important; }
-          .dash-metrics { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
-          .dash-status { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
-          .dash-metric-card { padding: 10px 10px !important; }
-          .dash-metric-value { font-size: 18px !important; }
-          .dash-metric-label { font-size: 10px !important; }
-          .dash-status-card { padding: 8px 8px !important; }
-          .dash-status-count { font-size: 18px !important; }
-          .dash-status-label { font-size: 10px !important; }
-          .dash-chart { padding: 12px 10px 6px !important; }
-          .dash-chart-title { font-size: 16px !important; }
-        }
-        @media (max-width: 400px) {
-          .dash-metrics { grid-template-columns: 1fr 1fr !important; gap: 5px !important; }
-          .dash-status { grid-template-columns: repeat(2, 1fr) !important; gap: 5px !important; }
-          .dash-range { flex-wrap: wrap; gap: 4px; }
-          .dash-range button { flex: 1; min-width: 0; padding: 6px 8px !important; font-size: 11px !important; min-height: 32px !important; }
-          .dash-wrap { padding: 8px 6px !important; }
-          .dash-metric-card { padding: 8px 8px !important; }
-          .dash-metric-value { font-size: 16px !important; }
-          .dash-status-card { padding: 6px 8px !important; }
-          .dash-status-count { font-size: 16px !important; }
-        }
-      `}</style>
 
       <div className="dash-range" style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {["week","month","year"].map((r) => (

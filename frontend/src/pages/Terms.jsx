@@ -10,8 +10,6 @@ const s = {
   section:    { marginBottom: 32 },
   secTitle:   { fontFamily: 'Cormorant Garamond, serif', fontSize: 18, fontWeight: 300, fontStyle: 'italic', color: '#1C3A28', marginBottom: 10, paddingBottom: 8, borderBottom: '0.5px solid #E2D4C8' },
   bodyText:   { fontSize: 13, color: '#5A5040', lineHeight: 1.85, fontWeight: 300, marginBottom: 10 },
-  highlight:  { background: '#F0EAE2', borderLeft: '2px solid #B8935A', padding: '12px 16px', borderRadius: '0 4px 4px 0', margin: '16px 0' },
-  hlText:     { fontSize: 12, color: '#7A6050', lineHeight: 1.7, margin: 0 },
   li:         { fontSize: 13, color: '#5A5040', lineHeight: 1.7, paddingLeft: 16, position: 'relative', fontWeight: 300, marginBottom: 6 },
   contactBox: { background: '#fff', border: '0.5px solid #D8D0C8', borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'flex-start', gap: 16, marginTop: 24 },
   contactIc:  { width: 36, height: 36, background: '#EAF3EA', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B6D11', fontSize: 18, flexShrink: 0 },
@@ -25,14 +23,6 @@ function Section({ title, children }) {
     <div style={s.section}>
       <div style={s.secTitle}>{title}</div>
       {children}
-    </div>
-  );
-}
-
-function Highlight({ children }) {
-  return (
-    <div style={s.highlight}>
-      <p style={s.hlText}>{children}</p>
     </div>
   );
 }

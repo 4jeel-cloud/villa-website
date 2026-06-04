@@ -1,0 +1,179 @@
+.laundryAlerts {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: none;
+}
+.laundryAlerts::-webkit-scrollbar { display: none; }
+.laundryAlertItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  animation: slideIn 0.25s ease;
+}
+.laundryAlertItem i {
+  color: #16a34a;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.laundryAlertText {
+  color: #166534;
+  font-weight: 500;
+}
+.laundryAlertTime {
+  color: #86efac;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.laundryDivider {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #bbf7d0;
+  flex-shrink: 0;
+}
+.stockArrow {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.stockArrow:hover {
+  background: #06402B;
+  border-color: #06402B;
+  color: #fff;
+}
+
+.laundryTable {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.laundryTableHeader,
+.laundryTableRow {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(4, 1fr);
+  gap: 0;
+}
+.laundryTableHeader {
+  background: #06402B;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.laundryTableHeader span,
+.laundryTableRow span {
+  padding: 8px 10px;
+  text-align: center;
+}
+.laundryTableHeader span:first-child,
+.laundryTableRow span:first-child {
+  text-align: left;
+}
+.laundryTableRow:nth-child(even) {
+  background: #f9fafb;
+}
+.laundryTableRow:nth-child(odd) {
+  background: #fff;
+}
+.laundryTableRow span {
+  font-size: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.laundryToggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.laundryToggleBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.laundryToggleBtn.active {
+  border-color: #06402B;
+  background: #06402B;
+  color: #fff;
+}
+.laundryToggleBtn i {
+  font-size: 16px;
+}
+
+.laundryModeTable {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+.laundryModeHeader,
+.laundryModeRow {
+  display: grid;
+  grid-template-columns: 1.5fr 80px 1fr 80px;
+  gap: 0;
+  align-items: center;
+}
+.laundryModeHeader {
+  background: #06402B;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.laundryModeHeader span,
+.laundryModeRow span,
+.laundryModeRow > div {
+  padding: 8px 10px;
+  text-align: center;
+}
+.laundryModeHeader span:first-child,
+.laundryModeRow span:first-child {
+  text-align: left;
+}
+.laundryModeRow:nth-child(even) {
+  background: #f9fafb;
+}
+.laundryModeRow:nth-child(odd) {
+  background: #fff;
+}
+.laundryModeRow span,
+.laundryModeRow > div {
+  font-size: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+}

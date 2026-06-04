@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { toDateKey, formatDate } from "../utils";
+import { useAppContext } from "../hooks/useAppContext";
 import AdminDashboard from "./AdminDashboard";
 import LaundryTracker from "./LaundryTracker";
 
@@ -11,18 +13,19 @@ const SIDEBAR_ITEMS = [
   { key: "bookings",  label: "Bookings",       icon: "calendar-check"   },
   { key: "room",      label: "Room Update",    icon: "currency-rupee"   },
   { key: "laundry",   label: "Laundry Tracker",icon: "clipboard-list"   },
-  { key: "profile",   label: "Profile",        icon: "user-circle"      },
   { key: "home",      label: "Home",           icon: "home"             },
 ];
 
-export default function AdminPage({
-  rooms, bookings, bookingsLoading, bookingsFetchError, adminForm, roomOptions, roomSettings, availability, adminEmail, adminProfile,
-  onAdminDateClick, onAdminFormChange, onAdminBooking, onCancel,
-  onRoomSettingsChange, onRoomUpdate, onAdminProfileChange, onLogout, onRetryFetchBookings,
-}) {
+export default function AdminPage() {
+  const {
+    rooms, bookings, bookingsLoading, bookingsFetchError, adminForm, roomOptions, roomSettings, setRoomSettings, availability,
+    handleAdminDateClick, setAdminFormField, handleAdminBooking, handleCancel,
+    handleRoomUpdate, logout, retryFetchBookings, showNotification,
+  } = useAppContext();
   const [selectedAdminBooking, setSelectedAdminBooking] = useState(null);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const navigate = useNavigate();
 
   const adminCalendarEvents = useMemo(() => {
     const bookingEvents = bookings
@@ -31,7 +34,8 @@ export default function AdminPage({
         title: booking.guestName,
         start: booking.checkIn,
         end: booking.checkOut,
-        classNames: ["admin-booking-event"]
+        classNames: ["admin-booking-event"],
+        extendedProps: { type: "booking", bookingId: booking.id },
       }));
     const blockedEvents = (availability || [])
       .filter(evt => evt.color === "#f59e0b")
@@ -40,7 +44,8 @@ export default function AdminPage({
         start: evt.start,
         end: evt.end,
         color: "#f59e0b",
-        classNames: ["admin-blocked-event"]
+        classNames: ["admin-blocked-event"],
+        extendedProps: { type: "block" },
       }));
     return [...bookingEvents, ...blockedEvents];
   }, [bookings, availability]);
@@ -88,7 +93,7 @@ export default function AdminPage({
       }
     }
     return { existingCheckin: ci, existingCheckout: co, blockedClasses: bk };
-  }, [bookings, availability]);
+  }, [bookings, availability, rooms]);
 
   const dayCellClassNames = (arg) => {
     const dayKey = toDateKey(arg.date);
@@ -105,9 +110,14 @@ export default function AdminPage({
 
   const handleDateClick = (clickInfo) => {
     const clickedDate = clickInfo.dateStr;
+    const dayKey = clickedDate;
+    if (blockedClasses.has(dayKey) || (existingCheckin.has(dayKey) && existingCheckout.has(dayKey))) {
+      showNotification("error", "This date is fully booked — select another date.");
+      return;
+    }
     if (adminForm.checkIn) {
       setSelectedAdminBooking(null);
-      onAdminDateClick(clickInfo);
+      handleAdminDateClick(clickInfo);
       return;
     }
     const foundBooking = bookings.find(
@@ -117,7 +127,7 @@ export default function AdminPage({
       setSelectedAdminBooking(foundBooking);
     } else {
       setSelectedAdminBooking(null);
-      onAdminDateClick(clickInfo);
+      handleAdminDateClick(clickInfo);
     }
   };
 
@@ -144,8 +154,8 @@ export default function AdminPage({
             {bookingsFetchError && (
               <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <p style={{ margin: 0, color: "#991b1b", fontSize: 13 }}>Could not load bookings from server.</p>
-                {onRetryFetchBookings && (
-                  <button type="button" onClick={onRetryFetchBookings} style={{ background: "#06402B", border: "none", color: "#fff", padding: "6px 16px", borderRadius: 6, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>Retry</button>
+                {retryFetchBookings && (
+                  <button type="button" onClick={retryFetchBookings} style={{ background: "#06402B", border: "none", color: "#fff", padding: "6px 16px", borderRadius: 6, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>Retry</button>
                 )}
               </div>
             )}
@@ -176,10 +186,10 @@ export default function AdminPage({
                     ) : bookingsFetchError ? (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 200, gap: 12 }}>
                         <p style={{ color: "#ef4444", fontSize: 14 }}>Failed to load bookings.</p>
-                        {onRetryFetchBookings && (
+                        {retryFetchBookings && (
                           <button
                             type="button"
-                            onClick={onRetryFetchBookings}
+                            onClick={retryFetchBookings}
                             style={{ background: "#06402B", border: "none", color: "#fff", padding: "8px 20px", borderRadius: 6, cursor: "pointer", fontSize: 13 }}
                           >
                             Retry
@@ -194,9 +204,9 @@ export default function AdminPage({
                       dateClick={handleDateClick}
                       eventClick={(info) => {
                         info.jsEvent.preventDefault();
-                        const start = info.event.startStr;
+                        if (info.event.extendedProps?.type !== "booking") return;
                         const found = bookings.find(
-                          (b) => start >= b.checkIn && start < b.checkOut && b.status === "confirmed"
+                          (b) => b.id === info.event.extendedProps.bookingId
                         );
                         if (found) setSelectedAdminBooking(found);
                       }}
@@ -279,7 +289,7 @@ export default function AdminPage({
                         <button className="formSubmit" type="button" style={{ background: "#94a3b8" }}
                           onClick={() => setSelectedAdminBooking(null)}>← Back</button>
                         <button className="formSubmit" type="button" style={{ background: "#ef4444" }}
-                          onClick={() => { onCancel(selectedAdminBooking.id); setSelectedAdminBooking(null); }}>Confirm Cancel</button>
+                          onClick={() => { handleCancel(selectedAdminBooking.id); setSelectedAdminBooking(null); }}>Confirm Cancel</button>
                       </div>
                     </div>
                   </>
@@ -287,11 +297,12 @@ export default function AdminPage({
                   <>
                     <h2 className="bookingFormTitle">Manual Booking</h2>
                     <p className="bookingFormSubtitle">Fill in details to create a reservation</p>
-                    <form className="form" onSubmit={onAdminBooking}>
+                    <form className="form" onSubmit={handleAdminBooking}>
                       <div className="formField">
                         <label className="formLabel">Room Type</label>
-                        <select className="formInput" value={adminForm.roomId} onChange={(e) => onAdminFormChange({ roomId: e.target.value })}>
-                          {roomOptions}
+                        <select className="formInput" value={adminForm.roomId} onChange={(e) => setAdminFormField({ roomId: e.target.value })}>
+                          <option value="" disabled>Select a room</option>
+                          {roomOptions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                         </select>
                       </div>
                       <div className="formRow">
@@ -306,24 +317,24 @@ export default function AdminPage({
                       </div>
                       <div className="formField">
                         <label className="formLabel">Full Name</label>
-                        <input className="formInput" placeholder="e.g. John Doe" value={adminForm.guestName} onChange={(e) => onAdminFormChange({ guestName: e.target.value })} required />
+                        <input className="formInput" placeholder="e.g. John Doe" value={adminForm.guestName} onChange={(e) => setAdminFormField({ guestName: e.target.value })} required />
                       </div>
                       <div className="formField">
                         <label className="formLabel">Phone Number</label>
-                        <input className="formInput" placeholder="e.g. +91 98765 43210" value={adminForm.guestPhone} onChange={(e) => onAdminFormChange({ guestPhone: e.target.value })} required />
+                        <input className="formInput" placeholder="e.g. +91 98765 43210" value={adminForm.guestPhone} onChange={(e) => setAdminFormField({ guestPhone: e.target.value })} required />
                       </div>
                       <div className="formField">
                         <label className="formLabel">Email</label>
-                        <input className="formInput" type="email" placeholder="e.g. john@email.com" value={adminForm.guestEmail} onChange={(e) => onAdminFormChange({ guestEmail: e.target.value })} required />
+                        <input className="formInput" type="email" placeholder="e.g. john@email.com" value={adminForm.guestEmail} onChange={(e) => setAdminFormField({ guestEmail: e.target.value })} required />
                       </div>
                       <div className="formRow">
                         <div className="formField">
                           <label className="formLabel">Number of Guests</label>
-                          <input className="formInput" type="number" min="1" placeholder="e.g. 2" value={adminForm.guests} onChange={(e) => onAdminFormChange({ guests: e.target.value })} required />
+                          <input className="formInput" type="number" min="1" placeholder="e.g. 2" value={adminForm.guests} onChange={(e) => setAdminFormField({ guests: e.target.value })} required />
                         </div>
                         <div className="formField">
                           <label className="formLabel">Guest Type</label>
-                          <select className="formInput" value={adminForm.guestType} onChange={(e) => onAdminFormChange({ guestType: e.target.value })}>
+                          <select className="formInput" value={adminForm.guestType} onChange={(e) => setAdminFormField({ guestType: e.target.value })}>
                             <option value="Family">Family</option>
                             <option value="Bachelor">Bachelor</option>
                           </select>
@@ -331,7 +342,7 @@ export default function AdminPage({
                       </div>
                       <div className="formField">
                         <label className="formLabel">Amount Received (₹)</label>
-                        <input className="formInput" type="number" min="0" placeholder="e.g. 5000" value={adminForm.amount || ""} onChange={(e) => onAdminFormChange({ amount: e.target.value })} />
+                        <input className="formInput" type="number" min="0" placeholder="e.g. 5000" value={adminForm.amount || ""} onChange={(e) => setAdminFormField({ amount: e.target.value })} />
                       </div>
                       <button className="formSubmit" type="submit">Create Admin Booking</button>
                     </form>
@@ -355,7 +366,7 @@ export default function AdminPage({
                       <label className="formLabel">Price per night (₹)</label>
                       <input className="formInput" type="number"
                         value={roomSettings[room.id]?.basePrice ?? room.basePrice}
-                        onChange={(e) => onRoomSettingsChange(room.id, { basePrice: e.target.value })} />
+                        onChange={(e) => setRoomSettings((p) => ({ ...p, [room.id]: { ...p[room.id], basePrice: e.target.value } }))} />
                     </div>
                   </div>
                   <div className="roomImgPreview">
@@ -370,9 +381,9 @@ export default function AdminPage({
                     <textarea className="formInput" rows={3}
                       placeholder="/carousel/DSC01117.webp, /carousel/DSC01115.webp"
                       value={roomSettings[room.id]?.imagesInput ?? room.images.join(", ")}
-                      onChange={(e) => onRoomSettingsChange(room.id, { imagesInput: e.target.value })} />
+                      onChange={(e) => setRoomSettings((p) => ({ ...p, [room.id]: { ...p[room.id], imagesInput: e.target.value } }))} />
                   </div>
-                  <button className="formSubmit" type="button" onClick={() => onRoomUpdate(room.id)}>
+                  <button className="formSubmit" type="button" onClick={() => handleRoomUpdate(room.id)}>
                     Save Changes
                   </button>
                 </div>
@@ -385,38 +396,6 @@ export default function AdminPage({
         return (
           <section className="adminSection" style={{ background: "transparent", padding: 0, boxShadow: "none" }}>
             <LaundryTracker />
-          </section>
-        );
-
-      case "profile":
-        return (
-          <section className="adminSection card">
-            <h2>Admin Profile</h2>
-            <div className="form" style={{ maxWidth: 480 }}>
-              <div className="formField">
-                <label className="formLabel">Full Name</label>
-                <input className="formInput" placeholder="e.g. Villa Manager"
-                  value={adminProfile.name} onChange={(e) => onAdminProfileChange({ name: e.target.value })} />
-              </div>
-              <div className="formField">
-                <label className="formLabel">Phone Number</label>
-                <input className="formInput" placeholder="e.g. +91 98765 43210"
-                  value={adminProfile.phone} onChange={(e) => onAdminProfileChange({ phone: e.target.value })} />
-              </div>
-              <div className="formField">
-                <label className="formLabel">Email</label>
-                <input className="formInput" type="email" placeholder="e.g. admin@creekview.com"
-                  value={adminProfile.email} onChange={(e) => onAdminProfileChange({ email: e.target.value })} />
-              </div>
-              <div className="formField">
-                <label className="formLabel">Address</label>
-                <textarea className="formInput" rows={3} placeholder="e.g. Creek View Villa, Wayanad, Kerala"
-                  value={adminProfile.address} onChange={(e) => onAdminProfileChange({ address: e.target.value })} />
-              </div>
-              <div className="formRow" style={{ alignItems: "center", gap: 12 }}>
-                <button className="formSubmit" type="button" onClick={() => alert("Profile saved!")}>Save</button>
-              </div>
-            </div>
           </section>
         );
 
@@ -439,7 +418,7 @@ export default function AdminPage({
             <button
               key={key}
               className={`adminSidebarItem${activeSection === key ? " active" : ""}`}
-              onClick={() => key === "home" ? window.location.href = "/#hero" : setActiveSection(key)}
+              onClick={() => key === "home" ? navigate("/#hero") : setActiveSection(key)}
               title={sidebarCollapsed ? label : undefined}
             >
               <i className={`ti ti-${icon}`} />
@@ -448,7 +427,7 @@ export default function AdminPage({
           ))}
         </nav>
         {!sidebarCollapsed && (
-          <button className="adminSidebarLogout" onClick={onLogout}>
+          <button className="adminSidebarLogout" onClick={logout}>
             <i className="ti ti-logout" />
             <span>Logout</span>
           </button>
@@ -460,17 +439,17 @@ export default function AdminPage({
         </div>
       </main>
       <nav className="adminMobileNav">
-        {SIDEBAR_ITEMS.slice(0, 5).map(({ key, label, icon }) => (
+        {SIDEBAR_ITEMS.slice(0, 4).map(({ key, label, icon }) => (
           <button
             key={key}
             className={`adminMobileNavItem${activeSection === key ? " active" : ""}`}
-            onClick={() => key === "home" ? window.location.href = "/#hero" : setActiveSection(key)}
+            onClick={() => key === "home" ? navigate("/#hero") : setActiveSection(key)}
           >
             <i className={`ti ti-${icon}`} />
             <span>{label}</span>
           </button>
         ))}
-        <button className="adminMobileNavItem adminMobileNavLogout" onClick={onLogout}>
+        <button className="adminMobileNavItem adminMobileNavLogout" onClick={logout}>
           <i className="ti ti-logout" />
           <span>Logout</span>
         </button>

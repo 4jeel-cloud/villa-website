@@ -1,4 +1,15 @@
-﻿function confirmationEmail({ name, room, checkin, checkout, nights, guests, phone }) {
+﻿function escHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
+function confirmationEmail({ name, room, checkin, checkout, nights, guests }) {
+  name = escHtml(name); room = escHtml(room); checkin = escHtml(checkin); checkout = escHtml(checkout);
   return `
   <div style="background:#F5F7F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #D8E4D8">
@@ -28,8 +39,8 @@
         ${[
           ['Total stay', `${nights} night${nights > 1 ? 's' : ''}`],
           ['Room', room],
-          ['Check-in', `${checkin} â€” 2:00 PM`],
-          ['Check-out', `${checkout} â€” 11:00 AM`],
+          ['Check-in', `${checkin} – 2:00 PM`],
+          ['Check-out', `${checkout} – 11:00 AM`],
           ['Guests', `${guests} guest${guests > 1 ? 's' : ''}`],
         ].map(([label, val], i, arr) => `
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-bottom:${i < arr.length - 1 ? '1px solid #E8F0E8' : 'none'}">
@@ -52,7 +63,7 @@
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#1C3A28;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#9AB09A;line-height:1.8;margin:0">
         Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
-        creekviewvilla@gmail.com Â· +91 73061 98968
+        creekviewvilla@gmail.com · +91 73061 98968
       </p>
     </div>
 
@@ -61,6 +72,7 @@
 }
 
 function cancellationEmail({ name, room, checkin, checkout }) {
+  name = escHtml(name); room = escHtml(room); checkin = escHtml(checkin); checkout = escHtml(checkout);
   return `
   <div style="background:#F7F5F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #E4D8D8">
@@ -115,7 +127,7 @@ function cancellationEmail({ name, room, checkin, checkout }) {
       <p style="font-size:14px;font-weight:300;font-style:italic;color:#3A1C1C;margin:0 0 4px">Creek View Villa</p>
       <p style="font-size:11px;color:#B09A9A;line-height:1.8;margin:0">
         Panthipoyil, Padinjarathara, Wayanad, Kerala 673575<br>
-        creekviewvilla@gmail.com Â· +91 73061 98968
+        creekviewvilla@gmail.com · +91 73061 98968
       </p>
     </div>
 
@@ -124,6 +136,7 @@ function cancellationEmail({ name, room, checkin, checkout }) {
 }
 
 function managerAlert({ guestName, roomName, checkIn, checkOut }) {
+  guestName = escHtml(guestName); roomName = escHtml(roomName); checkIn = escHtml(checkIn); checkOut = escHtml(checkOut);
   return `
   <div style="background:#F5F7F5;padding:24px;font-family:Inter,Helvetica,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #D8E4D8">

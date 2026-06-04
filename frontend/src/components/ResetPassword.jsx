@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 
 export default function ResetPassword() {
@@ -6,18 +6,15 @@ export default function ResetPassword() {
   const oobCode = searchParams.get("oobCode");
   const mode = searchParams.get("mode");
 
+  const isValidLink = mode === "resetPassword" && !!oobCode;
+
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  // Derive error from URL params directly — no need for useEffect setState
+  const [error, setError] = useState(() => isValidLink ? "" : "Invalid or expired reset link.");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (mode !== "resetPassword" || !oobCode) {
-      setError("Invalid or expired reset link.");
-    }
-  }, [mode, oobCode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,7 +50,7 @@ export default function ResetPassword() {
     }
   };
 
-  if (!oobCode || mode !== "resetPassword") {
+  if (!isValidLink) {
     return (
       <div style={{
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
@@ -238,12 +235,6 @@ export default function ResetPassword() {
         </form>
       </div>
 
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

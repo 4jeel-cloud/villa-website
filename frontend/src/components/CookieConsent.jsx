@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { memo, useState } from 'react';
 
-export default function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+// Derive visibility directly from localStorage at init time — avoids setState in useEffect
+function getInitialVisible() {
+  try { return !localStorage.getItem('cookieConsent'); } catch { return false; }
+}
 
-  useEffect(() => {
-    const dismissed = localStorage.getItem('cookieConsent');
-    if (!dismissed) setVisible(true);
-  }, []);
+export default memo(function CookieConsent() {
+  const [visible, setVisible] = useState(getInitialVisible);
 
   const accept = () => {
     localStorage.setItem('cookieConsent', '1');
@@ -26,4 +26,4 @@ export default function CookieConsent() {
       </div>
     </div>
   );
-}
+});
